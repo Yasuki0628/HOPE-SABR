@@ -1,6 +1,6 @@
 // DiamondLens service worker — アプリ本体をキャッシュしてオフラインで起動できるようにします。
 // アプリを更新したら VERSION を変えると、利用者の端末のキャッシュが入れ替わります。
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'diamondlens-' + VERSION;
 const ASSETS = [
   './',
@@ -10,7 +10,9 @@ const ASSETS = [
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
   './icons/apple-touch-icon.png',
-  './icons/favicon-32.png'
+  './icons/favicon-32.png',
+  './apple-touch-icon.png',
+  './favicon.ico'
 ];
 
 self.addEventListener('install', (e) => {
