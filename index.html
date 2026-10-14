@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F2F4F7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DiamondLens">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>DiamondLens 野球記録</title>
+<style>
+:root{box-sizing:border-box;--bg:#f2f4f7;--c:#fff;--t:#14202e;--m:#6b7785;--a:#1f6feb;--b:#e1e5ea;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e141b;--c:#18212b;--t:#e8edf2;--m:#8d9aa8;--a:#5aa0ff;--b:#2a3542}}
+:root[data-theme=dark]{--bg:#0e141b;--c:#18212b;--t:#e8edf2;--m:#8d9aa8;--a:#5aa0ff;--b:#2a3542}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:auto;background:var(--bg);color:var(--t);font:15px/1.5 -apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;padding:12px 12px 84px;max-width:640px}
+h3{font-size:15px;margin:16px 0 6px}
+.c{background:var(--c);border:1px solid var(--b);border-radius:12px;padding:12px;margin-bottom:10px}
+.m{color:var(--m);font-size:13px}small{font-size:12px}
+label{display:block;font-size:12px;color:var(--m);margin-bottom:8px;flex:1}
+input,select,textarea{width:100%;font:inherit;font-size:16px;padding:9px;border:1px solid var(--b);border-radius:8px;background:var(--bg);color:var(--t)}
+textarea{height:80px;font-size:12px}
+.r{display:flex;gap:8px}.g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+button{font:inherit;padding:10px 6px;border:1px solid var(--b);border-radius:10px;background:var(--c);color:var(--t)}
+button:active,.on{background:var(--a);color:#fff}
+.p{width:100%;background:var(--a);color:#fff;border:0;font-weight:600;margin-bottom:8px}
+.x{padding:2px 8px;color:var(--m);border:0;background:none}
+.ch{display:flex;gap:6px;overflow-x:auto;margin:6px 0}.ch button{padding:6px 12px;white-space:nowrap;border-radius:99px;font-size:13px}
+.i{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid var(--b);cursor:pointer}
+.i span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.k{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.k div{background:var(--c);border:1px solid var(--b);border-radius:12px;padding:8px;text-align:center}
+.k b{display:block;font-size:20px}
+i.u,i.d{font-style:normal;font-size:11px;margin-left:2px}i.u{color:#1a9e5c}i.d{color:#d93b3b}
+.rk{border:2px solid var(--a);border-radius:8px;padding:1px 8px;font-weight:700}.rk.ds{border-style:dashed;color:var(--m);border-color:var(--m)}
+details summary{cursor:pointer;list-style:none}
+.w{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--b)}th:first-child,td:first-child{text-align:left}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--c);border-top:1px solid var(--b);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;border-radius:0;background:none;padding:14px 0;font-size:13px;color:var(--t)}nav button.on{color:var(--a);background:none;font-weight:700}
+.pb{flex:0 0 40px;height:40px;border-radius:10px;background:var(--bg);text-align:center;font-weight:700;line-height:1.1;padding-top:4px}.pb small{display:block;color:var(--m);font-weight:400;font-size:11px}
+.bar{background:var(--bg);border-radius:6px;height:10px;flex:1}.bar div{height:10px;border-radius:6px;background:var(--a)}
+.dt{display:inline-block;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--b);margin-right:6px;vertical-align:middle}.dt.b{background:#2b7cf6}.dt.s{background:#e6a100}.dt.o{background:#d93b3b}
+.bg{padding:20px 4px;font-size:16px;font-weight:600}.gr{background:#0f766e;color:#fff;border:0}
+.toast{background:#17212b;color:#fff;border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin:8px 0}.toast span{flex:1}.toast button{background:#2b3a49;color:#fff;border:0;padding:6px 12px}
+.sh{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20}.shb{position:absolute;left:0;right:0;bottom:0;max-height:90%;overflow:auto;background:var(--c);border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));max-width:640px;margin:auto}
+.cb{display:inline-flex;align-items:center;gap:4px;margin:0 10px 6px 0;font-size:14px;color:var(--t);flex:none}.cb input{width:auto;padding:0}
+.cap{display:inline-block;background:#d4a017;color:#fff;border-radius:99px;min-width:20px;height:20px;line-height:20px;text-align:center;font-size:12px;font-weight:700;padding:0 5px;margin-left:5px;vertical-align:middle}
+.tag{display:inline-block;background:var(--bg);color:var(--a);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700;margin-right:6px}.fm{background:var(--bg);border-radius:10px;padding:12px;margin-top:8px;font-weight:600}.dr{width:44px;height:44px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:20px;margin-right:10px;flex:none}
+.dr.g{background:#e3f1ee;color:#1a7f6b}
+.cw{display:flex;gap:10px;overflow-x:auto;margin-bottom:10px;scroll-snap-type:x mandatory}.cc{flex:0 0 78%;scroll-snap-align:start;background:var(--c);border:1px solid var(--b);border-radius:14px;padding:14px}
+.kg{display:grid;grid-template-columns:1fr 1fr;gap:14px}.k4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.kp b{display:block;font-size:26px}
+.st{display:inline-block;border-radius:6px;padding:0 6px;font-size:11px;font-weight:700;margin-left:4px}.sg{background:#e3f1ee;color:#1a7f6b}.sb{background:#fde7e7;color:#c23}
+.tl{background:var(--bg);border-radius:10px;padding:8px}
+@media print{nav,button{display:none}}
+</style></head><body><div id="v"></div><nav id="n"></nav>
+<script>
+const $=s=>$d.querySelector(s),$d=document;
+const lt=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+let S={p:[],a:[],m:[],g:[],team:'マイチーム',hide:0,cur:''},tab='home',sel='',mk=0,an={who:'',per:'fy',inc:0},sq='',so='sc',gf=[],pf=[],gt='',gy=0,lim=10,rz=-1,pmode=0,ptc='',msg='',ca='',cb='',gp=0,warm=0,sh='',ip={},gq='',gk='',gli=0,gst=[],rid='';
+try{const j=JSON.parse(localStorage.getItem('dl')||'null');if(j)S=Object.assign(S,j)}catch(e){}
+const fyOf=d=>{const[y,m]=d.split('-');return m>3?+y:y-1};
+S.p.forEach(p=>{if(p.g0==null){p.g0=0;p.fy=fyOf(lt())}p.kana=p.kana||''});
+const norm=()=>{S.tm=Object.assign({ab:'',cat:'沖縄ブロック',kind:'学童野球',rb:'',yr:fyOf(lt()),area:'',mgr:'',memo:'',pp:'1週間',lim:500,cons:'制限なし',nx:'',iv:3,r:{公式戦:{i:9,t:1,c:1},練習試合:{i:9,t:0,c:0},紅白戦:{i:9,t:0,c:0},その他:{i:9,t:0,c:0}}},S.tm);S.pt=S.pt||[];S.sb=S.sb||[];S.gd=S.gd||{};S.gr=S.gr&&S.gr.length?S.gr:[{id:'gr0',name:'自校グラウンド',lf:98,lc:110,cf:122,rc:110,rf:98,bs:27.4,pm:18.4}];S.rs=S.rs&&S.rs.length?S.rs:[{id:'d0',name:'学童 標準',i:6,tb:0,c:1,dh:0,tl:0,ro:0,nt:''}];S.hh=S.hh||[];S.ho=S.ho||[];S.set=Object.assign({th:'',fs:100,cm:'C'},S.set)};norm();
+const save=()=>{try{localStorage.setItem('dl',JSON.stringify(S))}catch(e){}};
+const id=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const KS={学童野球:['小1','小2','小3','小4','小5','小6'],中学野球:['中1','中2','中3'],高校野球:['高1','高2','高3'],大学野球:['大1','大2','大3','大4'],社会人野球:['在籍']};let G=KS.学童野球;const setG=()=>{G=KS[S.tm.kind]||KS.学童野球},gi=p=>G.length==1?0:p.g0+fyOf(lt())-p.fy,act=()=>S.p.filter(p=>gi(p)<G.length);setG();
+const pn=i=>{const p=S.p.find(x=>x.id==i);return p?(p.no?'#'+p.no+' ':'')+p.name:'(削除済)'};
+const opts=(a,v)=>a.map(([x,y])=>`<option value="${x}"${x==v?' selected':''}>${esc(y)}</option>`).join('');
+const pl=()=>opts(act().map(p=>[p.id,pn(p.id)]),sel);
+const R={'単打':{ab:1,h:1,tb:1},'二塁打':{ab:1,h:1,tb:2},'三塁打':{ab:1,h:1,tb:3},'本塁打':{ab:1,h:1,tb:4},'四球':{bb:1},'死球':{hbp:1},'三振':{ab:1,k:1},'ゴロ':{ab:1},'飛球':{ab:1},'犠打':{sh:1},'犠飛':{sf:1},'失策':{ab:1},'野選':{ab:1}};
+const RN='球速,遠投,送球正確性,ロングティー,スイングスピード,立ち幅跳び,30m走,5-10-5,反復横跳び,一塁到達,二塁到達,ベース1周,二塁送球タイム,握力'.split(','),U='km/h,m,点,m,km/h,cm,秒,秒,回,秒,秒,秒,秒,kg'.split(','),LW=[0,0,0,0,0,0,1,1,0,1,1,1,1,0];
+const RM='45,50,56,62,69,76|20,25,31,38,46,55|2.5,3,3.5,4,4.5,5|25,32,40,49,59,70|65,70,76,82,88,94|120,130,140,152,165,178|6.8,6.5,6.2,5.9,5.6,5.3|6.2,6,5.8,5.6,5.4,5.2|26,30,34,38,42,46|5.3,5.05,4.85,4.6,4.35,4.1|10.6,10.1,9.7,9.2,8.7,8.2|21.2,20.2,19.4,18.4,17.4,16.4|3.3,3.2,3.1,3,2.9,2.8|10,12,15,18,22,26',RF='40,44,49,54,61,68|16,20,25,31,39,48|2.5,3,3.5,4,4.5,5|22,28,35,43,52,63|60,65,70,76,83,90|110,120,130,142,155,168|7,6.7,6.4,6.1,5.8,5.5|6.4,6.2,6,5.8,5.6,5.4|24,28,32,36,40,44|5.5,5.25,5,4.75,4.5,4.25|11,10.5,10,9.5,9,8.5|22,21,20,19,18,17|3.4,3.3,3.2,3.1,3,2.9|9,11,14,17,20,23';
+const SD='6,7,8,9,10,11|5,6,7,8,9,10|1,1,1,1,1,1|7,8,10,11,12,14|5,6,7,7,8,8|15,16,18,19,20,21|.4,.35,.35,.3,.25,.25|.4,.35,.3,.3,.25,.25|5,5,6,6,6,7|.35,.3,.3,.25,.2,.2|.7,.6,.6,.5,.4,.4|1.4,1.2,1.2,1,.8,.8|.2,.2,.2,.2,.2,.2|3,3,4,4,5,5'.split('|').map(r=>r.split(',').map(Number)),REF={男子:{},女子:{}};[['男子',RM],['女子',RF]].forEach(([g,t])=>t.split('|').forEach((r,i)=>REF[g][RN[i]]=r.split(',').map(Number)));
+const M=RN.map((n,i)=>[n,U[i],LW[i]]),BASE=60,PER=10;
+const bs=p=>S.tm.rb=='共通'||!p.sx?'':p.sx,ra=(p,k,c)=>{const i=gx(p,c),n=M[k][0],b=bs(p);return b?REF[b][n][i]:(REF.男子[n][i]+REF.女子[n][i])/2};
+const gx=(p,c)=>Math.min(5,Math.max(0,p.g0+fyOf(c)-p.fy));const ms=(id,k,v,c)=>{const p=S.p.find(x=>x.id==id);if(!p||S.tm.kind!='学童野球')return null;const a=ra(p,k,c),d=SD[k][gx(p,c)];return Math.max(0,Math.min(100,BASE+(M[k][2]?-1:1)*(v-a)/d*PER))};
+const mig=()=>{if(S.ver)return;const OM={1:'遠投',3:'立ち幅跳び',4:'スイングスピード',5:'球速'};S.m=S.m.filter(x=>x.k==99||OM[x.k]).map(x=>x.k==99?x:{...x,k:RN.indexOf(OM[x.k])});S.ver=2;save()};mig();
+const st=l=>{const o={pa:0,ab:0,h:0,tb:0,bb:0,hbp:0,sf:0,sh:0,k:0,rbi:0,hr:0};l.forEach(x=>{o.pa++;o.rbi+=x.rbi||0;if(x.r=='本塁打')o.hr++;const r=R[x.r]||{};for(const k in r)o[k]+=r[k]});o.avg=o.h/o.ab;o.obp=(o.h+o.bb+o.hbp)/(o.ab+o.bb+o.hbp+o.sf);o.slg=o.tb/o.ab;o.ops=o.obp+o.slg;return o};
+const f3=n=>isFinite(n)?n.toFixed(3).replace(/^0/,''):'-.---',f2=n=>isFinite(n)?n.toFixed(2):'-',pc=n=>isFinite(n)?(n*100).toFixed(1)+'%':'-',o2=x=>isFinite(x)?x:-1;
+const lat=(p,k,c)=>{const l=S.m.filter(x=>x.p==p&&x.k==k&&!x.na&&x.d<=c).sort((a,b)=>a.d<b.d?-1:1);return l.length?l[l.length-1].v:null};
+const cl=x=>Math.max(0,Math.min(100,x));
+const score=(p,c)=>{const q=[];M.forEach((m,k)=>{const v=lat(p,k,c);if(v!=null){const z=ms(p,k,v,c);if(z!=null)q.push(z)}});const n=q.length,s=st(S.a.filter(x=>x.p==p&&x.d<=c&&fyOf(x.d)==fyOf(c)));if(s.pa>=10&&isFinite(s.ops))q.push(cl(s.ops*100));return q.length?{s:Math.round(q.reduce((a,b)=>a+b)/q.length),n}:null};
+const rk=s=>'GFEDCBAS'[Math.min(7,Math.max(0,Math.floor(s/10)-2))];
+const badge=c=>c?`<span class="rk${c.n<3?' ds':''}">${rk(c.s)}${c.s}</span>`:'<span class="rk ds">-</span>';
+const grow=p=>{const t=lt(),a=score(p.id,t),b=score(p.id,(+t.slice(0,4)-1)+t.slice(4));return a&&b?a.s-b.s:-999};
+const pg=(per,prev)=>{const L=S.g.filter(g=>an.inc||g.t!='紅白戦').sort((a,b)=>a.d<b.d?-1:1);
+if(per=='5'){const e=L.length-(prev?5:0);return L.slice(Math.max(0,e-5),e)}
+if(per=='mo'){const n=new Date(),d=new Date(n.getFullYear(),n.getMonth()-(prev?1:0),1),k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return L.filter(g=>g.d.slice(0,7)==k)}
+return L.filter(g=>fyOf(g.d)==fyOf(lt())-(prev?1:0))};
+const ts=(L,w)=>{const ids=new Set(L.map(g=>g.id)),s=st(S.a.filter(x=>ids.has(x.gid)&&(!w||x.p==w)));s.n=L.length;const sbl=S.sb.filter(x=>ids.has(x.gid));s.sbr=sbl.filter(x=>x.ok).length/sbl.length;const q=S.pt.filter(x=>ids.has(x.gid)),bq=q.filter(x=>!x.p),mq=q.filter(x=>x.p);s.pl=bq.filter(x=>x.r=='見逃し').length/bq.length;s.pm=bq.filter(x=>x.r=='空振り').length/bq.length;s.sr=mq.filter(x=>x.r!='ボール').length/mq.length;s.pq=mq.filter(x=>x.r=='空振り').length/mq.length;s.w=L.filter(g=>g.rs>g.ra).length;s.rs=L.reduce((a,g)=>a+g.rs,0);s.ra=L.reduce((a,g)=>a+g.ra,0);return s};
+const CD=[['勝率',t=>t.w/t.n,1,f3,'勝利数÷試合数'],['1試合得点',t=>t.rs/t.n,1,f2,'総得点÷試合数'],['1試合失点',t=>t.ra/t.n,0,f2,'総失点÷試合数'],['打率',t=>t.avg,1,f3,'安打÷打数'],['出塁率',t=>t.obp,1,f3,'(安打+四死球)÷(打数+四死球+犠飛)'],['OPS',t=>t.ops,1,f3,'出塁率+長打率'],['三振率',t=>t.k/t.pa,0,pc,'三振÷打席数'],['見逃し率',t=>t.pl,0,pc,'見逃しストライク÷相手投手の球数'],['空振り率',t=>t.pm,0,pc,'空振り÷相手投手の球数'],['ストライク率(投手陣)',t=>t.sr,1,pc,'ボール以外÷自軍投手の球数'],['盗塁成功率',t=>t.sbr,1,pc,'盗塁成功÷盗塁企図']];
+const cards=w=>{const a=ts(pg(an.per,0),w),b=ts(pg(an.per,1),w);return'<div class="k">'+CD.filter((_,i)=>!w||(i>2&&i<7)).map(([n,f,hb,fm,i])=>{const x=f(a),y=f(b);let d='';if(a.n&&b.n&&isFinite(x)&&isFinite(y)&&x!=y)d=`<i class="${(x>y)==!!hb?'u':'d'}">${x>y?'▲':'▼'}</i>`;return`<div><b>${a.n?fm(x):'-'}${d}</b><span class="m">${n}</span>${a.n?jb(CMAP[n]||n,x):''}<details><summary class="m">ⓘ</summary><small class="m">${i}</small></details></div>`}).join('')+'</div>'};
+const chips=()=>`<div class="ch">${[['fy','今年度'],['5','直近5試合'],['mo','今月']].map(([k,t])=>`<button class="${an.per==k?'on':''}" data-a="per" data-k="${k}">${t}</button>`).join('')}<button class="${an.inc?'on':''}" data-a="inc">紅白戦を含む</button></div>`;
+const none='<div class="c m">先に「選手」タブで選手を登録してください。</div>';
+const POS=['投','捕','一','二','三','遊','左','中','右'],PF={投:'投手',捕:'捕手',一:'一塁手',二:'二塁手',三:'三塁手',遊:'遊撃手',左:'左翼手',中:'中堅手',右:'右翼手'};
+const dl=p=>{const ds=[...new Set(S.m.filter(x=>x.p==p.id).map(x=>x.d))].sort();if(ds.length<2)return'';const a=score(p.id,lt()),b=score(p.id,ds[ds.length-2]);if(!a||!b)return'';const d=a.s-b.s;return d?`<i class="${d>0?'u':'d'}">${d>0?'▲'+d:'▼'+-d}</i>`:'<small class="m">±0</small>'};
+const tg=(s,w,p)=>(s&&s.s>=70?(gi(p)==G.length-1?' <small class="rk">主力</small>':' <small class="rk">注目</small>'):'')+(hg(p)?' 🌱':'')+(w>=5?' <small class="rk" style="color:#1a9e5c;border-color:#1a9e5c">成長中</small>':'');
+const sp=p=>{const ds=[...new Set(S.m.filter(x=>x.p==p.id).map(x=>x.d))].sort().slice(-8),v=ds.map(d=>{const c=score(p.id,d);return c?c.s:null}).filter(x=>x!=null);if(v.length<2)return'';const a=Math.min(...v),b=Math.max(...v);return`<svg viewBox="0 0 60 24" width="60" height="24" style="flex:0 0 60px"><polyline fill="none" stroke="var(--a)" stroke-width="2" points="${v.map((y,i)=>(i*58/(v.length-1)+1).toFixed(1)+','+(22-(b==a?.5:(y-a)/(b-a))*20).toFixed(1)).join(' ')}"/></svg>`};
+const pcnt=(p,d)=>{const c=new Date(Date.now()-new Date().getTimezoneOffset()*6e4-d*864e5).toISOString().slice(0,10);return S.pt.filter(x=>x.p==p&&x.d>c).length};
+const pbar=()=>{const t=S.tm,d=t.pp=='1日'?1:7,r=act().map(p=>({p,n:pcnt(p.id,d)})).filter(x=>x.n).sort((a,b)=>b.n-a.n);return r.length?`<div class="c"><b>投手の球数</b> <small class="m">直近${d==1?'1日':'7日'}・上限${t.lim}球</small>${r.map(({p,n})=>{const q=n/t.lim;return`<div style="margin:8px 0"><div class="r"><b style="flex:1">${esc(p.name)}</b><span style="flex:0 0 auto;color:${q>=.8?'#d93b3b':'var(--m)'}">${n}球 ${n>=t.lim?'上限超過':'残り'+(t.lim-n)+'球'}</span></div><div class="bar"><div style="width:${Math.min(100,q*100)}%;${q>=.8?'background:#d93b3b':''}"></div></div></div>`}).join('')}</div>`:''};
+const alerts=()=>{const t=S.tm,d=t.pp=='1日'?1:7,o=[];act().forEach(p=>{const n=pcnt(p.id,d);if(n>=t.lim*.8)o.push(p.name+' の球数が'+(n>=t.lim?'上限超過':'上限間近')+' ('+n+'/'+t.lim+'球)')});if(t.nx){const k=Math.round((new Date(t.nx)-new Date(lt()))/864e5);if(k<=7)o.push(k<0?'測定の予定日を過ぎています ('+t.nx+')':'測定の予定日まであと'+k+'日 ('+t.nx+')')}return o};
+const al=()=>{const o=alerts();return o.length?`<div class="c" style="border-color:#d98a00"><b>🔔 お知らせ ${o.length}</b>${o.map(x=>`<div class="m">${esc(x)}</div>`).join('')}</div>`:''};
+const spray=l0=>{const l=l0?l0.filter(x=>x.z!=null&&x.z>=0):S.a.filter(x=>x.z!=null&&x.z>=0&&fyOf(x.d)==fyOf(lt()));if(!l.length)return'';const c=[0,0,0,0,0],P=(i,r)=>{const a=(-45+i*18)*Math.PI/180;return[(100+r*Math.sin(a)).toFixed(1),(165-r*Math.cos(a)).toFixed(1)]},N=['左','左中','中','右中','右'],T=l.length,K=k=>l.filter(x=>k.includes(x.r)).length;l.forEach(x=>c[x.z]++);
+return`<h3>打球傾向 <small class="m">n=${T}</small></h3><div class="c"><svg viewBox="0 0 200 175" width="100%">${c.map((n,i)=>{const a=P(i,150),b=P(i+1,150),m=P(i+.5,100);return`<path d="M100,165 L${a} A150,150 0 0 1 ${b} Z" fill="var(--a)" fill-opacity="${(.15+.6*n/T).toFixed(2)}" stroke="var(--c)" stroke-width="2"/><text x="${m[0]}" y="${m[1]}" font-size="9" text-anchor="middle" fill="var(--t)">${Math.round(n/T*100)}% ${N[i]}</text>`}).join('')}</svg><p class="m">ヒット ${K(['単打','二塁打','三塁打','本塁打'])}　長打 ${K(['二塁打','三塁打','本塁打'])}　本塁打 ${K(['本塁打'])}　アウト ${K(['ゴロ','飛球','犠打','犠飛'])}　その他 ${K(['失策'])}</p></div>`};
+const topics=()=>{const o=[];act().forEach(p=>{const ds=[...new Set(S.m.filter(x=>x.p==p.id).map(x=>x.d))].sort();if(ds.length<2)return;const a=score(p.id,lt()),b=score(p.id,ds[ds.length-2]);if(a&&b&&a.s>b.s&&rk(a.s)!=rk(b.s))o.push(`<div class="i"><span>${esc(pn(p.id))}</span><span style="flex:0 0 auto">総合${rk(b.s)}${b.s} → ${rk(a.s)}${a.s} <i class="u">ランクUP</i></span></div>`)});return o.length?`<h3>成長トピック</h3><div class="c">${o.slice(0,3).join('')}</div>`:''};
+const pcard=g=>{const n=S.pt.filter(x=>x.gid==g.id).length,ps=act().filter(p=>hp(p,'投'));return`<div class="c"><b>1球ごと</b> <small class="m">この試合 ${n}球</small><div class="ch"><button class="${pmode?'':'on'}" data-a="pm" data-k="0">自軍投手の球</button><button class="${pmode?'on':''}" data-a="pm" data-k="1">相手投手の球</button></div>${pmode?'':`<label>投手<select id="pt">${opts((ps.length?ps:act()).map(p=>[p.id,pn(p.id)]),ptc)}</select></label>`}<div class="g">${['見逃し','空振り','ファウル','ボール','インプレー'].map(k=>`<button data-a="pit" data-k="${k}">${k}</button>`).join('')}</div><div class="r" style="margin-top:8px"><button style="flex:1" data-a="sb" data-k="1">盗塁成功</button><button style="flex:1" data-a="sb" data-k="0">盗塁失敗</button></div>${n?'<button class="x" data-a="upit">直前の1球を取り消す</button>':''}</div>`};
+const hg=p=>{const l=S.m.filter(x=>x.p==p.id&&x.k==99).sort((a,b)=>a.d<b.d?-1:1);if(l.length<2)return false;const a=l[0],b=l[l.length-1],dd=(new Date(b.d)-new Date(a.d))/864e5;return dd>=90&&(b.v-a.v)/dd*365>=7.2};
+const spk=v=>{v=v.filter(isFinite);if(v.length<2)return'';const a=Math.min(...v),b=Math.max(...v);return`<svg viewBox="0 0 80 24" width="80" height="24"><polyline fill="none" stroke="var(--a)" stroke-width="2" points="${v.map((y,i)=>(i*78/(v.length-1)+1).toFixed(1)+','+(22-(b==a?.5:(y-a)/(b-a))*20).toFixed(1)).join(' ')}"/></svg>`};
+const fav=()=>{const L=pg(an.per,0),a=ts(L,''),b=ts(pg(an.per,1),''),it=[['OPS',x=>x.ops,1,f3],['ストライク率(投手陣)',x=>x.sr,1,pc],['平均失点',x=>x.ra/x.n,0,f2]];
+return L.length?`<h3>注目の指標</h3><div class="c">${it.map(([n,f,hb,fm])=>{const x=f(a),y=f(b),d=isFinite(x)&&isFinite(y)&&x!=y?`<i class="${(x>y)==!!hb?'u':'d'}">${x>y?'▲':'▼'}${fm(Math.abs(x-y))}</i> <small class="m">前 ${fm(y)}</small>`:'';return`<div class="i"><span><small class="m">${n}</small><br><b style="font-size:20px">${fm(x)}</b> ${d}</span>${spk(L.map(g=>f(ts([g],''))))}</div>`}).join('')}</div>`:''};
+const gsum=g=>{const l=S.a.filter(x=>x.gid==g.id),ids=[...new Set(l.map(x=>x.p))];return ids.length?`<div class="c w"><table><tr><th>選手</th><th>打数</th><th>安打</th><th>打点</th><th>三振</th></tr>${ids.map(i=>{const s=st(l.filter(x=>x.p==i));return`<tr><td>${esc(pn(i))}</td><td>${s.ab}</td><td>${s.h}</td><td>${s.rbi}</td><td>${s.k}</td></tr>`}).join('')}</table></div>`:''};
+const HS={al:['お知らせ',al],st:['はじめにやること',()=>{const ck=[['選手を登録',S.p.length],['最初の測定を記録',S.m.length],['試合を記録',S.g.length],['保護者の同意を記録',S.p.length&&S.p.every(p=>p.cs)]];return S.hide||ck.every(x=>x[1])?'':`<div class="c"><b>はじめにやること</b>${ck.map(([n,d])=>`<div class="i"><span>${d?'✅':'⬜'} ${n}</span></div>`).join('')}<button class="x" data-a="hide">表示しない</button></div>`}],
+rs:['記録中の試合',()=>{const c=S.g.find(g=>g.id==S.cur);return c?`<div class="c"><small class="m">● 記録中 ${df(c.d)} ${c.t}</small><h3 style="margin:4px 0">${esc(S.team)} ${c.rs} - ${c.ra} ${esc(c.o||'—')}</h3><button class="p" data-t="rec">記録を再開</button></div>`:''}],
+qa:['クイックアクション',()=>`<h3>クイックアクション</h3><div class="g" style="grid-template-columns:1fr 1fr"><button data-t="mse">測定を記録</button><button data-t="gnew">試合を始める</button><button data-t="ana">分析</button><button data-a="print">レポート出力</button></div>`],
+ms:['測定の予定',()=>S.tm.nx?`<div class="c" style="margin-top:10px"><b>測定の予定</b> <span class="m">${df(S.tm.nx)}（${S.tm.iv}か月ごと）</span></div>`:''],
+tr:['チーム傾向',()=>`<h3>チーム傾向</h3>${chips()}${cards('')}`],
+rg:['最近の試合',()=>`<h3>最近の試合</h3>`+(S.g.slice().sort((a,b)=>a.d<b.d?1:-1).slice(0,3).map(g=>`<div class="i" data-a="gd" data-i="${g.id}"><span>${dj(g.d)} vs ${esc(g.o||'—')}</span><b>${g.rs}-${g.ra}</b></div>`).join('')||'<p class="m">まだ試合がありません</p>')],
+pb:['投手の球数',pbar],sp:['打球傾向',spray],tp:['成長トピック',topics]};
+const hord=()=>{const o=S.ho.filter(k=>HS[k]);Object.keys(HS).forEach(k=>o.includes(k)||o.push(k));return o};
+const MH=['球速: ストレートの最高球速を計測','遠投: 助走ありで全力で投げた距離','送球正確性: 的への命中などを点数化','ロングティー: ティー打撃の飛距離','スイングスピード: センサーなどで計測','立ち幅跳び: 両足で踏み切った距離','30m走: スタートからゴールまでのタイム','5-10-5: 反復して走る敏捷性走のタイム','反復横跳び: 決めた時間内の回数','一塁到達: 打って一塁に着くまでのタイム','二塁到達: 二塁に着くまでのタイム','ベース1周: 本塁から1周するタイム','二塁送球タイム: 二塁へ届くまでのタイム','握力: 握力計で計測'];
+const ruT=g=>{const r=S.rs.find(x=>x.id==g.ru);return r?`・${esc(r.name)}（${r.i}回${r.tb?'・タイブレーク':''}${r.c?'・コールド':''}${r.dh?'・DH':''}${r.tl?'・'+r.tl+'分':''}）`:''};
+const wd=d=>'日月火水木金土'[new Date(d+'T00:00:00').getDay()],dj=d=>{const[,m,x]=d.split('-');return +m+'/'+ +x+'('+wd(d)+')'},df=d=>d.split('-')[0]+'/'+dj(d);
+const hp=(p,k)=>(p.pos||'').includes(k),pfs=p=>[...(p.pos||'')].map(k=>PF[k]).join('/')||'未設定',posBox=(sel,pre)=>POS.map(k=>`<label class="cb"><input type="checkbox" id="${pre}${k}"${sel.includes(k)?' checked':''}>${k}</label>`).join(''),rp=pre=>POS.filter(k=>$('#'+pre+k)&&$('#'+pre+k).checked).join('');
+const cm=p=>p&&p.cap?`<span class="cap" title="主将">${S.set.cm||'C'}</span>`:'';
+const cg=()=>S.g.find(x=>x.id==S.cur);
+const snap=g=>{g.h=g.h||[];g.h.push(JSON.stringify({n:g.n,rs:g.rs,ra:g.ra,na:S.a.length,np:S.pt.length,nb:S.sb.length,opc:g.opc,lt:g.lt}));if(g.h.length>40)g.h.shift()};
+const chg=g=>{const n=g.n;n.o=0;n.b=0;n.s=0;n.bs=[0,0,0];if(n.top)n.top=0;else{n.top=1;n.inn++}};
+const fin=(g,pa,db,dr,txt)=>{const n=g.n,L=g.lu,bi=n.bi%L.length,bid=L[bi];const rn0=n.bs.map(x=>x?1:0).join('');let run=0,out=0;const nb=[0,0,0],put=(i,dd)=>{if(dd==0)out++;else if(dd==4)run++;else nb[dd-1]=i};n.bs.forEach((x,i)=>{if(x)put(x,dr[i])});put(bid,db);n.bs=nb;n.o+=out;g.rs+=run;
+S.a.push({id:id(),p:bid,d:g.d,o:g.o,gid:g.id,r:pa.r,rbi:pa.rbi==null?run:pa.rbi,z:pa.z==null?-1:pa.z,dist:pa.dist,kind:pa.kind,pw:pa.pw,pos:pa.pos,rn:rn0});
+const p=S.p.find(x=>x.id==bid);g.lt=(bi+1)+'番 '+(p?p.name:'')+' '+txt+(run?' ('+run+'点)':'');n.b=0;n.s=0;n.bi++;if(n.o>=3)chg(g)};
+const simple=(g,r)=>{const b=g.n.bs;if(r=='三振')return fin(g,{r},0,b.map((x,i)=>x?i+1:0),'三振');return fin(g,{r},1,[b[0]?2:0,b[1]?(b[0]?3:2):0,b[2]?(b[0]&&b[1]?4:3):0],r)};
+const dflt=(r,n)=>{const sh2={単打:1,二塁打:2,三塁打:3,本塁打:4,失策:1,野選:1,犠打:1}[r],dr=n.bs.map((x,i)=>x?(sh2?Math.min(4,i+1+sh2):i+1):0);if(r=='犠飛'&&n.bs[2])dr[2]=4;if(r=='併殺'&&n.bs[0])dr[0]=0;return[{単打:1,二塁打:2,三塁打:3,本塁打:4,失策:1,野選:1}[r]||0,dr]};
+const grd=g=>S.gr.find(x=>x.id==(g&&g.gr))||S.gr[0],FD=G=>[G.lf,G.lc,G.cf,G.rc,G.rf],fen=(G,q)=>{const a=FD(G),t=(q+45)/22.5,i=Math.min(3,Math.floor(t));return a[i]+(a[i+1]-a[i])*(t-i)},gsc=G=>150/Math.max(...FD(G)),pt2=(q,r)=>{const a=q*Math.PI/180;return[+(100+r*Math.sin(a)).toFixed(1),+(165-r*Math.cos(a)).toFixed(1)]};
+const fld=()=>{const G=grd(cg()),sc=gsc(G),fp=[-45,-22.5,0,22.5,45].map((q,i)=>pt2(q,FD(G)[i]*sc)),b=G.bs*sc,x1=100+b*.7071,x3=100-b*.7071,y1=165-b*.7071,y2=165-b*1.4142;
+const fl=[['投',100,165-G.pm*sc],['捕',100,172],['一',x1+9,y1+3],['二',114,y2+9],['遊',86,y2+9],['三',x3-9,y1+3]].concat([['左',-30],['中',0],['右',30]].map(([k,q])=>{const p=pt2(q,fen(G,q)*sc*.7);return[k,p[0],p[1]]}));
+return`<svg data-a="fld" viewBox="0 0 200 182" width="100%" style="background:var(--bg);border-radius:10px;margin:6px 0"><path d="M100,165 L${fp.map(p=>p.join(',')).join(' L')} Z" fill="var(--a)" fill-opacity=".12" stroke="var(--m)"/><polygon points="100,165 ${x1},${y1} 100,${y2} ${x3},${y1}" fill="none" stroke="var(--m)"/><text x="${fp[2][0]}" y="${fp[2][1]-3}" font-size="8" text-anchor="middle" fill="var(--m)">${G.cf}m</text><text x="${fp[0][0]+12}" y="${fp[0][1]+10}" font-size="8" text-anchor="middle" fill="var(--m)">${G.lf}m</text><text x="${fp[4][0]-12}" y="${fp[4][1]+10}" font-size="8" text-anchor="middle" fill="var(--m)">${G.rf}m</text>${fl.map(([k,x,y])=>`<circle cx="${x}" cy="${y}" r="7.5" fill="${ip.pos==k?'var(--a)':'var(--c)'}" stroke="var(--a)"/><text x="${x}" y="${y+3.5}" font-size="9" font-weight="700" text-anchor="middle" fill="${ip.pos==k?'#fff':'var(--a)'}">${k}</text>`).join('')}${ip.x!=null?`<circle cx="${ip.x}" cy="${ip.y}" r="4" fill="#d93b3b"/><text x="${ip.x}" y="${ip.y-7}" font-size="9" font-weight="700" text-anchor="middle" fill="var(--t)">${['左','左中','中','右中','右'][ip.z]} ${ip.d}m</text>`:''}</svg>`};
+const chp=(arr,cur,act2)=>`<div class="ch">${arr.map(k=>`<button class="${cur==k?'on':''}" data-a="${act2}" data-k="${k}">${k}</button>`).join('')}</div>`;
+const sheet=g=>{const n=g.n,nm=i=>{const p=S.p.find(x=>x.id==i);return p?p.name:''},bn=['一塁','二塁','三塁'];let h='';
+if(sh=='play'){h=`<h3 style="margin:0 0 8px">インプレー</h3><b>① 打球結果</b><div class="g" style="margin:6px 0 12px">${['単打','二塁打','三塁打','本塁打','アウト','失策','野選','犠打','犠飛','併殺'].map(k=>`<button class="${ip.r==k?'on':''}" data-a="ipr" data-k="${k}">${k}</button>`).join('')}</div><b>② 打球地点</b> <small class="m">タップして置く</small>${fld()}<b>③ 打球種類</b>${chp(['ゴロ','ライナー','フライ','ポップフライ','バント'],ip.k,'ipk')}<b>打球の強さ</b> <small class="m">任意</small>${chp(['強','普','弱'],ip.w,'ipw')}<b>④ 守備位置</b> <small class="m">地点から自動で推定</small>${chp(POS,ip.pos,'ipp')}<p class="m" style="text-align:center">${ip.r?ip.r:'結果を選択'}${ip.x!=null?' · '+['左','左中','中','右中','右'][ip.z]+' '+ip.d+'m':' · 地点なし'}</p><div class="r" style="position:sticky;bottom:0;background:var(--c);padding-top:6px"><button style="flex:1" data-a="shx">キャンセル</button><button class="p" style="flex:2;margin:0" data-a="ipn">次へ（走者）</button></div>`}
+else if(sh=='run'){const opt=(lbl,cur,sel,i)=>{const o=[[0,'アウト'],...(cur?[[cur,'そのまま']]:[]),...[1,2,3].filter(b=>b>cur).map(b=>[b,bn[b-1]]),[4,'生還']];return`<p class="m" style="margin:8px 0 2px">${lbl}</p><div class="ch">${o.map(([v2,t])=>`<button class="${sel==v2?'on':''}" data-a="rd" data-i="${i}" data-k="${v2}">${t}</button>`).join('')}</div>`};
+h=`<h3 style="margin:0 0 4px">インプレー</h3><p class="m">② 走者の結果 — ${ip.r}${ip.pos?'（'+PF[ip.pos]+'）':''}</p>${[2,1,0].map(i=>n.bs[i]?opt(bn[i]+'走者 '+nm(n.bs[i]),i+1,ip.dr[i],i):'').join('')}${opt('打者走者 '+nm(g.lu[n.bi%g.lu.length]),0,ip.db,'b')}<div class="r" style="margin-top:12px"><button style="flex:1" data-a="shw" data-k="play">‹ 戻る</button><button class="p" style="flex:2;margin:0" data-a="rok">✓ 確定</button></div>`}
+else if(sh=='oth')h=`<h3 style="margin:0 0 8px">その他</h3><button class="p" data-a="hbp">死球</button>${n.bs.map((x,i)=>x?`<div class="i"><span>${bn[i]}走者 ${esc(nm(x))}</span><button data-a="stl" data-i="${i}" data-k="1">盗塁成功</button><button data-a="stl" data-i="${i}" data-k="0">盗塁失敗</button></div>`:'').join('')}<button data-a="shx" style="width:100%;margin-top:10px">閉じる</button>`;
+else if(sh=='sub')h=`<h3 style="margin:0 0 8px">交代・設定</h3><label>打者交代（現在の打順の選手を入れ替え）<select id="sw">${opts(act().map(p=>[p.id,pn(p.id)]),'')}</select></label><button class="p" data-a="swp">打者を交代</button><label>相手投手<input id="opn" value="${esc(g.op||'')}"></label><button class="p" data-a="opc">相手投手を変更（球数リセット）</button>${[['rs',S.team],['ra',g.o||'相手']].map(([k,t])=>`<div class="i"><span>${esc(t)} ${g[k]}点</span><button data-a="adj" data-i="${k}" data-k="-1">−1</button><button data-a="adj" data-i="${k}" data-k="1">＋1</button></div>`).join('')}<button class="p" data-a="gend" style="margin-top:10px">試合終了（記録を終える）</button><button data-a="shx" style="width:100%">閉じる</button>`;
+else if(sh=='hist')h=`<h3 style="margin:0 0 8px">打席履歴</h3>${S.a.filter(x=>x.gid==g.id).reverse().map(x=>`<div class="i"><span>${esc(pn(x.p))}</span><b>${x.r}${x.pos?'（'+PF[x.pos]+'）':''}${x.rbi?' 打点'+x.rbi:''}</b></div>`).join('')||'<p class="m">まだありません</p>'}<button data-a="shx" style="width:100%;margin-top:10px">閉じる</button>`;
+return`<div class="sh"><div class="shb">${h}</div></div>`};
+const GL=[];let gcc='';`打撃
+打率|u|打数に対する安打の割合。
+出塁率|u|アウトにならずに塁に出た割合。
+長打率|u|1打数あたりの塁打数。長打力の目安。
+OPS|u|出塁率と長打率を足した総合的な打撃指標。
+ISO（純長打率）|u|単打を除いた長打の力（長打率−打率）。
+BABIP|u|本塁打以外のインプレー打球が安打になった割合。
+打席||打席に立った回数（四死球・犠打なども含む）。
+打数||打席から四死球・犠打・犠飛・打撃妨害を除いた数。
+安打|u|ヒットの数。
+単打|u|一塁まで進んだヒット。
+二塁打|u|二塁まで進んだヒット（エンタイトル二塁打を含む）。
+三塁打|u|三塁まで進んだヒット。
+本塁打|u|ホームラン。
+長打|u|二塁打以上のヒット。
+塁打|u|ヒットで進んだ塁の合計。
+打点|u|打撃によって入った得点（併殺打・失策の間の得点は除く）。
+得点|u|本塁に生還した回数。
+四球|u|フォアボール（故意四球を含む）。
+死球||デッドボール。
+四死球|u|四球と死球の合計。
+三振|d|三振の数（見逃し・空振り・振り逃げを含む）。
+犠飛||犠牲フライ。打数に数えない。
+犠打||送りバント。打数に数えない。
+併殺打|d|ゴロで2つのアウトを取られた打席。
+三振率|d|打席に対する三振の割合（投手では三振割合）。
+四球率|u|打席に対する四球の割合（投手では与四球率）。
+四死球率|u|打席に対する四死球の割合。
+安打率|u|打席に対する安打の割合（カウント別の表示などに使う）。
+インプレー率||打席のうち打球が前に飛んだ割合。
+長打割合|u|打数に対する長打の割合。
+平均得点|u|1試合あたりの得点。
+選球
+見逃し率|b|全投球のうち見逃しストライクの割合。打者は低いほど積極的、投手は高いほど見逃しでストライクを取れている。
+空振り率|b|全投球のうち空振りの割合。打者は低いほど良く、投手は高いほど良い（打者と投手で良い方向が逆）。
+ファウル率||全投球のうちファウルの割合。粘りの目安。
+スイング率||全投球のうちバットを振った割合。
+空振り/スイング|d|スイングしたうち空振りだった割合。
+コンタクト率|b|スイングしたうちバットに当たった割合。打者は高いほど良く、投手は低いほど良い。
+初球ストライク率|u|初球がストライク（見逃し・空振り・ファウル・インプレー）だった割合。投手は高いほど有利。
+1打席の球数||1打席あたりの投球数。
+投手
+防御率|d|規定の回数あたりの自責点。
+WHIP|d|1イニングあたりに許した走者（安打＋四球）。
+投球回|u|投げたイニング。アウト1つで1/3回。「24.1」は24回1/3。
+投球数||投げた球の数。
+ストライク率|u|全投球のうちストライク（見逃し・空振り・ファウル・インプレー）の割合。
+ボール率|d|全投球のうちボール（死球を含む）の割合。
+三振割合（K%）|u|対戦打者に対する三振の割合。
+与四球率|d|対戦打者に対する四球の割合。
+奪三振率|u|規定の回数あたりの奪三振。
+与四球（回あたり）|d|規定の回数あたりの与四球。
+被打率|d|投手が打たれた打率。
+被安打|d|打たれたヒットの数。
+平均失点|d|1試合あたりの失点。
+失点|d|相手に与えた得点。
+自責点|d|失点のうち投手の責任とされる点（失策・捕逸などによらない得点）。
+勝利|u|勝利投手になった試合数。
+敗戦|d|敗戦投手になった試合数。
+セーブ|u|3点差以内のリードで登板し、1回以上投げて試合を締めた数。
+ホールド|u|3点差以内のリードで登板し、リードを保ったまま降板した数。
+失点率（得点率）|d|状況別の表で、その打席で点が入った割合。
+週の投球数|d|直近7日間（今日を含む）の投球数の合計。
+得点・走塁
+得点圏打率|u|二塁・三塁に走者がいる場面での打率。
+得点圏打点|u|得点圏の打席で挙げた打点。
+走者生還率|u|塁に出た走者が本塁に還ってきた割合。
+得点圏走者生還率|u|二塁・三塁に進んだ走者が生還した割合。
+満塁時得点率|u|満塁の打席で1点以上入った割合。
+総得点|u|期間中の得点の合計。
+走者状況別得点率|u|その走者状況からイニング終了までに1点以上入った割合。
+得点時のアウト数||得点が入ったときのアウトカウントの内訳。
+得点に至った方法||得点が入ったプレーの種類（ヒット/四死球/犠打・犠飛/失策など）。
+得点した走者の出塁方法||生還した走者がどうやって塁に出たか（ヒット/四死球/失策など）。
+得点イニング数|u|1点以上入ったイニングの数。
+盗塁|u|盗塁に成功した数。
+盗塁死|d|盗塁に失敗してアウトになった数。
+盗塁成功率|u|盗塁を試みて成功した割合。
+盗塁企図率||一塁にいて二塁が空いていた回数（出塁機会）に対する盗塁企図の割合。
+一つ先の塁を取った割合|u|安打のとき、走者が一つ先の塁まで進んだ割合。
+バント挑戦||バットに当たったバントの数。フェアになったバントを含む。
+バント成功率|u|バットに当てたバントのうち、フェアになった割合。
+ゴロでの出塁率|u|ゴロ・バント（犠打を除く）のうち、安打か失策で出塁した割合。
+内野安打率|u|ゴロ・バント（犠打を除く）のうち、内野安打になった割合。
+盗塁阻止率|u|相手の盗塁を刺した割合（守備側）。
+得点期待値||その場面（塁とアウト）から、イニングの終わりまでに入る得点の平均。
+得点期待値の変化|u|作戦が成功したときに得点期待値がいくつ上がったか。
+損をしない成功率||盗塁で、成功時に増える得点期待値と失敗時に減る値がつり合う成功率。
+牽制死||牽制球でアウトになった（した）数。
+得失点差|u|得点と失点の差。
+守備
+刺殺||自分でアウトを取った数（捕球・タッチ・ベース踏みなど）。
+補殺|u|アウトにつながる送球をした数。
+失策|d|エラーの数。
+守備機会||ボールを処理した機会。
+守備率|u|守備機会のうちミスなく処理した割合。
+守備イニング||守備についたイニング。
+出場試合||スタメン・途中出場を含む出場試合数。
+ポジション別出場||守備位置ごとの出場試合数。
+併殺|u|1つのプレーで2つのアウトを取った数。
+走者の進塁（捕手）|d|捕手が守っていた間に、盗塁・暴投・捕逸で走者が進んだ数。
+暴投・捕逸|d|捕手が守っていた間の暴投（投手の記録）と捕逸（捕手の記録）の数。
+進塁阻止率|u|外野手が打球を処理した安打で、走者に一つ先の塁を許さなかった割合。
+打球・状況
+打球地点||打球が飛んだ場所をフィールド上に表示（点／ヒートマップ）。
+打球方向||左・中・右（5区分では左/左中間/中/右中間/右）の割合。
+引っ張り率||打者の利き手側（右打者は左方向）への打球の割合。
+センター方向の割合||中堅方向（±15°）への打球の割合。
+流し打ち率||逆方向（右打者は右方向）への打球の割合。
+打球の強さ||記録する人が見た打球の強さ（強・普・弱。任意）。
+強い打球の割合|u|強さを付けた打球のうち「強」の割合。
+結果はアウトでも強い打球||強い打球のうち、安打にならなかった（アウト・失策など）もの。
+打球種類||ゴロ・ライナー・フライ・ポップフライ・バントの割合。
+ゴロ率||打球のうちゴロの割合。
+ライナー率|u|打球のうちライナーの割合。
+フライ率||打球のうちフライの割合。
+左右別成績||相手投手（または打者）の左右で分けた成績。
+カウント別成績||ボール・ストライクのカウント（12通り）ごとの成績。
+走者状況別成績||走者なし・あり・得点圏・満塁など塁の状況ごとの成績。
+打順別成績||打順ごとのOPSなど。
+能力
+打撃パワー|u|ロングティー・スイングスピードから算出（測定だけ）。
+肩力|u|球速・遠投から算出（測定だけ）。
+瞬発力|u|立ち幅跳び・スイングスピードから算出（測定だけ）。
+敏捷性|u|反復横跳び・切り返し走（5-10-5）から算出。
+走力|u|30m走・一塁到達から算出（測定だけ）。
+総合スコア|u|測定の各項目と今年度のOPSの点数の平均。測定が3項目未満のときは暫定。
+ランク|u|点数による8段階の評価（S・A・B・C・D・E・F・G）。10点刻み。測定時点の参考指標。
+種目スコア|u|測定値を学年・性別の平均と標準偏差と比べた点数。平均で60点、標準偏差1つ分で10点。
+ミート|u|当てる力の目安。このアプリでは打率÷.400を100点満点にしたもの。
+長打|u|長打力の目安。このアプリでは長打率÷.700を100点満点にしたもの。
+選球眼|u|ボールの見極めの目安。このアプリでは四死球率÷15%を100点満点にしたもの。
+走塁|u|盗塁の成功率と多さ、安打で一つ先の塁を取った割合から見た走塁力。
+制球|u|与四死球の少なさ・ストライク率・初球ストライク率から見た制球力。
+球威|u|三振割合・空振りを取る力・被打率の低さから見た球威。
+上位%|d|同学年の中での位置（小さいほど上位）。
+チーム平均||チームの選手（または同学年）の平均。
+全国平均||基準データ（学年・性別の平均）。
+能力×実戦の散布図||チーム全員を 測定値（横）×試合の成績（縦）で並べた図。
+測定
+球速|u|全力投球の球速をスピードガンで測り、3回の最高値を記録する。
+遠投|u|助走をつけて遠くへ投げ、ノーバウンドの落下地点までの距離。
+送球正確性|u|二塁ベース付近からのトスを捕ってすぐ本塁へ送球し、命中などを点数化。
+ロングティー|u|斜め前からのトスを打ち、打球の落下地点までの距離。
+スイングスピード|u|スイング測定器を付けたバットでフルスイングした速度。
+立ち幅跳び|u|両足で踏み切って前へ跳び、2回のうち最高の距離。
+30m走|d|スタンディングスタートで30mを走り、2回のうち速いほうのタイム。
+5-10-5|d|5m走って反転→10m走って反転→5m走るタイム。
+反復横跳び|u|中央線から左右の線をまたぎ、決めた時間内の回数。
+一塁到達|d|バットを持たず右打席側からスタートし、一塁ベースを踏むまでのタイム。
+二塁到達|d|一塁到達と同じスタートで一塁を回り、二塁ベースを踏むまでのタイム。
+ベース1周|d|一塁到達と同じスタートでダイヤモンドを1周し、本塁に戻るまでのタイム。
+二塁送球タイム|d|捕手が投球を捕ってから二塁へ送球し、二塁ベース付近に届くまでのタイム。
+握力|u|握力計で測定した値（kg）。
+試合
+勝率|u|勝ちの割合（引き分けを除く）。
+大会||試合情報の「大会名」で試合を絞り込む（例：夏の大会）。
+RHE||R=得点、H=安打、E=失策。
+イニング別スコア||各イニングの得点。Xはサヨナラ等で行われなかった裏の表記。
+両チーム比較||安打・失策・四死球・三振を両チームで比較。
+スコア推移||試合ごとの得点・失点の推移。`.split('\n').forEach(l=>{if(!l.includes('|'))gcc=l;else{const[t,d,x]=l.split('|');GL.push({c:gcc,t,d,x})}});
+const GC=[...new Set(GL.map(x=>x.c))],OK=('打率,出塁率,長打率,OPS,打席,打数,安打,二塁打,三塁打,本塁打,打点,得点,四球,死球,三振,犠飛,犠打,三振率,見逃し率,空振り率,ストライク率,投球数,週の投球数,勝率,平均得点,平均失点,得失点差,失点,盗塁,盗塁死,盗塁成功率,打球地点,打球方向,打球種類,打球の強さ,ミート,長打,選球眼,総合スコア,ランク,種目スコア,チーム平均,全国平均,能力×実戦の散布図,スコア推移'+','+RN.join(',')).split(',');
+const BD={見逃し率:'d',空振り率:'d',コンタクト率:'u'};const DT={};`打率|.000|安打 ÷ 打数|高校: .300以上で良い・.230未満は課題 / 中学: .300以上で良い・.220未満は課題。
+出塁率|.000|(安打＋四球＋死球) ÷ (打数＋四球＋死球＋犠飛)|.380以上で良い・.300未満は課題。
+長打率|.000|塁打 ÷ 打数|.450 以上で長打力あり。
+OPS|.000|出塁率 ＋ 長打率|高校: .800以上で良い・.600未満は課題 / 中学: .750以上で良い・.570未満は課題。
+ISO（純長打率）|.000|長打率 − 打率|高校: .150以上で良い・.060未満は課題 / 中学: .110以上で良い・.040未満は課題。
+BABIP|.000|(安打−本塁打) ÷ (打数−三振−本塁打＋犠飛)|.330 前後が平均。極端に高い/低いと揺り戻しが起きやすい。
+打席|打席|打数＋四死球＋犠打＋犠飛＋打撃妨害|個人の指標は30打席以上で目安になる。
+打数|打数|打席 − 四死球 − 犠打 − 犠飛 − 打撃妨害|
+安打|本|単打＋二塁打＋三塁打＋本塁打|
+単打|本|安打 − 二塁打 − 三塁打 − 本塁打|
+二塁打|本|記録した二塁打の数|
+三塁打|本|記録した三塁打の数|
+本塁打|本|記録した本塁打の数|
+長打|本|二塁打＋三塁打＋本塁打|
+塁打|塁|単打×1＋二塁打×2＋三塁打×3＋本塁打×4|
+打点|点|打撃によって入った得点の合計|
+得点|点|本塁に生還した回数の合計|
+四球|個|記録した四球の数|
+死球|個|記録した死球の数|
+四死球|個|四球＋死球|
+三振|個|見逃し三振＋空振り三振＋振り逃げ|
+犠飛|個|記録した犠飛の数|
+犠打|個|記録した犠打の数|
+併殺打|個|記録した併殺打の数|
+三振率|%|三振 ÷ 打席|
+四球率|%|四球 ÷ 打席|
+四死球率|%|(四球＋死球) ÷ 打席|
+安打率|%|安打 ÷ 打席|
+インプレー率|%|インプレー打球の打席 ÷ 打席|
+長打割合|%|長打 ÷ 打数|
+平均得点|0.0|総得点 ÷ 試合数|
+見逃し率|%|見逃しストライク ÷ 全投球|打者は15%以下で良い・20%を超えると課題。
+空振り率|%|空振り ÷ 全投球|打者は高校: 8%以下で良い・13%を超えると課題 / 中学: 9%以下で良い・14%を超えると課題。
+ファウル率|%|ファウル ÷ 全投球|15〜20%が一般的。
+スイング率|%|(空振り+ファウル+インプレー) ÷ 全投球|45%前後が一般的。
+空振り/スイング|%|空振り ÷ スイング|打者は高校: 15%以下で良い・25%を超えると課題 / 中学: 18%以下で良い・28%を超えると課題。
+コンタクト率|%|(ファウル+インプレー) ÷ スイング|80%以上で高い。
+初球ストライク率|%|初球ストライク ÷ 打席|投手は高校: 60%以上で良い・50%未満は課題 / 中学: 57%以上で良い・47%未満は課題。
+1打席の球数|球|全投球 ÷ 打席|打者は4球前後で粘り強い。
+防御率|0.00|自責点 × 規定の回数 ÷ 投球回|
+WHIP|0.00|(被安打＋与四球) ÷ 投球回|
+投球数|球|投げた球の合計|
+ストライク率|%|ストライク ÷ 全投球（ストライクは見逃し・空振り・ファウル・インプレー）|
+ボール率|%|ボール（死球を含む） ÷ 全投球|
+三振割合（K%）|%|奪三振 ÷ 対戦打者数|
+与四球率|%|与四球 ÷ 対戦打者数|
+奪三振率|0.00|奪三振 × 規定の回数 ÷ 投球回|
+被打率|.000|被安打 ÷ 被打数|
+平均失点|0.00|総失点 ÷ 試合数|
+失点|点|相手に与えた得点の合計|
+週の投球数|球|直近7日間（今日を含む）の投球数の合計|
+得点圏打率|.000|得点圏の安打 ÷ 得点圏の打数|
+盗塁成功率|%|盗塁 ÷ (盗塁＋盗塁死)|
+盗塁阻止率|%|盗塁刺 ÷ 盗塁企図数|
+走者生還率|%|生還した走者 ÷ 塁に出た走者|
+得失点差|点|総得点 − 総失点|
+守備率|.000|(刺殺＋補殺) ÷ (刺殺＋補殺＋失策)|
+引っ張り率|%|引っ張り方向の打球 ÷ 打球数|
+流し打ち率|%|逆方向の打球 ÷ 打球数|
+強い打球の割合|%|「強」の打球 ÷ 強さを付けた打球|
+ゴロ率|%|ゴロ ÷ 打球数|
+ライナー率|%|ライナー ÷ 打球数|
+フライ率|%|フライ（ポップフライを含む） ÷ 打球数|
+総合スコア|点|測定の各項目と今年度のOPSの点数の平均|測定が3項目未満のときは暫定として表示。
+ミート|点|打率 ÷ .400 × 100（100点が上限）|
+能力/長打|点|長打率 ÷ .700 × 100（100点が上限）|
+選球眼|点|四死球率 ÷ 15% × 100（100点が上限）|
+勝率|.000|勝利 ÷ (勝利＋敗戦)（引き分けを除く）|
+投球回|回|アウト数 ÷ 3（24.1 は 24回1/3）|
+与四球（回あたり）|0.00|与四球 × 規定の回数 ÷ 投球回|
+被安打|本|打たれたヒットの数|
+自責点|点|失点のうち、失策・捕逸などによらない得点|
+勝利|勝|勝利投手になった試合数|
+敗戦|敗|敗戦投手になった試合数|
+セーブ|S|3点差以内のリードで登板し、最後まで投げて試合を締めた数|
+ホールド|H|3点差以内のリードで登板し、リードを保ったまま降板した数|
+失点率（得点率）|%|その打席で点が入った打席 ÷ その状況の打席数|
+得点圏打点|点|得点圏の打席で挙げた打点の合計|
+得点圏走者生還率|%|生還した得点圏の走者 ÷ 二塁・三塁に進んだ走者|
+満塁時得点率|%|1点以上入った満塁の打席 ÷ 満塁の打席|
+総得点|点|期間中の得点の合計|
+走者状況別得点率|%|その走者状況からイニング終了までに1点以上入ったケース ÷ その状況のケース|
+得点時のアウト数|内訳||
+得点に至った方法|内訳||
+得点した走者の出塁方法|内訳||
+得点イニング数|回|1点以上入ったイニングの数|
+盗塁|個|成功した盗塁の数|
+盗塁死|個|失敗してアウトになった盗塁の数|
+盗塁企図率|%|盗塁企図数 ÷ 出塁機会（一塁にいて二塁が空いていた回数）|
+一つ先の塁を取った割合|%|一つ先の塁まで進んだ回数 ÷ 安打の機会|
+バント挑戦|回|バットに当たったバントの数|
+バント成功率|%|フェアになったバント ÷ バットに当てたバント|
+ゴロでの出塁率|%|(安打＋失策出塁) ÷ ゴロ・バント（犠打を除く）|
+内野安打率|%|内野安打 ÷ ゴロ・バント（犠打を除く）|
+得点期待値|点|その場面（塁とアウト）から、イニング終了までに入る得点の平均|
+得点期待値の変化|点|作戦後の得点期待値 − 作戦前の得点期待値|
+損をしない成功率|%|失敗で減る得点期待値 ÷ (成功で増える得点期待値＋失敗で減る得点期待値)|
+牽制死|個|牽制球でアウトになった（した）数|
+刺殺|個|自分でアウトを取った数（捕球・タッチ・ベース踏み）|
+補殺|個|アウトにつながる送球をした数|
+失策|個|エラーの数|
+守備機会|回|刺殺＋補殺＋失策|
+守備イニング|回|守備についたアウト数 ÷ 3|
+出場試合|試合|スタメン・途中出場を含めて出場した試合数|
+ポジション別出場|試合|守備位置ごとの出場試合数|
+併殺|個|1つのプレーで2つのアウトを取った数|
+走者の進塁（捕手）|個|捕手の守備中に、盗塁・暴投・捕逸で走者が進んだ数|
+暴投・捕逸|個|暴投（投手の記録）＋捕逸（捕手の記録）|
+進塁阻止率|%|一つ先の塁を許さなかった安打 ÷ 外野手が処理した安打|
+打球地点|図||
+打球方向|%|左・中・右（5区分）の方向別の打球数 ÷ 打球数|
+センター方向の割合|%|中堅方向（±15°）の打球 ÷ 打球数|
+打球の強さ|区分||
+結果はアウトでも強い打球|個|「強」の打球のうち、安打にならなかった打球の数|
+打球種類|%|ゴロ・ライナー・フライ・ポップフライ・バント別の打球数 ÷ 打球数|
+左右別成績|成績||
+カウント別成績|成績||
+走者状況別成績|成績||
+打順別成績|成績||
+打撃パワー|点|ロングティー・スイングスピードの種目スコアの平均|
+肩力|点|球速・遠投の種目スコアの平均|
+瞬発力|点|立ち幅跳び・スイングスピードの種目スコアの平均|
+敏捷性|点|反復横跳び・5-10-5の種目スコアの平均|
+走力|点|30m走・一塁到達の種目スコアの平均|
+ランク|S〜G|総合スコアを10点刻みで、S（90以上）・A・B・C・D・E・F・G（30未満）に分ける|S〜Gは測定時点の参考指標で、能力を決めるものではありません。
+種目スコア|点|60 ＋ 10 × (測定値 − 学年・性別の平均) ÷ 標準偏差（タイムは逆向き）|平均で60点、標準偏差1つ分で10点。
+走塁|点|盗塁成功率・盗塁数・一つ先の塁を取った割合の点数の平均|
+制球|点|与四死球率・ストライク率・初球ストライク率の点数の平均|
+球威|点|三振割合・空振り率・被打率の点数の平均|
+上位%|%|同学年の中で自分より上の人数 ÷ 同学年の人数|
+チーム平均|点|チームの選手（または同学年）の点数の合計 ÷ 人数|
+全国平均|値||
+能力×実戦の散布図|図||
+大会|名称||
+RHE|R-H-E|R＝得点、H＝安打、E＝失策|
+イニング別スコア|表||
+両チーム比較|表||
+スコア推移|点||`.split('\n').forEach(l=>{const a=l.split('|');if(!DT[a[0]])DT[a[0]]={y:a[1],f:a[2],m:a[3]}});
+const gla=()=>{const q=gq.toLowerCase(),l=GL.filter(x=>(!gk||x.c==gk)&&(!q||(x.t+x.x).toLowerCase().includes(q)));return`<p class="m">${l.length}件</p>`+(GC.map(c=>{const m=l.filter(x=>x.c==c);return m.length?`<h3>${c}</h3><div class="c">${m.map(x=>`<div class="i" data-a="gld" data-i="${GL.indexOf(x)}"><span><b>${esc(x.t)}</b><br><small class="m">${esc(x.x)}</small></span><span class="m" style="flex:0 0 auto">${{u:'↑',d:'↓',b:'⇄'}[x.d]||''} ›</span></div>`).join('')}</div>`:''}).join('')||'<p class="m">該当する用語がありません</p>')};
+const TH={打率:{g:.3,b:.22,d:'u'},出塁率:{g:.38,b:.3,d:'u'},長打率:{g:.45,d:'u'},OPS:{g:.75,b:.57,d:'u'},'ISO（純長打率）':{g:.11,b:.04,d:'u'},見逃し率:{g:15,b:20,d:'d',p:1},空振り率:{g:9,b:14,d:'d',p:1},'空振り/スイング':{g:18,b:28,d:'d',p:1},コンタクト率:{g:80,d:'u',p:1},初球ストライク率:{g:57,b:47,d:'u',p:1},三振率:{d:'d',p:1},ストライク率:{d:'u',p:1},盗塁成功率:{d:'u',p:1},平均得点:{d:'u'},平均失点:{d:'d'},勝率:{d:'u'},得点圏打率:{d:'u'}},CMAP={'1試合得点':'平均得点','1試合失点':'平均失点','ストライク率(投手陣)':'ストライク率'};
+const th=t=>TH[t]?(S.gd&&S.gd[t]!==undefined?Object.assign({},TH[t],{g:S.gd[t].g,b:S.gd[t].b}):TH[t]):null;
+const nf=(v,h)=>h.p?v+'%':(v<5&&v!=Math.round(v)?f3(v):v);
+const jd=(t,raw)=>{const h=th(t);if(!h||h.g==null||!isFinite(raw))return'';const v=h.p?raw*100:raw,g=h.d=='u'?v>=h.g:v<=h.g,b=h.b!=null&&(h.d=='u'?v<h.b:v>h.b);return g?'g':b?'b':'m'};
+const jb=(t,raw)=>{const r=jd(t,raw);return r=='g'?'<small class="st sg">良い</small>':r=='b'?'<small class="st sb">課題</small>':''};
+const f1=n=>isFinite(n)?n.toFixed(1):'-',md=d=>+d.slice(5,7)+'/'+ +d.slice(8),bj=x=>isFinite(x)?badge({s:Math.round(cl(x*100)),n:3}):'—';
+const dl2=(x,y,fm)=>isFinite(x)&&isFinite(y)&&x!=y?`<small><i class="${x>y?'u':'d'}">${x>y?'▲':'▼'}${fm(Math.abs(x-y))}</i> <span class="m">前期 ${fm(y)}</span></small>`:'';
+const kp=(n,x,y,fm,t)=>`<div class="kp"><small class="m">${n}${jb(t||CMAP[n]||n,x)}</small><b>${isFinite(x)?fm(x):'-'}</b>${dl2(x,y,fm)}</div>`;
+const AP=()=>{const L=pg(an.per,0),B=pg(an.per,1),ids=new Set(L.map(g=>g.id)),P=S.a.filter(x=>ids.has(x.gid)&&(!an.who||x.p==an.who));return{L,B,ids,P,a:ts(L,an.who),b:ts(B,an.who)}};
+const cond=()=>{const L=pg(an.per,0).slice().sort((a,b)=>a.d<b.d?-1:1),y=fyOf(lt());return`<details class="c"><summary>≡ 条件　<b>${an.who?esc(pn(an.who)):'チーム全体'}・${{fy:y+'年度','5':'直近5試合',mo:'今月'}[an.per]}</b> ▾</summary><label style="margin-top:8px">対象<select id="aw">${opts([['','チーム全体'],...act().map(p=>[p.id,pn(p.id)])],an.who)}</select></label>${chips()}</details><p class="m">${L.length}試合${L.length?'・'+md(L[0].d)+'〜'+md(L[L.length-1].d):''}</p>`};
+const lc=(v,lab)=>{v=v.map(x=>isFinite(x)?x:0);if(v.length<2)return'<p class="m">2試合以上で表示します</p>';const a=Math.min(...v),b=Math.max(...v),w=300,h=100,X=i=>10+i*(w-20)/(v.length-1),Y=y=>h-12-(b==a?.5:(y-a)/(b-a))*(h-24),pts=v.map((y,i)=>X(i).toFixed(1)+','+Y(y).toFixed(1)).join(' ');return`<svg viewBox="0 0 ${w} ${h}" width="100%"><polygon points="${X(0)},${h-12} ${pts} ${X(v.length-1)},${h-12}" fill="var(--a)" fill-opacity=".25"/><polyline points="${pts}" fill="none" stroke="var(--a)" stroke-width="2"/></svg><div class="r" style="font-size:11px">${lab.map(x=>`<div style="flex:1;text-align:center" class="m">${x}</div>`).join('')}</div>`};
+const back='<button class="x" data-t="ana">‹ 分析</button>';
+const tb=(h,r)=>`<div class="c w"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${r.join('')}</table></div>`;
+const RS=[['走者なし','000'],['一塁','100'],['二塁','010'],['三塁','001'],['一・二塁','110'],['一・三塁','101'],['二・三塁','011'],['満塁','111']];
+const stl=l=>l.map(r=>{const q=st(r[1]);return`<tr><td>${r[0]}</td><td>${q.pa}</td><td>${f3(q.avg)}</td><td>${q.h}</td><td>${q.rbi}</td><td>${f3(q.ops)}</td></tr>`});
+const lst=()=>{const r=act().filter(p=>!sq||(p.name+p.kana+p.no).includes(sq)).filter(p=>!gf.length||gf.includes(G[gi(p)])).filter(p=>!pf.length||[...(p.pos||'')].some(k=>pf.includes(k))).filter(p=>!gp||hg(p)).map(p=>({p,s:score(p.id,lt()),w:grow(p)}));
+const key={sc:x=>-((x.s?x.s.s:-1)+(x.s&&x.s.n<3?-1000:0)),no:x=>+x.p.no||999,gr:x=>-gi(x.p),nm:x=>x.p.kana||x.p.name,gw:x=>-x.w}[so];
+r.sort((a,b)=>{const x=key(a),y=key(b);return typeof x=='string'?x.localeCompare(y,'ja'):x-y});
+r.sort((a,b)=>(b.p.cap?1:0)-(a.p.cap?1:0));return r.map(({p,s,w})=>`<div class="i" data-a="pd" data-i="${p.id}"><div class="pb">${(p.pos||'－')[0]}<small>${esc(p.no)}</small></div><span><b>${esc(p.name)}</b>${cm(p)}${tg(s,w,p)}<br><small class="m">#${esc(p.no)}・${G[gi(p)]}・${pfs(p)}・${p.th||'右'}投${p.bt||'右'}打</small></span>${sp(p)}${badge(s)}${dl(p)}</div>`).join('')||'<p class="m">該当する選手がいません</p>'};
+const tr=l=>{if(l.length<2)return'';const w=300,h=110,mx=Math.max(1,...l.flatMap(g=>[g.rs,g.ra])),X=i=>10+i*(w-20)/(l.length-1),Y=v=>h-10-v/mx*(h-20),ln=(k,c,da)=>`<polyline fill="none" stroke="${c}" stroke-width="2" ${da?'stroke-dasharray="5 4"':''} points="${l.map((g,i)=>X(i).toFixed(1)+','+Y(g[k]).toFixed(1)).join(' ')}"/>`;return`<svg viewBox="0 0 ${w} ${h}" width="100%">${ln('rs','#1f9e8e')}${ln('ra','#e0607e',1)}</svg><div class="r" style="font-size:12px">${l.map(g=>`<div style="flex:1;text-align:center" class="m">${g.d.slice(5).replace('-','/')}<br>${g.rs>g.ra?'勝':g.rs<g.ra?'負':'引'} ${g.rs}-${g.ra}</div>`).join('')}</div>`};
+const ext=()=>{const L=pg(an.per,0);if(!L.length)return'';const s=ts(L,an.who),w=L.filter(g=>g.rs>g.ra).length,lo=L.filter(g=>g.rs<g.ra).length,r3=L.slice(-3),sc=[['ミート',s.avg/.4],['長打',s.slg/.7],['選球眼',(s.bb+s.hbp)/s.pa/.15]];
+return(an.who?'':fav())+`<h3>試合の判定</h3><div class="k">${sc.map(([n,x])=>`<div>${isFinite(x)?badge({s:Math.round(cl(x*100)),n:3}):'-'}<br><span class="m">${n}</span></div>`).join('')}</div><h3>最近の傾向</h3><div class="c">${tr(L.slice(-8))}<p class="m">直近3試合 ${f2(r3.reduce((a,g)=>a+g.rs,0)/r3.length)}点　最高 ${Math.max(...L.map(g=>g.rs))}点</p></div><div class="c"><b>分析コメント</b><p>${L.length}試合で${w}勝${lo}敗${L.length-w-lo}分。平均得点${f2(s.rs/s.n)}・平均失点${f2(s.ra/s.n)}、OPSは${f3(s.ops)}です。</p><p class="m">自動で作った要約です。医学的な診断や安全性の断定ではありません。</p></div><div class="c"><div class="i" data-t="ax"><span>能力×実戦</span><b>›</b></div><div class="i" data-t="allm"><span>すべての指標</span><b>›</b></div><div class="i" data-t="gl"><span>試合ごとの詳細</span><b>›</b></div><div class="i" data-t="gls"><span>指標の用語集</span><b>›</b></div></div>`};
+const bar=(l,n,t)=>`<div class="r" style="align-items:center;margin:4px 0"><span style="flex:0 0 64px">${l}</span><div class="bar"><div style="width:${t?n/t*100:0}%"></div></div><b style="flex:0 0 28px;text-align:right">${n}</b></div>`;
+const csv=()=>'日付,相手,選手,結果,打点\n'+S.a.map(x=>[x.d,x.o||'',pn(x.p),x.r,x.rbi||0].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+const gl=g=>g.rs>g.ra?'○':g.rs<g.ra?'●':'△';
+const pas=l=>l.slice().reverse().map(x=>`<div class="i"><span>${esc(pn(x.p))}</span><b>${x.r}${x.rbi?' 打点'+x.rbi:''}</b><button class="x" data-a="dpa" data-i="${x.id}">×</button></div>`).join('')||'<p class="m">記録なし</p>';
+const V={
+home:()=>`<div class="c" data-t="team" style="cursor:pointer"><b>${esc(S.team)}</b> <span class="m">› チーム管理</span></div>`+hord().map(k=>S.hh.includes(k)&&!(k=='pb'&&alerts().some(x=>x.includes('球数')))?'':HS[k][1]()).join('')+`<button class="x" data-t="hs">≡ ホームの並び替え</button>`,
+pls:()=>`<h2 style="margin:4px 0 10px">選手 ${act().length}名</h2><div class="c"><input id="q" placeholder="名前・ふりがな・番号で検索" value="${esc(sq)}"><label style="margin-top:8px">並び<select id="so">${opts([['sc','評価順'],['no','選手番号'],['gr','学年'],['nm','名前'],['gw','成長幅']],so)}</select></label><div class="ch">${G.map(g=>`<button class="${gf.includes(g)?'on':''}" data-a="gf" data-k="${g}">${g}</button>`).join('')}</div><div class="ch">${POS.map(g=>`<button class="${pf.includes(g)?'on':''}" data-a="pf" data-k="${g}">${g}</button>`).join('')}<button class="${gp?'on':''}" data-a="gp">🌱 成長期</button></div></div><div class="c" id="lst">${lst()}</div><button class="x" data-t="cmp">⇄ 選手を比較</button><p class="m" style="text-align:center">登録 ${act().length} / 150名</p><details class="c"><summary>＋ 選手を追加</summary><div class="r" style="margin-top:8px"><label style="flex:0 0 80px">番号<input id="pno" inputmode="numeric"></label><label>名前<input id="pn"></label></div><label>ふりがな<input id="pk"></label><div class="r"><label>性別<select id="psx">${opts([['','未回答（任意）'],['男子','男子'],['女子','女子']],'')}</select></label><label>学年<select id="pg">${opts(G.map((g,i)=>[i,g]),0)}</select></label><label>主ポジション<select id="pps">${opts(POS.map(x=>[x,PF[x]]),'投')}</select></label></div><p class="m" style="margin:0 0 4px">他に守れるポジション（複数選択）</p><div style="margin-bottom:8px">${posBox('','po_')}</div><label class="cb"><input type="checkbox" id="pcap">主将（主将マークを付け、一覧の先頭に表示）</label><div class="r"><label>投<select id="pth">${opts([['右','右投'],['左','左投']],'右')}</select></label><label>打<select id="pbt">${opts([['右','右打'],['左','左打'],['両','両打']],'右')}</select></label></div><button class="p" data-a="ap">追加</button></details>`,
+pd:()=>{const p=S.p.find(x=>x.id==sel);if(!p)return'';const c=score(p.id,lt()),[n,u]=M[mk],l=S.m.filter(x=>x.p==p.id&&x.k==mk).sort((a,b)=>a.d<b.d?1:-1),s=st(S.a.filter(x=>x.p==p.id&&fyOf(x.d)==fyOf(lt())));
+return`<button class="x" data-t="pls">‹ 選手一覧</button><div class="c"><b>${esc(pn(p.id))}</b>${cm(p)} ${p.sx?p.sx+'・':''}${G[gi(p)]}・${pfs(p)} ${badge(c)}<p class="m">${c?'信頼度 '+(c.n<3?'低（測定項目が3つ未満・暫定）':c.n<8?'中':'高')+'。':'未測定です。'}S〜Gは測定時点の参考指標で、能力を決めるものではありません。　今年度 打率${f3(s.avg)} OPS${f3(s.ops)} 打点${s.rbi}</p></div><div class="k">${M.map((m,k)=>{const v=lat(p.id,k,'9999');return`<div><b>${v==null?'-':v}</b><span class="m">${m[0]}</span></div>`}).join('')}</div><div class="c"><b>測定を記録</b> <small class="m">${S.tm.kind=='学童野球'?(bs(p)?bs(p)+G[gi(p)]:'男女共通・'+G[gi(p)])+'の平均 '+(+ra(p,mk,lt()).toFixed(2))+u+'（標準偏差 '+SD[mk][gx(p,lt())]+'）':'この区分の基準データは未登録です（過去の自分との比較で見ます）'}</small><label>項目<select id="mk">${opts(M.map((m,i)=>[i,m[0]+' ('+m[1]+')']),mk)}</select></label><p class="m">${MH[mk]}。測定方法はチームで統一し、条件を記録してください。</p><div class="r"><label>記録<input id="mv" type="number" step="any" inputmode="decimal"></label><label>日付<input id="dt" type="date" value="${lt()}"></label></div><label>測定条件・方法（任意）<input id="mc" placeholder="例: 屋外・計測器の種類"></label><button class="p" data-a="am">追加</button><button class="x" data-a="na">この項目は測定不能として記録</button><p class="m">${(()=>{const v=l.filter(x=>!x.na).map(x=>x.v);if(!v.length)return'';const b=M[mk][2]?Math.min(...v):Math.max(...v),g=+(v[0]-v[v.length-1]).toFixed(2);return'自己ベスト '+b+u+'　初回との差 '+(g>0?'+':'')+g+u})()}</p>${l.map(x=>`<div class="i"><span>${df(x.d)}</span><b>${x.na?'測定不能':x.v+u}</b>${x.c?'<small class="m">'+esc(x.c)+'</small>':''}<button class="x" data-a="dm" data-i="${x.id}">×</button></div>`).join('')}</div><div class="c"><b>身長・体重</b> <small class="m">${hg(p)?'🌱 成長期（年7.2cm以上）':''}</small><div class="r"><label>身長(cm)<input id="hv" type="number" step="any" inputmode="decimal"></label><label>体重(kg)<input id="wv" type="number" step="any" inputmode="decimal"></label></div><label>日付<input id="hd" type="date" value="${lt()}"></label><button class="p" data-a="ah">身長・体重を追加</button><p class="m">身体の成長には個人差があります。体重や体格だけで能力や価値を評価することはありません。痛みや体調不良があるときは練習を中止し、保護者・指導者に相談してください。</p></div><div class="c"><b>保護者の同意</b> <small class="m">${p.cs?'取得済 '+p.cs:'未取得'}</small><button class="p" data-a="cs" style="margin-top:8px">${p.cs?'同意の記録を取り消す':'同意を取得した日として記録'}</button></div><details class="c"><summary>登録情報を訂正する</summary><div class="r" style="margin-top:8px"><label style="flex:0 0 80px">番号<input id="eno" value="${esc(p.no)}"></label><label>名前<input id="en" value="${esc(p.name)}"></label></div><label>ふりがな<input id="ek" value="${esc(p.kana||'')}"></label><div class="r"><label>性別（任意）<select id="esx">${opts([['','未回答'],['男子','男子'],['女子','女子']],p.sx||'')}</select></label><label>学年<select id="eg">${opts(G.map((g,i)=>[i,g]),gi(p))}</select></label></div><label>主ポジション<select id="epps">${opts(POS.map(x=>[x,PF[x]]),(p.pos||'投')[0])}</select></label><p class="m" style="margin:0 0 4px">他に守れるポジション（複数選択）</p><div style="margin-bottom:8px">${posBox((p.pos||'').slice(1),'eo_')}</div><label class="cb"><input type="checkbox" id="ecap"${p.cap?' checked':''}>主将</label><br><button class="p" data-a="pe">保存</button></details><button class="x" data-a="cap">${p.cap?'⭐ 主将を外す':'⭐ 主将にする'}</button> <button class="x" data-t="pk">選手向けの簡易表示</button> <button class="x" data-a="dp">この選手を削除</button>`},
+gms:()=>{const y=fyOf(lt())-gy,L=S.g.filter(g=>fyOf(g.d)==y).sort((a,b)=>a.d<b.d?-1:1),rc=l=>{let w=0,x=0,d=0,rs=0,ra=0;l.forEach(g=>{rs+=g.rs;ra+=g.ra;g.rs>g.ra?w++:g.rs<g.ra?x++:d++});return{w,l:x,d,rs,ra,wr:w/(w+x),n:l.length}},a=rc(L),b=rc(S.g.filter(g=>fyOf(g.d)==y-1)),m=rc(L.filter(g=>g.d.slice(0,7)==lt().slice(0,7))),cur=S.g.find(g=>g.id==S.cur),all=S.g.filter(g=>!gt||g.t==gt).sort((a,b)=>a.d<b.d?1:-1);let sk=0,ml='';for(let i=L.length-1;i>=0&&L[i].rs>L[i].ra;i--)sk++;
+const dw=isFinite(a.wr)&&isFinite(b.wr)&&a.wr!=b.wr?`<i class="${a.wr>b.wr?'u':'d'}">${a.wr>b.wr?'▲':'▼'}${f3(Math.abs(a.wr-b.wr))}</i>`:'';
+return(cur?`<div class="c"><small class="m">● 記録中</small><h3 style="margin:4px 0">${esc(S.team)} ${cur.rs} - ${cur.ra} ${esc(cur.o||'—')}</h3><button class="p" data-t="rec">記録を再開</button></div>`:'<button class="p" data-t="gnew">記録を始める</button>')+`<div class="c"><div class="r"><b style="flex:1">シーズン概要</b><div class="ch" style="margin:0">${[0,1].map(k=>`<button class="${gy==k?'on':''}" data-a="gy" data-k="${k}">${fyOf(lt())-k}</button>`).join('')}</div></div><div class="k" style="margin-top:8px"><div><b>${a.w}勝${a.l}敗${a.d?a.d+'分':''}</b><span class="m">${a.n}試合</span></div><div><b>${f3(a.wr)}${dw}</b><span class="m">勝率 (前年 ${f3(b.wr)})</span></div><div><b>${a.rs-a.ra>0?'+':''}${a.rs-a.ra}</b><span class="m">得${a.rs}・失${a.ra}</span></div><div><b>${sk}連勝</b><span class="m">現在</span></div><div><b>${m.w}勝${m.l}敗</b><span class="m">今月</span></div><div><b>${f2(a.rs/a.n)}</b><span class="m">1試合得点 (失${f2(a.ra/a.n)})</span></div></div>${['公式戦','練習試合','紅白戦'].map(t=>{const r=rc(L.filter(g=>g.t==t));return`<div class="i"><span>${t}</span><span style="flex:0 0 auto">${r.w}勝${r.l}敗${r.d?r.d+'分':''}　勝率${f3(r.wr)}</span></div>`}).join('')}</div>`+(L.length>1?`<div class="c"><b>得点・失点の推移</b> <small class="m">直近5試合</small>${tr(L.slice(-5))}<small><span style="color:#1f9e8e">━ 得点</span>　<span style="color:#e0607e">┅ 失点</span></small></div>`:'')+`<h3>試合一覧</h3><div class="ch">${['公式戦','練習試合','紅白戦'].map(t=>`<button class="${gt==t?'on':''}" data-a="gtf" data-k="${t}">${t}</button>`).join('')}</div>`+all.slice(0,lim).map(g=>{const h=g.d.slice(0,7)!=ml?`<h3>${ml=g.d.slice(0,7)}</h3>`:'';return h+`<div class="i" data-a="gd" data-i="${g.id}"><span>${dj(g.d)} vs ${esc(g.o||'—')}<br><small class="m">${g.t}　${esc(g.v||'')}</small></span><b>${g.rs}-${g.ra}</b><span class="rk${g.rs==g.ra?' ds':''}" style="flex:0 0 auto">${g.rs>g.ra?'勝':g.rs<g.ra?'負':'引'}</span></div>`}).join('')+(all.length?'':'<p class="m">試合がありません</p>')+(all.length>lim?`<button class="p" data-a="more">さらに表示（残り${all.length-lim}試合）</button>`:'')},
+gnew:()=>`<button class="x" data-t="gms">‹ 戻る</button><div class="c"><label>対戦相手<input id="op"></label><label>場所<input id="vn"></label><div class="r"><label>相手投手（任意）<input id="opn"></label><label>先攻/後攻<select id="gho">${opts([[0,'先攻（表に攻撃）'],[1,'後攻（裏に攻撃）']],0)}</select></label></div><label>規則セット<select id="gru">${opts(S.rs.map(r=>[r.id,r.name]),S.rs[0].id)}</select></label><label>グラウンド<select id="ggr">${opts(S.gr.map(r=>[r.id,r.name]),S.gr[0].id)}</select></label><div class="r"><label>日付<input id="dt" type="date" value="${lt()}"></label><label>種別<select id="gtp">${['公式戦','練習試合','紅白戦'].map(t=>`<option>${t}</option>`).join('')}</select></label></div><button class="p" data-a="gstart">記録を始める</button></div>`,
+lu:()=>{const g=cg();if(!g)return'';const P=act(),o=[['','（なし）'],...P.map(p=>[p.id,pn(p.id)])];g.lu=g.lu||[];return`<button class="x" data-t="gms">‹ 戻る</button><div class="c"><b>スタメン（打順）</b><p class="m">登録した選手から9人を選びます。</p>${[0,1,2,3,4,5,6,7,8].map(i=>`<label>${i+1}番<select id="lu${i}">${opts(o,g.lu[i]||(P[i]?P[i].id:''))}</select></label>`).join('')}<button class="p" data-a="lgo">試合開始</button></div>`},
+rec:()=>{const g=cg();if(!g)return'<div class="c m">記録中の試合がありません。</div>';if(!g.n)return V.lu();const n=g.n,at=n.top==(g.ho?0:1),L=g.lu,bid=L[n.bi%L.length],bp=S.p.find(x=>x.id==bid)||{name:'',pos:'',bt:'右'},pa=S.a.filter(x=>x.gid==g.id&&x.p==bid),s1=st(pa),dots=(c,m,k)=>[...Array(m)].map((_,i)=>`<span class="dt${i<c?' '+k:''}"></span>`).join(''),nx=[1,2].map(k=>{const j=(n.bi+k)%L.length,q=S.p.find(x=>x.id==L[j]);return(j+1)+'番 '+(q?q.name.split(' ')[0]:'')}).join('、'),bsx=[[130,70],[80,20],[30,70]],rn=i=>{const p=S.p.find(x=>x.id==n.bs[i]);return p?(p.no?p.no+' ':'')+p.name.split(' ')[0].slice(0,4):''};
+const bd=`<svg viewBox="0 0 160 130" width="100%"><polyline points="80,118 130,70 80,20 30,70 80,118" fill="none" stroke="var(--m)"/><rect x="73" y="111" width="14" height="14" rx="3" fill="var(--m)"/>${bsx.map(([x,y],i)=>n.bs[i]?`<rect x="${x-28}" y="${y-10}" width="56" height="20" rx="10" fill="var(--c)" stroke="var(--a)" stroke-width="2"/><text x="${x}" y="${y+4}" font-size="10" font-weight="700" text-anchor="middle" fill="var(--a)">${esc(rn(i))}</text>`:`<rect x="${x-6}" y="${y-6}" width="12" height="12" transform="rotate(45 ${x} ${y})" fill="none" stroke="var(--m)" stroke-width="1.5"/>`).join('')}</svg>`;
+const pt=[...new Set(act().filter(p=>hp(p,'投')).concat(act().filter(p=>!hp(p,'投'))).map(p=>p.id))];
+const top=`<div class="r" style="align-items:center"><button class="x" data-t="home">‹ ホーム</button><b style="flex:1;text-align:center">vs ${esc(g.o||'—')}</b><button class="x" data-a="shw" data-k="sub">⋯</button></div><div class="c r" style="align-items:center;text-align:center;gap:4px"><div style="flex:1;text-align:left">${at?'✎ ':''}<b>${esc(S.team)}</b> <span style="font-size:26px;font-weight:700">${g.rs}</span></div><div><b>${n.inn}回${n.top?'表':'裏'}</b><br><small class="rk">${at?'攻撃中':'守備中'}</small></div><div style="flex:1;text-align:right"><span style="font-size:26px;font-weight:700">${g.ra}</span> <b>${esc(g.o||'相手')}</b></div></div><div class="c r" style="align-items:center"><div style="flex:1;line-height:2.1"><b>B</b> ${dots(n.b,3,'b')} ${n.b}<br><b>S</b> ${dots(n.s,2,'s')} ${n.s}<br><b>O</b> ${dots(n.o,2,'o')} ${n.o}</div><div style="flex:1">${bd}</div></div>`;
+const act3=`${g.lt?`<div class="toast"><span>${esc(g.lt)}</span><button data-a="undo">↶ 取り消す</button></div>`:''}<div class="r" style="justify-content:space-around;margin:6px 0"><button class="x" data-a="undo">↶ 取り消し</button><button class="x" data-a="shw" data-k="sub">⇄ 交代</button><button class="x" data-a="shw" data-k="hist">☰ 打席履歴</button></div>`;
+const mid=at?`<div class="r"><div class="c" style="flex:1.3"><small class="m"><b style="color:var(--a)">${n.bi%L.length+1}番</b> ${(bp.pos||'')[0]||''}・第${pa.length+1}打席</small><div><b style="font-size:18px">${esc(bp.name)}</b>${cm(bp)} <small class="rk">${bp.bt||'右'}打</small></div><small class="m">${s1.ab}打数${s1.h}安打 ${pa.slice(-3).map(x=>x.r).join(' ')}</small></div><div class="c" style="flex:1"><small class="m">相手投手・${esc(g.opr||'右')}投</small><div><b style="font-size:18px">${esc(g.op||'相手投手')}</b></div><div><b style="font-size:26px">${g.opc||0}</b><small class="m">球</small></div></div></div><div class="c"><div class="r" style="align-items:center"><span><small class="m">この打席</small> <b>${n.b}-${n.s}</b></span><button class="x" data-a="pd" data-i="${bid}" style="margin-left:auto">打者データ ›</button></div><small class="m">${n.b+n.s?'カウント '+n.b+'-'+n.s:'初球待ち'} · 次: ${nx}</small></div>${act3}<div class="g">${['見逃し','空振り','ファウル','ボール'].map(k=>`<button class="bg" data-a="p1" data-k="${k}">${k}</button>`).join('')}<button class="bg gr" data-a="shw" data-k="play">インプレー</button><button class="bg" data-a="shw" data-k="oth">その他</button></div>`
+:`<div class="c"><b>相手の攻撃</b> <small class="m">アウト ${n.o}/3</small><div class="r" style="margin:8px 0"><button class="p" style="flex:1;margin:0" data-a="dra">失点 +1</button><button class="p" style="flex:1;margin:0" data-a="dout">アウト +1</button></div><button class="p" data-a="chg" style="margin:0">チェンジ（攻守交代）</button></div><div class="c"><label>自軍投手<select id="pt">${opts(pt.map(i=>[i,pn(i)]),ptc)}</select></label><div class="g">${['見逃し','空振り','ファウル','ボール','インプレー'].map(k=>`<button class="bg" data-a="dpit" data-k="${k}">${k}</button>`).join('')}</div><small class="m">この試合の投球数 ${S.pt.filter(x=>x.gid==g.id&&x.p).length}球</small></div>${act3}`;
+return top+mid+(sh?sheet(g):'')},
+
+gd:()=>{const g=S.g.find(x=>x.id==rid);if(!g)return'';return`<button class="x" data-t="gms">‹ 試合一覧</button><div class="c"><b>${df(g.d)} vs ${esc(g.o||'—')}</b> <span class="m">${g.t}${ruT(g)}</span><h3>${gl(g)} ${g.rs} - ${g.ra}</h3></div><button class="p" data-a="gres">この試合の記録を再開</button>${gsum(g)}${pas(S.a.filter(x=>x.gid==g.id))}<button class="x" data-a="gdel">試合を削除</button>`},
+ana:()=>{const{L,a,b}=AP(),cd=[['打撃','ab','チーム打率',a.avg,b.avg,f3],['投手','pa2','ストライク率',a.sr,b.sr,pc],['得点・走塁','sc2','1試合平均得点',a.rs/a.n,b.rs/b.n,f2],['守備・走塁','df','盗塁成功率',a.sbr,b.sbr,pc]],r3=L.slice(-3),w=L.filter(g=>g.rs>g.ra).length,lo=L.filter(g=>g.rs<g.ra).length,sc=[['ミート',a.avg/.4],['長打',a.slg/.7],['選球眼',(a.bb+a.hbp)/a.pa/.15],['走塁',a.sbr/.8]],ps=[['制球',a.sr/.7],['球威',a.pq/.2]],tl=l=>`<div class="kg" style="gap:8px">${l.map(([n,x])=>`<div class="tl"><small class="m">${n}</small><div>${bj(x)}</div></div>`).join('')}</div>`;
+return cond()+`<div class="cw">${cd.map(([t,pg2,lb,x,y,fm])=>`<div class="cc"><b>${t}</b><p class="m" style="margin:2px 0">${lb}</p><div style="font-size:34px;font-weight:700">${isFinite(x)?fm(x):'-'}</div>${dl2(x,y,fm)}<button class="p" style="margin-top:10px" data-t="${pg2}">詳細へ ›</button></div>`).join('')}<div class="cc"><b>能力×実戦</b><p class="m" style="margin:2px 0">測定と実戦の関係</p><button class="p" style="margin-top:44px" data-t="ax">詳細へ ›</button></div></div>`+fav()+(L.length?`<h3>試合の判定（チーム）</h3><div class="c"><b>打撃・走塁</b>${tl(sc)}<p style="margin:12px 0 6px"><b>投球</b></p>${tl(ps)}<p class="m">基準は打率÷.400・長打率÷.700・四死球率÷15%・盗塁成功率÷80%・ストライク率÷70%・空振り率÷20%（100点上限）です。</p></div><h3>最近の傾向</h3><div class="c">${tr(L.slice(-8))}<p class="m">直近3試合 ${f2(r3.reduce((x,g)=>x+g.rs,0)/r3.length)}点　最高 ${Math.max(...L.map(g=>g.rs))}点</p></div><div class="c"><b>✦ 分析コメント</b><p>${L.length}試合で${w}勝${lo}敗${L.length-w-lo}分。平均得点${f2(a.rs/a.n)}・平均失点${f2(a.ra/a.n)}、OPSは${f3(a.ops)}です。</p><p class="m">自動で作った要約です。医学的な診断や安全性の断定ではありません。</p></div>`:'<p class="m">対象の試合がありません</p>')+`<div class="c"><div class="i" data-t="allm"><span>すべての指標</span><b>›</b></div><div class="i" data-t="gl"><span>試合ごとの詳細</span><b>›</b></div><div class="i" data-t="gls"><span>指標の用語集（目安の編集）</span><b>›</b></div></div>`},
+ab:()=>{const{L,P,a,b}=AP(),n=L.length||1,rows=act().map(p=>({p,s:st(P.filter(x=>x.p==p.id))})).filter(r=>r.s.pa).sort((x,y)=>y.s.pa-x.s.pa),pw=P.filter(x=>x.pw),sg=pw.filter(x=>x.pw=='強'),ct=k=>pw.filter(x=>x.pw==k).length,by=L.slice().sort((x,y)=>x.d<y.d?-1:1).map(g=>st(S.a.filter(x=>x.gid==g.id&&(!an.who||x.p==an.who))));
+const c4=[['安打',a.h],['本塁打',a.hr],['四死球',a.bb+a.hbp],['三振',a.k]].map(([t,v])=>`<div class="kp"><small class="m">${t}</small><b style="font-size:20px">${v}</b><small class="m">1試合 ${f1(v/n)}</small></div>`).join('');
+return back+'<h2 style="margin:4px 0">打撃分析</h2>'+cond()+`<div class="c"><b>打撃サマリー</b><div class="kg" style="margin-top:8px">${kp('打率',a.avg,b.avg,f3)}${kp('出塁率',a.obp,b.obp,f3)}${kp('長打率',a.slg,b.slg,f3)}${kp('OPS',a.ops,b.ops,f3)}</div><div class="k4">${c4}</div></div><h3>打者ごとの判定</h3>`+tb(['打者','打席','ミート','長打','選球眼'],rows.map(({p,s:q})=>`<tr data-a="pd" data-i="${p.id}"><td>${esc(p.name)}${q.pa<10?' <small class="m">参考</small>':''}</td><td>${q.pa}</td>${q.pa<10?'<td>—</td><td>—</td><td>—</td>':`<td>${bj(q.avg/.4)}</td><td>${bj(q.slg/.7)}</td><td>${bj((q.bb+q.hbp)/q.pa/.15)}</td>`}</tr>`))+(spray(P)||'<p class="m">打球地点のデータがありません</p>')+`<h3>打球の強さ</h3><div class="c"><div class="kg"><div class="kp"><small class="m">強い打球の割合</small><b>${pc(sg.length/pw.length)}</b></div><div class="kp"><small class="m">強い打球のアウト</small><b>${sg.filter(x=>['ゴロ','飛球'].includes(x.r)).length}本</b></div></div><div class="k4" style="grid-template-columns:repeat(3,1fr)"><div class="tl">強 ${ct('強')}本</div><div class="tl">普 ${ct('普')}本</div><div class="tl">弱 ${ct('弱')}本</div></div></div>`+tb(['打者','打球','強い割合','強いのにアウト','打率'],rows.map(({p,s:q})=>{const m=pw.filter(x=>x.p==p.id),g=m.filter(x=>x.pw=='強');return m.length?`<tr data-a="pd" data-i="${p.id}"><td>${esc(p.name)}</td><td>${m.length}</td><td>${pc(g.length/m.length)}</td><td>${g.filter(x=>['ゴロ','飛球'].includes(x.r)).length}</td><td>${f3(q.avg)}</td></tr>`:''}))+`<h3>走者状況別</h3>`+tb(['状況','打席','打率','安打','打点','OPS'],stl([['走者なし',P.filter(x=>x.rn=='000')],['走者あり',P.filter(x=>x.rn&&x.rn!='000')],['得点圏',P.filter(x=>x.rn&&(x.rn[1]=='1'||x.rn[2]=='1'))],['満塁',P.filter(x=>x.rn=='111')]]))+`<h3>試合日ごとの推移（OPS）</h3><div class="c">${lc(by.map(q=>q.ops),L.slice().sort((x,y)=>x.d<y.d?-1:1).map(g=>md(g.d)))}</div>`},
+pa2:()=>{const{L,ids,a,b}=AP(),q=S.pt.filter(x=>ids.has(x.gid)&&x.p),n=q.length||NaN,K=['見逃し','空振り','ファウル','ボール','インプレー'],ps=[...new Set(q.map(x=>x.p))].map(i=>{const m=q.filter(x=>x.p==i);return{i,n:m.length,sr:m.filter(x=>x.r!='ボール').length/m.length,sw:m.filter(x=>x.r=='空振り').length/m.length,bl:m.filter(x=>x.r=='ボール').length/m.length}}).sort((x,y)=>y.n-x.n);
+return back+'<h2 style="margin:4px 0">投手分析</h2>'+cond()+`<div class="c"><b>投手サマリー</b><div class="kg" style="margin-top:8px">${kp('ストライク率',a.sr,b.sr,pc,'ストライク率')}${kp('空振り率',a.pq,b.pq,pc,'')}${kp('ボール率',q.filter(x=>x.r=='ボール').length/n,NaN,pc,'')}${kp('平均失点',a.ra/a.n,b.ra/b.n,f2)}</div><div class="k4" style="grid-template-columns:repeat(3,1fr)"><div class="kp"><small class="m">投球数</small><b style="font-size:20px">${q.length}</b></div><div class="kp"><small class="m">1試合</small><b style="font-size:20px">${f1(q.length/(L.length||NaN))}</b></div><div class="kp"><small class="m">総失点</small><b style="font-size:20px">${a.ra}</b></div></div></div><div class="c"><b>投球結果</b>${K.map(k=>{const c=q.filter(x=>x.r==k).length;return bar(k,c,q.length)}).join('')}</div><h3>投手ごとの成績</h3>`+tb(['投手','投球数','ストライク率','空振り率','ボール率','制球','球威'],ps.map(r=>`<tr><td>${esc(pn(r.i))}</td><td>${r.n}</td><td>${pc(r.sr)}</td><td>${pc(r.sw)}</td><td>${pc(r.bl)}</td><td>${bj(r.sr/.7)}</td><td>${bj(r.sw/.2)}</td></tr>`))+(pbar()||'')+'<p class="m">防御率・被安打・与四球などは、相手打者の打席を記録していないため、まだ集計に対応していません。</p>'},
+sc2:()=>{const{L,P,a,b}=AP(),sp=P.filter(x=>x.rn&&(x.rn[1]=='1'||x.rn[2]=='1')),ss=st(sp),sl=S.sb.filter(x=>L.some(g=>g.id==x.gid)),ok=sl.filter(x=>x.ok).length,by=L.slice().sort((x,y)=>x.d<y.d?-1:1);
+return back+'<h2 style="margin:4px 0">得点・走塁</h2>'+cond()+`<div class="c"><b>得点サマリー</b><div class="kg" style="margin-top:8px">${kp('1試合平均得点',a.rs/a.n,b.rs/b.n,f2,'平均得点')}${kp('得点圏打率',ss.avg,NaN,f3)}<div class="kp"><small class="m">総得点</small><b>${a.rs}点</b></div><div class="kp"><small class="m">得点圏打点</small><b>${ss.rbi}</b></div></div></div><h3>走者状況</h3>`+tb(['走者','打席','打率','安打','打点','OPS'],stl(RS.map(([t,k])=>[t,P.filter(x=>x.rn==k)])))+`<div class="c"><b>盗塁</b><div class="kg" style="margin-top:8px">${kp('盗塁成功率',ok/sl.length,b.sbr,pc,'盗塁成功率')}<div class="kp"><small class="m">盗塁企図</small><b>${sl.length}</b><small class="m">成功 ${ok}・失敗 ${sl.length-ok}</small></div></div></div><h3>得点の推移</h3><div class="c">${lc(by.map(g=>g.rs),by.map(g=>md(g.d)))}</div>`},
+df:()=>{const{L}=AP(),sl=S.sb.filter(x=>L.some(g=>g.id==x.gid)),ok=sl.filter(x=>x.ok).length,rs=[...new Set(sl.map(x=>x.p))].map(i=>{const m=sl.filter(x=>x.p==i),o=m.filter(x=>x.ok).length;return`<tr data-a="pd" data-i="${i}"><td>${esc(pn(i))}</td><td>${m.length}</td><td>${o}</td><td>${m.length-o}</td><td>${pc(o/m.length)}</td></tr>`});
+return back+'<h2 style="margin:4px 0">守備・走塁</h2>'+cond()+`<div class="c"><b>盗塁（攻撃）</b><div class="kg" style="margin-top:8px">${kp('盗塁成功率',ok/sl.length,NaN,pc,'盗塁成功率')}<div class="kp"><small class="m">盗塁企図</small><b>${sl.length}</b><small class="m">成功 ${ok}・失敗 ${sl.length-ok}</small></div></div></div>`+tb(['走者','企図','成功','失敗','成功率'],rs)+'<p class="m">捕手の送球タイム・守備率・失策など守備の記録は、まだ集計に対応していません。</p>'},
+hs:()=>`<button class="x" data-t="home">‹ ホーム</button><div class="c"><b>ホームの並び替え</b><p class="m">この端末の表示だけが変わります。投手の球数は、上限に近い投手がいるときは非表示でも表示します。</p>${hord().map(k=>`<div class="i"><span>${HS[k][0]}</span><button class="x" data-a="hu" data-k="${k}">↑</button><button class="x" data-a="hd" data-k="${k}">↓</button><button class="${S.hh.includes(k)?'':'on'}" data-a="hh" data-k="${k}">${S.hh.includes(k)?'非表示':'表示'}</button></div>`).join('')}</div>`,
+set:()=>`<button class="x" data-t="team">‹ チーム</button><div class="c"><b>設定</b><label>テーマ<select id="sth">${opts([['','端末に合わせる'],['light','ライト（屋外向け）'],['dark','ダーク']],S.set.th)}</select></label><label>主将マーク<select id="scm">${opts(['C','主','★','♛'].map(x=>[x,x]),S.set.cm)}</select></label><label>文字サイズ<select id="sfs">${opts([[90,'小'],[100,'標準'],[115,'大'],[130,'特大']],S.set.fs)}</select></label></div>`,
+gls:()=>`<button class="x" data-t="team">‹ チーム</button><h2 style="margin:4px 0 8px">用語集</h2><div class="c"><input id="gqi" placeholder="指標名・キーワードで検索" value="${esc(gq)}"></div><div class="ch"><button class="${gk?'':'on'}" data-a="gkc" data-k="">すべて</button>${GC.map(c=>`<button class="${gk==c?'on':''}" data-a="gkc" data-k="${c}">${c}</button>`).join('')}</div><p class="m">↑ 高いほど良い　↓ 低いほど良い　⇄ 打者と投手で見方が逆</p><div id="gll">${gla()}</div>`,
+gld:()=>{const x=GL[gli];if(!x)return'';const D=DT[x.c+'/'+x.t]||DT[x.t]||{},k=RN.indexOf(x.t),DR={u:['↑','高いほど良い','数値が上がると ▲ 緑（改善）で表示します。'],d:['↓','低いほど良い','数値が下がると ▼ 緑（改善）で表示します。']},bd=BD[x.t]||'u',od=bd=='u'?'d':'u',rows=x.d=='b'?[['打者は'+DR[bd][1],DR[bd][0],DR[bd][2],1],['投手は'+DR[od][1],DR[od][0],DR[od][2],0]]:x.d?[[DR[x.d][1],DR[x.d][0],DR[x.d][2],1]]:[['高低で良し悪しを決めない','⇄','増減は灰色で表示し、目安の範囲で判断します。',0]];let f=D.f,y=D.y,m=D.m;
+if(k>=0){y=U[k];f='60 ＋ 10 × (測定値 − 学年・性別の平均) ÷ 標準偏差'+(LW[k]?'（タイムは小さいほど高得点）':'');m='学童の平均（小1→小6） 男子: '+REF.男子[x.t].join('・')+U[k]+' ／ 女子: '+REF.女子[x.t].join('・')+U[k]}
+const hh=TH[x.t]?th(x.t):null;if(hh)m=hh.g!=null?'良い: '+nf(hh.g,hh)+(hh.d=='u'?'以上':'以下')+(hh.b!=null?'・課題: '+nf(hh.b,hh)+(hh.d=='u'?'未満':'超'):'')+'。':'目安は設定されていません。';const mm=m?m+(!hh&&/高校|中学|^\.|%|前後|一般的/.test(m)?'　学童の目安は設けていません。':''):'目安は設けていません。チームの推移や前期間との比較で見てください。',bk=gst.length>1?GL[gst[gst.length-2]].t:'用語集',oth=GL.filter(z=>z.c==x.c&&z!=x).slice(0,6);
+return`<button class="x" data-a="glb">‹ ${esc(bk)}</button><h2 style="margin:4px 0 8px">${esc(x.t)}</h2><div class="c"><span class="tag">${x.c}</span>${y?`<span class="tag">表示: ${esc(y)}</span>`:''}<p style="font-size:17px;margin-bottom:0">${esc(x.x)}</p></div>${f?`<div class="c"><b>▦ 計算式</b><div class="fm">${esc(f)}</div></div>`:''}<div class="c"><b>↗ 良い方向</b>${x.d=='b'?'<details style="display:inline-block;margin-left:8px"><summary class="m">ⓘ</summary><small class="m">同じ指標でも、打者として見るか投手として見るかで、良い方向が逆になります。</small></details>':''}${rows.map((r,i)=>`<div class="r" style="align-items:center;margin-top:8px;${i?'border-top:1px solid var(--b);padding-top:8px':''}"><span class="dr${r[3]?' g':''}">${r[1]}</span><span style="flex:1"><b>${r[0]}</b><br><small class="m">${r[2]}</small></span></div>`).join('')}</div><div class="c"><b>◎ 目安</b><p style="margin-bottom:0">${esc(mm)}</p>${hh?`<details style="margin-top:8px"><summary class="m">目安を編集</summary><div class="r" style="margin-top:8px"><label>良い（${hh.d=='u'?'以上':'以下'}${hh.p?'・%':''}）<input id="thg" type="number" step="any" inputmode="decimal" value="${hh.g==null?'':hh.g}"></label><label>課題（${hh.d=='u'?'未満':'超'}）<input id="thb" type="number" step="any" inputmode="decimal" value="${hh.b==null?'':hh.b}"></label></div><button class="p" data-a="thsave" data-k="${esc(x.t)}">保存</button><button class="x" data-a="thclr" data-k="${esc(x.t)}">目安をなしにする</button><button class="x" data-a="thrst" data-k="${esc(x.t)}">初期値に戻す</button><p class="m">この目安は、分析の「良い／課題」の表示に使われます。初期値は参考値（中学）です。学童に合わせて直してください。</p></details>`:''}</div>${k>=0?`<div class="c"><b>測定方法の目安</b><p class="m" style="margin-bottom:0">${esc(MH[k])}</p></div>`:''}<p class="m" style="margin:6px 4px">このアプリでの集計: ${OK.includes(x.t)?'対応しています':'まだ対応していません'}</p><h3>${x.c}のほかの指標</h3><div class="c">${oth.map(z=>`<div class="i" data-a="gld" data-i="${GL.indexOf(z)}"><span><b>${esc(z.t)}</b><br><small class="m">${esc(z.x)}</small></span><span class="m" style="flex:0 0 auto">›</span></div>`).join('')}</div>`},
+gl:()=>`<button class="x" data-t="ana">‹ 分析</button><div class="c w"><table><tr><th>試合</th><th>結果</th><th>打数-安打</th><th>四死</th><th>三振</th><th>球数</th></tr>${S.g.slice().sort((a,b)=>a.d<b.d?1:-1).map(g=>{const s=st(S.a.filter(x=>x.gid==g.id));return`<tr data-a="gd" data-i="${g.id}"><td>${dj(g.d)} ${esc(g.o||'')}</td><td>${g.rs}-${g.ra}</td><td>${s.ab}-${s.h}</td><td>${s.bb+s.hbp}</td><td>${s.k}</td><td>${S.pt.filter(x=>x.gid==g.id&&x.p).length}</td></tr>`}).join('')}</table></div>`,
+allm:()=>{const a=ts(pg(an.per,0),''),b=ts(pg(an.per,1),''),X=[['打席',x=>x.pa],['打数',x=>x.ab],['安打',x=>x.h],['本塁打',x=>x.hr],['打点',x=>x.rbi],['四球',x=>x.bb],['死球',x=>x.hbp],['犠打',x=>x.sh],['犠飛',x=>x.sf],['三振',x=>x.k],['長打率',x=>x.slg,f3],...CD.map(c=>[c[0],c[1],c[3]])];
+return`<button class="x" data-t="ana">‹ 分析</button>${chips()}<div class="c w"><table><tr><th>指標</th><th>今期</th><th>前期</th></tr>${X.map(([n,f,fm])=>{const g=fm||(x=>x);return`<tr><td>${n}</td><td>${isFinite(f(a))?g(f(a)):'-'}${jb(CMAP[n]||n,f(a))}</td><td>${isFinite(f(b))?g(f(b)):'-'}</td></tr>`}).join('')}</table></div>`},
+ax:()=>{const r=act().map(p=>{const q=[];M.forEach((m,k)=>{const v=lat(p.id,k,'9999');if(v!=null){const z=ms(p.id,k,v,lt());if(z!=null)q.push(z)}});const s=st(S.a.filter(x=>x.p==p.id&&fyOf(x.d)==fyOf(lt())));return q.length>=3&&s.pa>=10&&isFinite(s.ops)?{p,a:Math.round(q.reduce((x,y)=>x+y)/q.length),f:Math.round(cl(s.ops*100))}:null}).filter(Boolean).map(x=>({...x,d:x.f-x.a})),row=x=>`<div class="i" data-a="pd" data-i="${x.p.id}"><span>${esc(pn(x.p.id))}</span><span style="flex:0 0 auto">能力${x.a} 実戦${x.f} <i class="${x.d>0?'u':'d'}">${x.d>0?'+':''}${x.d}</i></span></div>`,u=r.filter(x=>x.d>=15),g=r.filter(x=>x.d<=-15);
+return`<button class="x" data-t="ana">‹ 分析</button><div class="c"><b>能力以上の結果 ${u.length}人</b><p class="m">実戦(OPS)が能力(測定)を15点以上上回る選手</p>${u.map(row).join('')}</div><div class="c"><b>伸びしろ ${g.length}人</b><p class="m">能力に対して実戦が15点以上低い選手（測定3項目・10打席以上が対象）</p>${g.map(row).join('')}</div>`},
+cmp:()=>{const P=act(),A=P.find(p=>p.id==ca)||P[0],B=P.find(p=>p.id==cb)||P[1]||P[0];if(!A)return none;const row=(n,f)=>`<tr><td>${n}</td><td>${f(A)}</td><td>${f(B)}</td></tr>`,sa=p=>st(S.a.filter(x=>x.p==p.id&&fyOf(x.d)==fyOf(lt())));
+return`<button class="x" data-t="pls">‹ 選手一覧</button><div class="c"><div class="r"><label>A<select id="c1">${opts(P.map(p=>[p.id,pn(p.id)]),A.id)}</select></label><label>B<select id="c2">${opts(P.map(p=>[p.id,pn(p.id)]),B.id)}</select></label></div></div><div class="c w"><table>${row('総合',p=>{const c=score(p.id,lt());return c?rk(c.s)+c.s:'-'})}${M.map((m,k)=>row(m[0],p=>{const v=lat(p.id,k,'9999');return v==null?'-':v+m[1]})).join('')}${row('打率',p=>f3(sa(p).avg))}${row('OPS',p=>f3(sa(p).ops))}${row('打点',p=>sa(p).rbi)}</table></div>`},
+pk:()=>{const p=S.p.find(x=>x.id==sel);if(!p)return'';const rows=M.map((m,k)=>{const l=S.m.filter(x=>x.p==p.id&&x.k==k&&!x.na).sort((a,b)=>a.d<b.d?-1:1);if(!l.length)return'';const v=l.map(x=>x.v),b=m[2]?Math.min(...v):Math.max(...v),g=+(v[v.length-1]-v[0]).toFixed(2),good=m[2]?g<0:g>0;return`<div class="i"><span><b>${m[0]}</b><br><small class="m">最新 ${v[v.length-1]}${m[1]}・自己ベスト ${b}${m[1]}</small></span>${l.length>1?`<span style="flex:0 0 auto;color:${good?'#1a9e5c':'var(--m)'}">${g>0?'+':''}${g}</span>`:'<small class="m">はじめて</small>'}</div>`}).join('');
+return`<button class="x" data-t="pd">‹ 戻る</button><div class="c" style="text-align:center"><h2 style="margin:4px 0">${esc(p.name)} さん</h2><p class="m">きのうの自分より、すこしずつ前へ！</p></div><div class="c"><b>わたしの記録</b>${rows||'<p class="m">まだ測定がありません</p>'}<p class="m">数字は最初の記録からの変化です。体の成長には個人差があるので、友だちとくらべすぎなくて大丈夫。痛いところや具合が悪いときは、すぐに大人に伝えよう。</p></div>`},
+mse:()=>`<button class="x" data-t="home">‹ ホーム</button><div class="c"><b>測定会（まとめて入力）</b><div class="r"><label>項目<select id="mk">${opts(M.map((m,i)=>[i,m[0]+' ('+m[1]+')']),mk)}</select></label><label>日付<input id="dt" type="date" value="${lt()}"></label></div></div><div class="c">${act().map(p=>`<div class="r" style="align-items:center;margin-bottom:6px"><span style="flex:1">${esc(pn(p.id))}</span><input style="flex:0 0 110px" id="ms_${p.id}" type="number" step="any" inputmode="decimal" placeholder="${lat(p.id,mk,'9999')==null?'':lat(p.id,mk,'9999')}"></div>`).join('')||'<span class="m">先に選手を登録してください</span>'}<button class="p" data-a="msave">保存</button></div>`,
+ret:()=>`<button class="x" data-t="team">‹ チーム</button><div class="c"><b>卒業・引退した選手</b>${S.p.filter(p=>gi(p)>=G.length).map(p=>`<div class="i"><span>${esc(pn(p.id))}</span><button data-a="rev" data-i="${p.id}">現役に戻す</button></div>`).join('')||'<p class="m">いません</p>'}</div>`,
+team:()=>{norm();const t=S.tm,P=act(),n=P.length,c=x=>P.filter(p=>p.pos&&x.includes(p.pos[0])).length,y=fyOf(lt()),w=S.g.filter(g=>fyOf(g.d)==y),W=w.filter(g=>g.rs>g.ra).length,Lo=w.filter(g=>g.rs<g.ra).length,sb='<button class="p" data-a="tn">保存</button>',BL=['沖縄ブロック','うるまブロック','嘉手納読谷ブロック','北部南ブロック','北部北ブロック','中部南ブロック','那覇ブロック','島尻ブロック','宮古ブロック','八重山ブロック'];
+return`<button class="x" data-t="home">‹ ホーム</button><div class="c"><small class="m">${esc(t.ab?'略称 '+t.ab:'')}</small><h3 style="margin:0">${esc(S.team)}</h3><small class="m">${esc(t.cat)}・${t.yr}年度${t.area?'・'+esc(t.area):''}</small><p class="m">${y}年シーズン ${W}勝${Lo}敗${w.length-W-Lo}分　得失点差 ${w.reduce((a,g)=>a+g.rs-g.ra,0)}</p></div>
+<div class="c"><b>チーム情報</b><label>チーム名 (1〜60文字)<input id="tn" maxlength="60" value="${esc(S.team)}"></label><div class="r"><label>略称<input id="tab" maxlength="10" value="${esc(t.ab)}"></label><label>年度<input id="tyr" type="number" min="1900" max="2200" value="${t.yr}"></label></div><label>カテゴリー<select id="tkd">${opts(Object.keys(KS).map(x=>[x,x]),t.kind)}</select></label><label>評価基準の性別の扱い<select id="trb">${opts([['','回答した性別の基準を使う（未回答は男女共通）'],['共通','常に男女共通の基準を使う']],t.rb)}</select></label><label>区分<select id="tct">${opts(BL.map(x=>[x,x]),t.cat)}</select></label><div class="r"><label>地域<input id="tar" maxlength="40" value="${esc(t.area)}"></label><label>担当者<input id="tmg" maxlength="40" value="${esc(t.mgr)}"></label></div><label>メモ (300文字まで)<textarea id="tme" maxlength="300">${esc(t.memo)}</textarea></label>${sb}</div>
+<div class="c"><b>チームの概要</b><div class="k" style="margin-top:8px"><div><b>${n}名</b><span class="m">選手数</span></div><div><b>${c('投')}名</b><span class="m">投手</span></div><div><b>${P.filter(p=>p.bt=='左'||p.bt=='両').length}名</b><span class="m">左打者(両打含む)</span></div></div>${G.map((g,i)=>bar(g,P.filter(p=>gi(p)==i).length,n)).join('')}<p class="m" style="margin:8px 0 0">ポジション構成</p>${bar('投手',c('投'),n)}${bar('捕手',c('捕'),n)}${bar('内野手',c('一二三遊'),n)}${bar('外野手',c('左中右'),n)}</div>
+<div class="c"><b>測定の予定</b><div class="r"><label>次回の予定<input id="tnx" type="date" value="${t.nx}"></label><label>周期<select id="tiv">${opts([1,2,3,6].map(x=>[x,x+'か月ごと']),t.iv)}</select></label></div></div>
+<div class="c"><b>球数の上限</b><div class="r"><label>期間<select id="tpp">${opts([['1日','1日'],['1週間','1週間（直近7日）']],t.pp)}</select></label><label>上限(球)<input id="tlm" type="number" inputmode="numeric" value="${t.lim}"></label></div><label>連投<select id="tcs">${opts(['制限なし','2日まで','3日まで'].map(x=>[x,x]),t.cons)}</select></label></div>
+<h3>グラウンド</h3><p class="m">外野フェンスまでの距離などを登録します。試合の記録の打球地点に反映されます。追加・削除の前に「保存」を押してください。</p>${S.gr.map((r,i)=>`<details class="c"><summary><b>${esc(r.name)}</b> <small class="m">左${r.lf}・中${r.cf}・右${r.rf}m</small></summary><label>名称<input id="gn${i}" value="${esc(r.name)}"></label><div class="r" style="flex-wrap:wrap">${[['gl','左翼','lf'],['gm','左中間','lc'],['gc','中堅','cf'],['gk','右中間','rc'],['gr','右翼','rf'],['gb','塁間','bs'],['gp','投手板まで','pm']].map(([k,l,f])=>`<label style="flex:1 1 28%">${l}(m)<input id="${k}${i}" type="number" step="any" inputmode="decimal" value="${r[f]}"></label>`).join('')}</div>${S.gr.length>1?`<button class="x" data-a="grd" data-i="${i}">このグラウンドを削除</button>`:''}</details>`).join('')}<button class="p" data-a="gra">グラウンドを追加</button>${sb}<h3>競技規則セット</h3><p class="m">大会・連盟・年度ごとに作成し、試合を始めるときに選べます。適用される規則は主催者の案内で確認してください。追加・削除の前に「保存」を押してください。</p>${S.rs.map((r,i)=>`<details class="c"><summary><b>${esc(r.name)}</b> <small class="m">${r.i}回${r.tb?'・タイブレーク':''}${r.c?'・コールド':''}${r.dh?'・DH':''}</small></summary><label>名称<input id="rn${i}" value="${esc(r.name)}"></label><div class="r"><label>回数<input id="ri${i}" type="number" value="${r.i}"></label><label>時間制限(分)<input id="rl${i}" type="number" value="${r.tl||''}"></label><label>登録人数<input id="ro${i}" type="number" value="${r.ro||''}"></label></div><div class="r"><label>タイブレーク<select id="rt${i}">${opts([[0,'なし'],[1,'あり']],r.tb)}</select></label><label>コールド<select id="rc${i}">${opts([[0,'なし'],[1,'あり']],r.c)}</select></label><label>DH制<select id="rd${i}">${opts([[0,'なし'],[1,'あり']],r.dh)}</select></label></div><label>大会独自のルール<textarea id="rm${i}">${esc(r.nt||'')}</textarea></label>${S.rs.length>1?`<button class="x" data-a="rsd" data-i="${i}">このセットを削除</button>`:''}</details>`).join('')}<button class="p" data-a="rsa">規則セットを追加</button>${sb}
+<h3>チームの管理</h3><div class="c"><div class="i" data-t="pls"><span>選手管理</span><b>${n}名 ›</b></div><div class="i" data-t="ret"><span>卒業・引退した選手</span><b>${S.p.length-n}名 ›</b></div><div class="i" data-t="mse"><span>測定会</span><b>${new Set(S.m.map(x=>x.d)).size}回 ›</b></div><div class="i" data-t="gms"><span>試合の記録</span><b>${S.g.length}試合 ›</b></div><div class="i" data-t="ana"><span>チーム分析</span><b>›</b></div><div class="i" data-t="gls"><span>指標の用語集</span><b>›</b></div><div class="i" data-t="set"><span>設定（テーマ・文字サイズ）</span><b>›</b></div></div>
+<h3>同期とアカウント</h3><div class="c"><div class="i"><span>同期の状態</span><b class="m">同期しない</b></div><div class="i"><span>この端末に保存</span><b class="m">保存中</b></div><div class="i"><span>オフライン動作</span><b class="m">${typeof navigator!='undefined'&&navigator.serviceWorker&&navigator.serviceWorker.controller?'有効':'初回の読み込み後に有効'}</b></div><p class="m">このアプリは外部へ通信しません。選手の情報はこの端末のブラウザ内にだけ保存され、外部のAIへ送信されることはありません。必要最小限の情報だけを入力してください（性別は任意）。</p></div>
+<h3>データ</h3><div class="c"><button class="p" data-a="sample">サンプルデータを読み込む（データが空のときのみ）</button><p class="m">${msg}</p><button class="p" data-a="print">レポート出力（印刷／PDF）</button><p class="m">打席データ (CSV)</p><textarea readonly>${esc(csv())}</textarea><p class="m">バックアップ (JSON)</p><textarea id="bk">${esc(JSON.stringify(S))}</textarea><button class="p" data-a="imp">貼り付けた内容で上書き復元</button><button class="x" data-a="wipe">${warm?'もう一度押すと全データを削除します':'全データを削除する'}</button></div>`}
+};
+const NT={home:'ホーム',pls:'選手',gms:'試合',ana:'分析'},NV={pd:'pls',gnew:'gms',gd:'gms',rec:'gms',team:'home',mse:'home',ret:'home',ab:'ana',pa2:'ana',sc2:'ana',df:'ana',pk:'pls',lu:'gms',ax:'ana',allm:'ana',gl:'ana',gls:'home',gld:'home',cmp:'pls',set:'home',hs:'home'};
+function draw(){const e=document.documentElement;if(S.set.th)e.setAttribute('data-theme',S.set.th);else e.removeAttribute('data-theme');document.body.style.fontSize=15*S.set.fs/100+'px';const sb=$('.shb'),y0=sb?sb.scrollTop:0;$('#v').innerHTML=V[tab]();const nb=$('.shb');if(nb&&y0)nb.scrollTop=y0;$('#n').innerHTML=Object.keys(NT).map(k=>`<button class="${k==(NV[tab]||tab)?'on':''}" data-t="${k}">${NT[k]}</button>`).join('')}
+$d.addEventListener('input',e=>{if(e.target.id=='q'){sq=e.target.value;$('#lst').innerHTML=lst()}else if(e.target.id=='gqi'){gq=e.target.value;$('#gll').innerHTML=gla()}});
+$d.addEventListener('change',e=>{const t=e.target,g=S.g.find(x=>x.id==S.cur);
+if(t.id=='sp')sel=t.value;else if(t.id=='pt')ptc=t.value;else if(t.id=='c1'){ca=t.value;draw()}else if(t.id=='c2'){cb=t.value;draw()}else if(t.id=='sth'){S.set.th=t.value;save();draw()}else if(t.id=='sfs'){S.set.fs=+t.value;save();draw()}else if(t.id=='scm'){S.set.cm=t.value;save();draw()}else if(t.id=='mk'){mk=+t.value;draw()}else if(t.id=='so'){so=t.value;draw()}else if(t.id=='aw'){an.who=t.value;draw()}
+else if((t.id=='rs'||t.id=='ra')&&g){g[t.id]=+t.value||0;save()}});
+$d.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;const d=t.dataset,a=d.a,v=s=>$(s)?$(s).value:'';
+if(d.t){tab=d.t;sh='';draw();scrollTo(0,0);return}
+if(a=='per')an.per=d.k;else if(a=='inc')an.inc^=1;
+else if(a=='gf')gf=gf.includes(d.k)?gf.filter(x=>x!=d.k):gf.concat(d.k);
+else if(a=='pf')pf=pf.includes(d.k)?pf.filter(x=>x!=d.k):pf.concat(d.k);
+else if(a=='gy')gy=+d.k;else if(a=='more')lim+=10;
+else if(a=='rz')rz=rz==+d.k?-1:+d.k;else if(a=='pm')pmode=+d.k;
+else if(a=='pit'){const g=S.g.find(x=>x.id==S.cur);if(!g||(!pmode&&!v('#pt')))return;S.pt.push({id:id(),gid:g.id,d:g.d,p:pmode?'':v('#pt'),r:d.k});if(!pmode)ptc=v('#pt')}
+else if(a=='upit'){const i=S.pt.map(x=>x.gid).lastIndexOf(S.cur);if(i>=0)S.pt.splice(i,1)}
+else if(a=='msave'){act().forEach(p=>{const n=parseFloat(v('#ms_'+p.id));if(!isNaN(n))S.m.push({id:id(),p:p.id,k:mk,v:n,d:v('#dt')||lt()})});tab='home'}
+else if(a=='rev'){const p=S.p.find(x=>x.id==d.i);if(p)p.g0-=gi(p)-(G.length-1)}
+else if(a=='sample'){if(S.p.length||S.g.length)msg='既存データがあるため読み込めません（先にバックアップを取ってください）';else{const y=fyOf(lt()),ri=n=>Math.floor(Math.random()*n),Ps=['投','捕','右','中','遊','一','三','左','二','投'],O=['翠嶺浜','星見ヶ原','霞草台','朝霧野工','藤棚坂','夕凪台','灯籠高','紫苑台'],D=['04-18','05-06','06-06','07-11','08-02','09-05','09-18'],RR=['単打','単打','二塁打','本塁打','四球','三振','三振','ゴロ','ゴロ','飛球','飛球','飛球'];
+'山田 大翔,佐藤 悠真,鈴木 大輝,高橋 颯太,渡辺 悠斗,伊藤 奏真,小林 楓,中村 海斗,加藤 隆,田中 翔真'.split(',').forEach((n,i)=>{const p={id:id(),name:n,kana:'',no:String(i+1),g0:2,fy:y,pos:Ps[i],th:'右',bt:'右',sx:'男子'},q=.3+Math.random()*.6;S.p.push(p);[y+'-04-10',y+'-07-10',y+'-09-10'].forEach((d,j)=>M.forEach((m,k)=>S.m.push({id:id(),p:p.id,k,v:+(REF.男子[m[0]][2]*(1+(m[2]?-1:1)*((q-.55)*.3+j*.02))).toFixed(1),d})));S.m.push({id:id(),p:p.id,k:99,v:125+i,d:y+'-04-10'},{id:id(),p:p.id,k:99,v:125+i+(i%3?2:8),d:y+'-09-10'})});
+O.forEach((o,i)=>{const g={id:id(),d:i==7?lt():y+'-'+D[i],o,v:'自校グラウンド',t:['公式戦','練習試合'][i%2],rs:ri(9),ra:ri(6)};S.g.push(g);for(let k=0;k<30;k++){const x=RR[ri(RR.length)];S.a.push({id:id(),p:S.p[ri(10)].id,d:g.d,o,gid:g.id,r:x,rbi:x=='本塁打'?1:0,z:x=='四球'||x=='三振'?-1:ri(5),pw:['強','普','弱'][ri(3)],rn:['000','100','010','001','110','101','011','111'][ri(8)]})}for(let k=0;k<60;k++)S.pt.push({id:id(),gid:g.id,d:g.d,p:k%3?'':S.p[ri(2)*9].id,r:['見逃し','空振り','ファウル','ボール','ボール','インプレー'][ri(6)]})});msg='サンプルデータを読み込みました'}}
+else if(a=='hu'||a=='hd'){const o=hord(),i=o.indexOf(d.k),j=a=='hu'?i-1:i+1;if(j>=0&&j<o.length){[o[i],o[j]]=[o[j],o[i]];S.ho=o}}
+else if(a=='hh')S.hh=S.hh.includes(d.k)?S.hh.filter(x=>x!=d.k):S.hh.concat(d.k);
+else if(a=='gp')gp^=1;
+else if(a=='ah'){const n=parseFloat(v('#hv')),w=parseFloat(v('#wv')),d0=v('#hd')||lt();if(isNaN(n)&&isNaN(w))return;if(!isNaN(n))S.m.push({id:id(),p:sel,k:99,v:n,d:d0});if(!isNaN(w))S.m.push({id:id(),p:sel,k:98,v:w,d:d0})}
+else if(a=='sb'){const g=S.g.find(x=>x.id==S.cur),p=v('#sp');if(!g||!p)return;S.sb.push({id:id(),gid:g.id,d:g.d,p,ok:+d.k})}
+else if(a=='cs'){const p=S.p.find(x=>x.id==sel);if(p)p.cs=p.cs?'':lt()}
+else if(a=='pe'){const p=S.p.find(x=>x.id==sel);if(p){const n=v('#en').trim();if(n)p.name=n;p.kana=v('#ek').trim();p.no=v('#eno').trim();p.sx=v('#esx');p.pos=v('#epps')+rp('eo_').replace(v('#epps'),'');if($('#ecap')){const on=$('#ecap').checked;if(on)S.p.forEach(q=>q.cap=0);p.cap=on?1:0}p.g0=+v('#eg')-(fyOf(lt())-p.fy)}}
+else if(a=='na')S.m.push({id:id(),p:sel,k:mk,na:1,d:v('#dt')||lt()});
+else if(a=='rsa')S.rs.push({id:id(),name:'新しい規則セット',i:6,tb:0,c:0,dh:0,tl:0,ro:0,nt:''});
+else if(a=='rsd')S.rs.splice(+d.i,1);
+else if(a=='wipe'){if(!warm){warm=1;draw();return}S={p:[],a:[],m:[],g:[],team:'マイチーム',hide:0,cur:'',ver:2};norm();setG();warm=0;tab='home'}
+else if(a=='lgo'){const g=cg(),l=[0,1,2,3,4,5,6,7,8].map(i=>v('#lu'+i)).filter(Boolean);if(!l.length)return;g.lu=l;g.n={inn:1,top:1,o:0,b:0,s:0,bs:[0,0,0],bi:0};g.opc=g.opc||0;g.h=[];tab='rec'}
+else if(a=='shw'){sh=d.k;if(sh=='play')ip={}}
+else if(a=='shx')sh='';
+else if(a=='ipr')ip.r=d.k;else if(a=='ipk')ip.k=d.k;else if(a=='ipw')ip.w=d.k;else if(a=='ipp'){ip.pos=d.k;ip.pm=1}
+else if(a=='fld'){const G=grd(cg()),sc=gsc(G),r=t.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*200,y=(e.clientY-r.top)/r.height*182,dx=x-100,dy=165-y;if(dy<=0)return;let q=Math.atan2(dx,dy)*180/Math.PI;q=Math.max(-45,Math.min(45,q));const R=Math.min(fen(G,q)*sc,Math.hypot(dx,dy)),rr=q*Math.PI/180;ip.x=+(100+R*Math.sin(rr)).toFixed(1);ip.y=+(165-R*Math.cos(rr)).toFixed(1);ip.z=Math.min(4,Math.floor((q+45)/18));ip.d=Math.round(R/sc);if(!ip.pm)ip.pos=ip.d<G.bs*1.8?['三','遊','投','二','一'][ip.z]:['左','左','中','右','右'][ip.z]}
+else if(a=='ipn'){if(!ip.r)return;const g=cg(),z=dflt(ip.r,g.n);ip.db=z[0];ip.dr=z[1];sh='run'}
+else if(a=='rd'){if(d.i=='b')ip.db=+d.k;else ip.dr[+d.i]=+d.k}
+else if(a=='rok'){const g=cg();snap(g);const r0=ip.r,r=r0=='アウト'?(['ライナー','フライ','ポップフライ'].includes(ip.k)?'飛球':'ゴロ'):r0=='併殺'?'ゴロ':r0;fin(g,{r,rbi:r0=='失策'||r0=='併殺'?0:null,z:ip.z,dist:ip.d,kind:ip.k,pw:ip.w,pos:ip.pos},ip.db,ip.dr,r0+(ip.pos?'（'+PF[ip.pos]+'）':''));sh=''}
+else if(a=='p1'){const g=cg(),n=g.n;snap(g);S.pt.push({id:id(),gid:g.id,d:g.d,p:'',r:d.k});g.opc=(g.opc||0)+1;g.lt='';if(d.k=='ボール'){n.b++;if(n.b>=4)simple(g,'四球')}else if(d.k=='見逃し'||d.k=='空振り'){n.s++;if(n.s>=3)simple(g,'三振')}else if(n.s<2)n.s++}
+else if(a=='hbp'){const g=cg();snap(g);simple(g,'死球');sh=''}
+else if(a=='stl'){const g=cg(),n=g.n,i=+d.i,x=n.bs[i];if(!x)return;snap(g);S.sb.push({id:id(),gid:g.id,d:g.d,p:x,ok:+d.k});n.bs[i]=0;if(+d.k){if(i==2)g.rs++;else if(!n.bs[i+1])n.bs[i+1]=x;else n.bs[i]=x}else{n.o++;if(n.o>=3)chg(g)}g.lt='盗塁'+(+d.k?'成功':'失敗');sh=''}
+else if(a=='undo'){const g=cg();if(!g||!g.h||!g.h.length)return;const x=JSON.parse(g.h.pop());g.n=x.n;g.rs=x.rs;g.ra=x.ra;S.a.length=x.na;S.pt.length=x.np;S.sb.length=x.nb;g.opc=x.opc;g.lt=x.lt}
+else if(a=='dra'){const g=cg();snap(g);g.ra++;g.lt=''}
+else if(a=='dout'){const g=cg();snap(g);g.n.o++;g.lt='';if(g.n.o>=3)chg(g)}
+else if(a=='chg'){const g=cg();snap(g);chg(g);g.lt=''}
+else if(a=='dpit'){const g=cg(),p=v('#pt');if(!p)return;snap(g);ptc=p;S.pt.push({id:id(),gid:g.id,d:g.d,p,r:d.k});g.lt=''}
+else if(a=='swp'){const g=cg(),x=v('#sw');if(x){g.lu[g.n.bi%g.lu.length]=x;sh=''}}
+else if(a=='opc'){const g=cg();g.op=v('#opn').trim();g.opc=0;sh=''}
+else if(a=='adj'){const g=cg();g[d.i]=Math.max(0,g[d.i]+ +d.k)}
+else if(a=='gra')S.gr.push({id:id(),name:'新しいグラウンド',lf:98,lc:110,cf:122,rc:110,rf:98,bs:27.4,pm:18.4});
+else if(a=='grd'){if(S.gr.length>1)S.gr.splice(+d.i,1)}
+else if(a=='cap'){const p=S.p.find(x=>x.id==sel);if(p){const on=!p.cap;S.p.forEach(q=>q.cap=0);p.cap=on?1:0}}
+else if(a=='gkc')gk=d.k;
+else if(a=='gld'){gst=tab=='gld'?gst.concat(+d.i):[+d.i];gli=+d.i;tab='gld';scrollTo(0,0)}
+else if(a=='glb'){gst.pop();if(gst.length)gli=gst[gst.length-1];else tab='gls';scrollTo(0,0)}
+else if(a=='thsave'){const g=parseFloat(v('#thg')),b=parseFloat(v('#thb'));S.gd[d.k]={g:isNaN(g)?null:g,b:isNaN(b)?null:b}}
+else if(a=='thclr')S.gd[d.k]={g:null,b:null};
+else if(a=='thrst')delete S.gd[d.k];
+else if(a=='gtf')gt=gt==d.k?'':d.k;
+else if(a=='pd'){sel=d.i;tab='pd';scrollTo(0,0)}
+else if(a=='gd'){rid=d.i;tab='gd';scrollTo(0,0)}
+else if(a=='hide')S.hide=1;
+else if(a=='ap'){const name=v('#pn').trim();if(!name)return;S.p.push({id:id(),name,kana:v('#pk').trim(),no:v('#pno').trim(),g0:+v('#pg'),fy:fyOf(lt()),pos:v('#pps')+rp('po_').replace(v('#pps'),''),th:v('#pth'),bt:v('#pbt'),sx:v('#psx')});if($('#pcap')&&$('#pcap').checked){S.p.forEach(q=>q.cap=0);S.p[S.p.length-1].cap=1}}
+else if(a=='dp'){S.p=S.p.filter(x=>x.id!=sel);S.a=S.a.filter(x=>x.p!=sel);S.m=S.m.filter(x=>x.p!=sel);tab='pls'}
+else if(a=='pa'){const g=S.g.find(x=>x.id==S.cur),p=v('#sp');if(!g||!p)return;sel=p;S.a.push({id:id(),p,d:g.d,o:g.o,gid:g.id,r:d.k,rbi:+v('#rb'),z:rz});rz=-1}
+else if(a=='dpa')S.a=S.a.filter(x=>x.id!=d.i);
+else if(a=='am'){const n=parseFloat(v('#mv'));if(isNaN(n))return;S.m.push({id:id(),p:sel,k:mk,v:n,d:v('#dt')||lt(),c:v('#mc').trim().slice(0,60)})}
+else if(a=='dm')S.m=S.m.filter(x=>x.id!=d.i);
+else if(a=='gstart'){const g={id:id(),d:v('#dt')||lt(),o:v('#op').trim(),v:v('#vn').trim()||(S.gr.find(x=>x.id==v('#ggr'))||{}).name||'',t:v('#gtp'),ru:v('#gru'),gr:v('#ggr'),ho:+v('#gho'),op:v('#opn').trim(),rs:0,ra:0};S.g.push(g);S.cur=g.id;tab='lu'}
+else if(a=='gres'){S.cur=rid;tab='rec'}
+else if(a=='gend'){S.cur='';tab='gms'}
+else if(a=='gdel'){S.g=S.g.filter(x=>x.id!=rid);S.a=S.a.filter(x=>x.gid!=rid);S.pt=S.pt.filter(x=>x.gid!=rid);if(S.cur==rid)S.cur='';tab='gms'}
+else if(a=='tn'){const n=v('#tn').trim().slice(0,60);if(n)S.team=n;norm();const t=S.tm,y=+v('#tyr');t.ab=v('#tab').slice(0,10);if(y>=1900&&y<=2200)t.yr=y;t.cat=v('#tct');t.area=v('#tar').slice(0,40);t.mgr=v('#tmg').slice(0,40);t.memo=v('#tme').slice(0,300);t.nx=v('#tnx');t.iv=+v('#tiv');t.pp=v('#tpp');t.lim=+v('#tlm')||t.lim;t.cons=v('#tcs');S.gr.forEach((r,i)=>{r.name=v('#gn'+i).trim()||r.name;[['gl','lf'],['gm','lc'],['gc','cf'],['gk','rc'],['gr','rf'],['gb','bs'],['gp','pm']].forEach(([k,f])=>{const x=parseFloat(v('#'+k+i));if(x>0)r[f]=x})});t.kind=v('#tkd');t.rb=v('#trb');setG();S.rs.forEach((r,i)=>{r.name=v('#rn'+i).trim()||r.name;r.i=+v('#ri'+i)||r.i;r.tb=+v('#rt'+i);r.c=+v('#rc'+i);r.dh=+v('#rd'+i);r.tl=+v('#rl'+i)||0;r.ro=+v('#ro'+i)||0;r.nt=v('#rm'+i).slice(0,200)})}
+else if(a=='print'){print();return}
+else if(a=='imp'){try{const j=JSON.parse(v('#bk'));if(!Array.isArray(j.p)||!Array.isArray(j.a)||!Array.isArray(j.m))throw 0;S=Object.assign({g:[],team:'マイチーム',hide:0,cur:''},j);norm();mig();tab='home'}catch(x){alert('データ形式が正しくありません');return}}
+save();draw()});
+draw();
+try{if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('./sw.js').then(r=>{r.addEventListener('updatefound',()=>{const w=r.installing;w&&w.addEventListener('statechange',()=>{if(w.state=='installed'&&navigator.serviceWorker.controller)console.log('新しいバージョンを準備しました。次回の起動で切り替わります。')})})}).catch(()=>{});navigator.serviceWorker.addEventListener('controllerchange',()=>{});}
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
+</script></body></html>
