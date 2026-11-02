@@ -1,6 +1,6 @@
 {
-  "name": "DiamondLens 野球記録",
-  "short_name": "DiamondLens",
+  "name": "HOPE Data Analysis 野球記録",
+  "short_name": "HOPE Data Analysis",
   "description": "試合記録・能力測定・データ分析（オフライン対応）",
   "lang": "ja",
   "start_url": "./",
