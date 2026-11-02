@@ -1,6 +1,6 @@
 // HOPE Data Analysis service worker — アプリ本体をキャッシュしてオフラインで起動できるようにします。
 // アプリを更新したら VERSION を変えると、利用者の端末のキャッシュが入れ替わります。
-const VERSION = 'v33';
+const VERSION = 'v34';
 const CACHE = 'diamondlens-' + VERSION;
 const ASSETS = [
   './',
