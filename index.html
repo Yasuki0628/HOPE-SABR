@@ -75,7 +75,7 @@ let SWR=null,DLERR=null,DLRAW=null;
 try{DLRAW=localStorage.getItem('dl');const j=DLRAW?JSON.parse(DLRAW):null;if(j!=null){const bad=(typeof j!='object'||Array.isArray(j))?['全体']:['p','a','m','g'].filter(k=>j[k]!=null&&!Array.isArray(j[k]));if(bad.length)DLERR='保存データの構造が正しくありません（'+bad.join('・')+'）';else S=Object.assign(S,j)}}catch(e){DLERR='保存データを読み込めませんでした（JSONが壊れています）'}
 const fyOf=d=>{const[y,m]=d.split('-');return m>3?+y:y-1};
 S.p.forEach(p=>{if(p.g0==null){p.g0=0;p.fy=fyOf(lt())}p.kana=p.kana||''});
-const norm=()=>{try{(S.p||[]).forEach(p=>{if(!p.dv)p.dv='代表'});(S.g||[]).forEach(g=>{if(!g.dv)g.dv='代表'})}catch(_){}S.tm=Object.assign({ab:'',cat:'沖縄ブロック',kind:'学童野球',rb:'',yr:fyOf(lt()),area:'',mgr:'',memo:'',pp:'1週間',lim:500,cons:'制限なし',nx:'',iv:3,r:{公式戦:{i:9,t:1,c:1},練習試合:{i:9,t:0,c:0},紅白戦:{i:9,t:0,c:0},その他:{i:9,t:0,c:0}}},S.tm);S.pt=S.pt||[];S.gl=S.gl||[];S.px=S.px||[];S.sb=S.sb||[];S.gd=S.gd||{};S.sn=S.sn||[];S.op=S.op||[];S.df=S.df||[];S.pk=S.pk||[];S.ao=S.ao||[];S.ev=S.ev||[];S.ob=S.ob||[];S.opp=S.opp||[];S.g.forEach(g=>{if(g.h&&g.hv!=2){g.h=[];g.hv=2}});S.gr=S.gr&&S.gr.length?S.gr:[{id:'gr0',name:'自校グラウンド',lf:98,lc:110,cf:122,rc:110,rf:98,bs:27.4,pm:18.4}];S.rs=S.rs&&S.rs.length?S.rs:[{id:'d0',name:'学童 標準',i:6,tb:0,c:1,dh:0,tl:0,ro:0,nt:''}];S.hh=S.hh||[];S.ho=S.ho||[];S.set=Object.assign({th:'',fs:100,cm:'C'},S.set)};norm();
+const norm=()=>{try{(S.p||[]).forEach(p=>{if(!p.dv)p.dv='代表'});(S.g||[]).forEach(g=>{if(!g.dv)g.dv='代表'})}catch(_){}S.tm=Object.assign({ab:'',cat:'沖縄ブロック',kind:'学童野球',rb:'',yr:fyOf(lt()),area:'',mgr:'',memo:'',pp:'1週間',lim:500,cons:'制限なし',nx:'',iv:3,r:{公式戦:{i:9,t:1,c:1},練習試合:{i:9,t:0,c:0},紅白戦:{i:9,t:0,c:0},その他:{i:9,t:0,c:0}}},S.tm);S.pt=S.pt||[];S.gl=S.gl||[];S.px=S.px||[];S.sb=S.sb||[];S.gd=S.gd||{};S.sn=S.sn||[];S.op=S.op||[];S.df=S.df||[];S.pk=S.pk||[];S.ao=S.ao||[];S.ev=S.ev||[];S.ob=S.ob||[];S.opp=S.opp||[];S.g.forEach(g=>{if(g.h&&g.hv!=2){g.h=[];g.hv=2}});S.gr=S.gr&&S.gr.length?S.gr:[{id:'gr0',name:'自校グラウンド',lf:98,lc:110,cf:122,rc:110,rf:98,bs:27.4,pm:18.4}];S.rs=S.rs&&S.rs.length?S.rs:[{id:'d0',name:'学童 標準',i:6,tb:0,c:1,dh:0,tl:0,ro:0,nt:''}];S.hh=S.hh||[];S.ho=S.ho||[];S.ux=Object.assign({mode:'d',btns:['1','2','3','H','K','B','G','F'],cf:1,vc:1,lk:0,dr:null,md:'',mk:'g'},S.ux);S.set=Object.assign({th:'',fs:100,cm:'C'},S.set)};norm();
 // ===== Phase 1: データ保存の安全性 =====
 const OPK='dl_log';let OPL=[];try{OPL=JSON.parse(localStorage.getItem(OPK)||'[]');if(!Array.isArray(OPL))OPL=[]}catch(_){OPL=[]}
 const oplog=(a,x)=>{try{OPL.push({t:new Date().toISOString(),a,x:String(x==null?'':x).slice(0,80)});if(OPL.length>200)OPL=OPL.slice(-200);localStorage.setItem(OPK,JSON.stringify(OPL))}catch(_){}};
@@ -819,7 +819,7 @@ const back='<button class="x" data-t="ana">‹ 分析</button>';
 const tb=(h,r)=>`<div class="c w"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${r.join('')}</table></div>`;
 const RS=[['走者なし','000'],['一塁','100'],['二塁','010'],['三塁','001'],['一・二塁','110'],['一・三塁','101'],['二・三塁','011'],['満塁','111']];
 const stl=l=>l.map(r=>{const q=st(r[1]);return`<tr><td>${r[0]}</td><td>${q.pa}</td><td>${f3(q.avg)}</td><td>${q.h}</td><td>${q.rbi}</td><td>${f3(q.ops)}</td></tr>`});
-const BK=[{k:'all',t:'全データ',f:'*',n:()=>'すべての項目をまとめて'},{k:'players',t:'選手記録',f:['p'],n:()=>S.p.length+'名'},{k:'measures',t:'測定記録・目標・ポジション経験',f:['m','gl','px'],n:()=>S.m.length+'件・目標'+(S.gl||[]).length+'件'},{k:'games',t:'試合記録',f:['g','a','pt','sb','df','pk','ao','ev'],n:()=>S.g.length+'試合・'+S.a.length+'打席・'+S.pt.length+'球・盗塁'+S.sb.length+'・守備'+S.df.length+'・牽制'+S.pk.length},{k:'grounds',t:'グラウンド記録',f:['gr'],n:()=>S.gr.length+'件'},{k:'opponents',t:'対戦相手記録',f:['op','ob','opp'],n:()=>S.op.length+'チーム・相手打者'+S.ob.length+'・相手投手'+S.opp.length},{k:'seasons',t:'シーズン',f:['sn'],n:()=>S.sn.length+'件'},{k:'rules',t:'競技規則セット',f:['rs'],n:()=>S.rs.length+'件'},{k:'settings',t:'チーム設定・目安・ロゴ',f:['team','tm','set','gd','hh','ho','hide'],n:()=>esc(S.team)},{k:'csv',t:'打席データ（CSV・書き出しのみ）',n:()=>S.a.length+'打席'}];
+const BK=[{k:'all',t:'全データ',f:'*',n:()=>'すべての項目をまとめて'},{k:'players',t:'選手記録',f:['p'],n:()=>S.p.length+'名'},{k:'measures',t:'測定記録・目標・ポジション経験',f:['m','gl','px'],n:()=>S.m.length+'件・目標'+(S.gl||[]).length+'件'},{k:'games',t:'試合記録',f:['g','a','pt','sb','df','pk','ao','ev'],n:()=>S.g.length+'試合・'+S.a.length+'打席・'+S.pt.length+'球・盗塁'+S.sb.length+'・守備'+S.df.length+'・牽制'+S.pk.length},{k:'grounds',t:'グラウンド記録',f:['gr'],n:()=>S.gr.length+'件'},{k:'opponents',t:'対戦相手記録',f:['op','ob','opp'],n:()=>S.op.length+'チーム・相手打者'+S.ob.length+'・相手投手'+S.opp.length},{k:'seasons',t:'シーズン',f:['sn'],n:()=>S.sn.length+'件'},{k:'rules',t:'競技規則セット',f:['rs'],n:()=>S.rs.length+'件'},{k:'settings',t:'チーム設定・目安・ロゴ',f:['team','tm','set','gd','hh','ho','hide','ux'],n:()=>esc(S.team)},{k:'csv',t:'打席データ（CSV・書き出しのみ）',n:()=>S.a.length+'打席'}];
 const sumOf=o=>{const t=JSON.stringify(o);let h=0x811c9dc5;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0}return h.toString(16)};
 const bkd=k=>{if(k=='csv')return csv();const b=BK.find(x=>x.k==k),d={};(b.f==='*'?Object.keys(S):b.f).forEach(x=>{d[x]=S[x]});return JSON.stringify({app:'HOPE Data Analysis',item:k,ver:2,at:new Date().toISOString(),cnt:{p:S.p.length,g:S.g.length,a:S.a.length,m:S.m.length},sum:sumOf(d),data:d})};
 const WRONG='この項目のデータではありません。別の項目のバックアップか、形式が違います。';
@@ -1685,6 +1685,129 @@ for(let i=c0[4];i<S.ev.length;i++){const r=S.ev[i];if(r.gid!=pre.gid)continue;if
 for(let i=c0[3];i<S.sb.length;i++){const r=S.sb[i];if(r.gid!=pre.gid||r.inn!=null)continue;r.inn=pre.inn;r.ou=pre.o;r.rs=(pre.bs||[]).map(x=>x?1:0).join('');if(a=='stl'&&d&&d.i!=null)r.bf=+d.i}
 for(let i=c0[5];i<S.pk.length;i++){const r=S.pk[i];if(r.gid==pre.gid&&r.k=='att'&&r.ou==null)r.ou=pre.o}
 if(used&&!pkeep)pspd=''};
+/* ===== Phase 7: 試合中の入力支援 ===== */
+const UXM={'1':{l:'単打',r:'単打'},'2':{l:'二塁打',r:'二塁打'},'3':{l:'三塁打',r:'三塁打'},H:{l:'本塁打',r:'本塁打'},K:{l:'三振',x:'k'},KL:{l:'見逃し三振',x:'kl'},B:{l:'四球',x:'b'},D:{l:'死球',x:'d'},G:{l:'ゴロアウト',r:'アウト',k:'ゴロ'},F:{l:'飛球アウト',r:'アウト',k:'フライ'},S:{l:'犠打',r:'犠打'},SF:{l:'犠飛',r:'犠飛'},DP:{l:'併殺',r:'併殺'},E:{l:'失策出塁',r:'失策'},FC:{l:'野選',r:'野選'}};
+const UXDEF=['1','2','3','H','K','B','G','F'],UXMAX=8,UXDS=['play','run','dplay','drun2','drun','arun','sq'];
+const UXR={単打:'1',二塁打:'2',三塁打:'3',本塁打:'H',三振:'K',四球:'B',死球:'D',ゴロ:'G',飛球:'F',犠打:'S',犠飛:'SF',失策:'E',野選:'FC'};
+const UXTAG=['要確認','投手交代を検討','守備位置を変える','好プレー','ケガに注意','次回の課題'];
+let uxq=null,uxv={st:'',txt:'',r:null,msg:''},uxIn=0,uxDk='',uxUl=0,uxSR=null,uxDq={k:'',t:0},uxMt=null;
+const uxX=()=>{const X=S.ux=S.ux||{};if(!Array.isArray(X.btns))X.btns=UXDEF.slice();X.btns=X.btns.filter(k=>UXM[k]).slice(0,UXMAX);if(X.mode!='s')X.mode='d';if(X.cf==null)X.cf=1;if(X.vc==null)X.vc=1;X.mk=X.mk=='i'?'i':'g';X.md=X.md||'';return X};
+const uxAt=g=>g&&g.n&&g.n.top==(g.ho?0:1);
+/* 音声の文章 → 操作。戻り値 {t:'q',k}|{t:'p',k}|{t:'u'}|{t:'c'}|null */
+const voiceParse=t=>{t=String(t||'').replace(/[\s、。，．,.!！?？「」]/g,'').replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+96));if(!t)return null;const hk=x=>x.replace(/[\u3041-\u3096]/g,c=>String.fromCharCode(c.charCodeAt(0)+96)),has=(...a)=>a.some(x=>t.includes(hk(x)));
+if(has('取り消','取消','アンドゥ','ヤリナオ','やり直','ヒトツモド','戻して','モドシテ'))return{t:'u'};
+if(has('チェンジ','攻守交代'))return{t:'c'};
+if(has('見逃し三振','ミノガシサンシン'))return{t:'q',k:'KL'};
+if(has('三振','サンシン','ストライクアウト'))return{t:'q',k:'K'};
+if(has('四球','フォアボール','ファーボール','フォアーボール','ベースオンボールズ'))return{t:'q',k:'B'};
+if(has('死球','デッドボール','シキュウ'))return{t:'q',k:'D'};
+if(has('本塁打','ホームラン','ホンルイダ'))return{t:'q',k:'H'};
+if(has('三塁打','スリーベース','サンルイダ'))return{t:'q',k:'3'};
+if(has('二塁打','ツーベース','ニルイダ'))return{t:'q',k:'2'};
+if(has('併殺','ゲッツー','ダブルプレー','ヘイサツ'))return{t:'q',k:'DP'};
+if(has('犠飛','犠牲フライ','サクリファイスフライ','ギヒ'))return{t:'q',k:'SF'};
+if(has('犠打','送りバント','犠牲バント','バント','ギダ'))return{t:'q',k:'S'};
+if(has('失策','エラー','シッサク'))return{t:'q',k:'E'};
+if(has('野選','フィルダースチョイス','ヤセン'))return{t:'q',k:'FC'};
+if(has('単打','シングル','ヒット','安打','タンダ','アンダ'))return{t:'q',k:'1'};
+if(has('飛球','フライ','ライナー','ポップ','ヒキュウ'))return{t:'q',k:'F'};
+if(has('ゴロ'))return{t:'q',k:'G'};
+if(has('見逃し','ミノガシ','ストライク'))return{t:'p',k:'見逃し'};
+if(has('空振り','カラブリ'))return{t:'p',k:'空振り'};
+if(has('ファウル','ファール'))return{t:'p',k:'ファウル'};
+if(has('ボール'))return{t:'p',k:'ボール'};
+return null};
+const uxLbl=r=>!r?'':r.t=='q'?UXM[r.k].l:r.t=='p'?r.k+'（1球）':r.t=='u'?'取り消し（1つ前に戻す）':'チェンジ（攻守交代）';
+/* 結果の予告（走者の進み方・得点・アウト） */
+const uxPrev=(g,k)=>{const n=g.n,m=UXM[k];let db,dr;if(m.r){const z=dflt(m.r,n);db=z[0];dr=z[1]}else if(m.x=='k'||m.x=='kl'){db=0;dr=n.bs.map((x,i)=>x?i+1:0)}else{const b=n.bs;db=1;dr=[b[0]?2:0,b[1]?(b[0]?3:2):0,b[2]?(b[0]&&b[1]?4:3):0]}
+const s=rsum(n.bs,db,dr);let run=noRun(n.bs,db,dr,n.o)?0:s.run;const o2=n.o+s.out;return{run,out:s.out,o2,nb:s.nb,end:o2>=3}};
+const uxOk=(g,k)=>{const n=g.n,r=n.bs.some(x=>x);if(k=='DP'&&!(n.bs[0]&&n.o<2))return'併殺は、一塁に走者がいて2アウト未満のときだけ使えます（それ以外は「インプレー」から）';if(k=='SF'&&!(n.bs[2]&&n.o<2))return'犠飛は、三塁に走者がいて2アウト未満のときだけ使えます（それ以外は「インプレー」から）';if(k=='S'&&!(r&&n.o<2))return'犠打は、走者がいて2アウト未満のときだけ使えます（それ以外は「インプレー」から）';return''};
+const uxNeed=(g,k,pv)=>{const X=uxX();return !!X.cf&&(pv.run>0||pv.end||['H','DP','E'].includes(k))};
+const uxPv=(g,k)=>{const pv=uxPrev(g,k),L=g.lu,b=L[g.n.bi%L.length];return`<div class="c" style="box-shadow:none;border-color:var(--b)"><b style="font-size:18px">${esc(pn(b))}　${UXM[k].l}</b><div class="k" style="margin-top:8px"><div><b>${pv.run}</b><span class="m">得点</span></div><div><b>${pv.o2>3?3:pv.o2}</b><span class="m">アウト</span></div><div><b style="font-size:16px">${pv.end?'—':(pv.nb.map((x,i)=>x?['一','二','三'][i]:'').join('')||'なし')}</b><span class="m">プレー後の塁</span></div></div>${pv.end?'<p class="m" style="margin:6px 0 0">3アウトでチェンジになります。</p>':''}<p class="m" style="margin:6px 0 0">走者は標準の進塁で処理します。違うときは確定後に「取り消す」を押し、「インプレー」から入力してください。</p></div>`};
+const uxFire=(a,dt)=>{dupL={k:'',t:0};const b=document.createElement('button');b.dataset.a=a;Object.entries(dt||{}).forEach(([k,v])=>b.dataset[k]=v);b.style.display='none';uxIn=1;try{document.body.appendChild(b);b.click()}finally{uxIn=0;try{b.remove()}catch(_){}}};
+/* 1つの操作を実行（既存の確定処理をそのまま呼ぶため、記録・取り消し・集計は通常入力と同じになる） */
+const uxGo=k=>{const g=cg(),m=UXM[k];if(!g||!g.n)return;const n=g.n;sh='';
+if(m.r){ip={r:m.r};if(m.k)ip.k=m.k;const z=dflt(m.r,n);ip.db=z[0];ip.dr=z[1];sh='run';uxFire('rok')}
+else if(m.x=='d')uxFire('hbp');
+else{const o={b:n.b,s:n.s};if(m.x=='b')n.b=3;else n.s=2;uxFire('p1',{k:m.x=='b'?'ボール':m.x=='kl'?'見逃し':'空振り'});try{const h=g.h,x=JSON.parse(h[h.length-1]);x.n.b=o.b;x.n.s=o.s;h[h.length-1]=JSON.stringify(x);save()}catch(_){}}
+oplog('ワンタップ入力',m.l)};
+const uxLast=g=>{const a=S.a.filter(x=>x.gid==g.id&&!x.ibb&&!x.sq).slice(-1)[0];return a&&UXR[a.r]?{k:UXR[a.r],r:a.r}:null};
+const uxLastP=g=>{const p=S.pt.filter(x=>x.gid==g.id&&!x.p).slice(-1)[0];return p&&['見逃し','空振り','ファウル','ボール'].includes(p.r)?p.r:null};
+/* イニング別スコア（打席・失点の記録から自動集計。合計が点数と合わないぶんは「他」に出す） */
+const uxLine=g=>{const A=S.a.filter(x=>x.gid==g.id),E=S.ev.filter(x=>x.gid==g.id&&x.run>0),D=S.df.filter(x=>x.gid==g.id&&x.run>0);let m=Math.max(g.n?g.n.inn:1,1,...A.map(x=>x.inn||1),...E.map(x=>x.inn||1),...D.map(x=>x.inn||1));const us=Array(m).fill(0),th=Array(m).fill(0);A.forEach(x=>{if(x.inn>=1&&x.ru)us[x.inn-1]+=x.ru});E.forEach(x=>{if(x.inn>=1)th[x.inn-1]+=x.run});D.forEach(x=>{if(x.inn>=1&&!E.some(e=>e.id&&e.id==x.id))th[x.inn-1]+=x.run});const su=us.reduce((a,b)=>a+b,0),st=th.reduce((a,b)=>a+b,0);return{m,us,th,su,st,ou:(g.rs||0)-su,ot:(g.ra||0)-st,rs:g.rs||0,ra:g.ra||0}};
+const uxLineH=g=>{const L=uxLine(g),f=g.ho?0:1,row=(nm,a,o,tot)=>`<tr><td style="text-align:left;white-space:nowrap">${esc(nm)}</td>${a.map(x=>`<td>${x}</td>`).join('')}<td>${o?(o>0?'+':'')+o:'-'}</td><td><b>${tot}</b></td></tr>`,R=[[S.team,L.us,L.ou,L.rs],[g.o||'相手',L.th,L.ot,L.ra]];if(g.ho)R.reverse();const bad=L.ou||L.ot;return`<div class="w"><table style="text-align:center"><tr><th></th>${[...Array(L.m)].map((_,i)=>`<th>${i+1}</th>`).join('')}<th>他</th><th>計</th></tr>${R.map(r=>row(...r)).join('')}</table></div>${bad?'<p class="m" style="margin:4px 0 0">「他」＝イニングが分からない得点・手動の点数補正（−1／＋1）です。合計は試合の点数と一致します。</p>':''}`};
+const uxMemoH=g=>{const M=g.mm||[];return M.length?M.slice().reverse().map(x=>`<div class="i" style="align-items:flex-start;gap:8px"><span style="flex:1"><small class="m">${x.inn}回${x.top?'表':'裏'}・${x.k=='i'?'イニング間':'試合中'}・${new Date(x.ts).toTimeString().slice(0,5)}</small><br>${esc(x.x).replace(/\n/g,'<br>')}</span></div>`).join(''):'<p class="m">メモはありません。</p>'};
+const uxOnl=()=>navigator.onLine!==false;
+const uxOf=()=>{try{const b=svEl('uxof','position:fixed;top:calc(4px + env(safe-area-inset-top,0px));right:8px;z-index:30;background:#a00;color:#fff;border-radius:12px;padding:2px 9px;font-size:11px;pointer-events:none');b.textContent='📴 オフライン（記録は端末に保存中）';b.style.display=uxOnl()?'none':'block'}catch(_){}};
+/* 選手の絞り込み（名前・背番号・ひらがな／カタカナ・全角半角を区別しない） */
+const uxNm=s=>String(s==null?'':s).toLowerCase().replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+96)).replace(/[Ａ-Ｚａ-ｚ０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/[\s　#＃]/g,'');
+const uxHit=(q,txt,p)=>{q=uxNm(q);if(!q)return true;return uxNm(txt+(p?(p.no||'')+(p.name||'')+(p.kana||''):'')).includes(q)};
+const uxFilt=q=>{['slp','phn','prn','obs','opp','pt'].forEach(k=>{const s=document.getElementById(k);if(!s)return;if(!s._o)s._o=[...s.options].map(o=>({v:o.value,t:o.text}));const cur=s.value,hit=s._o.filter(o=>o.v===''||uxHit(q,o.t,S.p.find(x=>x.id==o.v)));s.innerHTML=hit.map(o=>`<option value="${esc(o.v)}">${esc(o.t)}</option>`).join('');if(hit.some(o=>o.v==cur)&&!(uxNm(q)&&k!='pt'&&cur===''))s.value=cur;else if(uxNm(q)&&hit.length>1&&k!='pt')s.value=hit[1].v;s.dataset.uxn=hit.length-1})};
+/* 画面 */
+const uxBtn=(k,g)=>{const pv=uxPrev(g,k);return`<button class="bg uxb" data-a="uq" data-k="${k}">${UXM[k].l}${pv.run?`<small class="m" style="display:block;font-weight:400">${pv.run}点</small>`:''}</button>`};
+const uxPanel=(g,at)=>{const X=uxX(),n=g.n,la=at?uxLast(g):null,lp=at?uxLastP(g):null,mc=(g.mm||[]).length;const L0=g.lu,bq=S.p.find(x=>x.id==L0[n.bi%L0.length]);return`<div class="c uxq">${at&&bq?`<div class="uxsh" style="margin:0 0 6px"><b style="font-size:17px">${n.bi%L0.length+1}番 ${esc(bq.name)}</b> <small class="m">カウント ${n.b}-${n.s}・${n.o}アウト</small></div>`:''}<div class="ch" style="margin:0 0 6px">${X.vc?'<button data-a="uxv0">🎤 音声</button>':''}<button data-a="uxm0">📝 メモ${mc?' '+mc:''}</button><button data-a="uxlk">${X.lk?'🔓 解除':'🔒 ロック'}</button><button data-a="uxset">⚙︎ 設定</button><button class="${X.mode=='s'?'on':''}" data-a="uxmode">${X.mode=='s'?'簡易入力':'詳細入力'}</button></div>${at?`<div class="g" style="grid-template-columns:repeat(4,1fr)">${X.btns.map(k=>uxBtn(k,g)).join('')}</div>${la||lp?`<div class="r" style="margin-top:8px">${la?`<button class="x" style="flex:1" data-a="uq" data-k="${la.k}">↻ 直前の結果と同じ：${UXM[la.k].l}</button>`:''}${lp?`<button class="x" style="flex:1" data-a="uxp" data-k="${lp}">↻ 直前の球：${lp}</button>`:''}</div>`:''}<small class="m">ワンタップで確定します（走者は標準の進塁）。違うときは「取り消す」で戻せます。</small>`:'<small class="m">守備中は、下の「失点＋1」「アウト＋1」「チェンジ」や投球ボタンで入力します。</small>'}</div>`};
+const uxSheet=g=>{const X=uxX(),n=g.n;let h='';
+if(sh=='uxc'&&uxq){const raw=uxq.raw;h=`<h3 style="margin:0 0 8px">確認してから確定</h3>${raw?`<div class="c" style="box-shadow:none"><b style="font-size:18px">${esc(raw.t)}</b><p class="m" style="margin:6px 0 0">${esc(raw.m||'')}</p></div>`:uxPv(g,uxq.k)}<div class="r"><button style="flex:1" data-a="uxcx">キャンセル</button><button class="p" style="flex:2;margin:0" data-a="uxcok">✓ 確定</button></div>`}
+else if(sh=='uxset'){h=`<div class="r" style="align-items:center"><h3 style="margin:0;flex:1">入力設定</h3><button class="x" data-a="uxx" style="flex:0 0 44px">✕</button></div><b>入力モード</b><div class="ch"><button class="${X.mode=='d'?'on':''}" data-a="uxmode" data-k="d">詳細入力</button><button class="${X.mode=='s'?'on':''}" data-a="uxmode" data-k="s">簡易入力</button></div><p class="m" style="margin:0 0 8px">詳細＝従来どおり（球種タグ・相手打者なども表示）。簡易＝ワンタップとボールカウントだけに絞ります。</p><b>ワンタップのボタン</b> <small class="m">最大${UXMAX}個・タップで表示／非表示・↑で先頭へ</small><div class="ch" style="flex-wrap:wrap;overflow:visible">${Object.keys(UXM).map(k=>`<span style="display:inline-flex"><button class="${X.btns.includes(k)?'on':''}" data-a="uxbt" data-k="${k}">${UXM[k].l}</button>${X.btns.includes(k)&&X.btns[0]!=k?`<button data-a="uxup" data-k="${k}" style="padding:6px 8px">↑</button>`:''}</span>`).join('')}</div><b>確認</b><div class="ch"><button class="${X.cf?'on':''}" data-a="uxcf">${X.cf?'重要な記録は確定前に確認する':'確認しない'}</button></div><p class="m" style="margin:0 0 8px">確認が出るとき：得点が入る／3アウトでチェンジ／本塁打・併殺・失策／失点＋1／チェンジ。音声入力は毎回確認します。</p><b>音声入力ボタン</b><div class="ch"><button class="${X.vc?'on':''}" data-a="uxvc">${X.vc?'表示する':'表示しない'}</button></div><button class="x" data-a="uxrst" style="width:100%">ボタンを初期の並びに戻す</button><button style="width:100%;margin-top:8px" data-a="uxx">閉じる</button>`}
+else if(sh=='uxm'){const at=uxAt(g);h=`<div class="r" style="align-items:center"><h3 style="margin:0;flex:1">試合メモ <small class="m">${n.inn}回${n.top?'表':'裏'}</small></h3><button class="x" data-a="uxx" style="flex:0 0 44px">✕</button></div><div class="ch"><button class="${X.mk=='g'?'on':''}" data-a="uxmk" data-k="g">試合中メモ</button><button class="${X.mk=='i'?'on':''}" data-a="uxmk" data-k="i">イニング間メモ</button></div><div class="ch">${UXTAG.map(t=>`<button data-a="uxmt" data-k="${esc(t)}">${esc(t)}</button>`).join('')}</div><textarea id="uxmt" rows="3" maxlength="300" style="width:100%" placeholder="メモを入力（書きかけは自動で残ります）">${esc(X.md||'')}</textarea><div class="r" style="margin:8px 0"><button style="flex:1" data-a="uxx">閉じる</button><button class="p" style="flex:2;margin:0" data-a="uxms">メモを保存</button></div>${(g.mm||[]).length?`<div style="max-height:40vh;overflow:auto">${(g.mm||[]).slice().reverse().map(x=>`<div class="i" style="align-items:flex-start;gap:8px"><span style="flex:1"><small class="m">${x.inn}回${x.top?'表':'裏'}・${x.k=='i'?'イニング間':'試合中'}・${new Date(x.ts).toTimeString().slice(0,5)}</small><br>${esc(x.x).replace(/\n/g,'<br>')}</span><button class="x" style="flex:0 0 52px" data-a="uxmd" data-i="${x.id}">削除</button></div>`).join('')}</div>`:''}`}
+else if(sh=='uxv'){const r=uxv.r,at=uxAt(g);let note='';if(r&&r.t=='q'&&!at)note='守備中のため、この操作はできません。';if(r&&r.t=='q'&&at){const e=uxOk(g,r.k);if(e)note=e}h=`<div class="r" style="align-items:center"><h3 style="margin:0;flex:1">🎤 音声入力</h3><button class="x" data-a="uxvx" style="flex:0 0 44px">✕</button></div><p class="m" style="margin:4px 0">${uxv.st=='listen'?'聞いています… 話してください':uxv.st=='unsup'?'この端末・ブラウザは音声認識に対応していません。下の入力欄（キーボードのマイク）か、通常のボタンを使ってください。':uxv.st=='err'?esc(uxv.msg)+'　下の入力欄か通常のボタンも使えます。':'ボタンを押して話してください。例：「ヒット」「ホームラン」「三振」「四球」「ボール」「取り消し」'}</p><button class="p" data-a="uxvs" ${uxv.st=='listen'?'disabled':''}>${uxv.st=='listen'?'聞き取り中…':'🎤 話す'}</button><label>聞き取り結果（直せます）<input id="uxvt" value="${esc(uxv.txt)}" placeholder="例：ヒット"></label><button class="x" data-a="uxvp" style="width:100%">この文で判定する</button>${uxv.txt?`<div class="c" style="box-shadow:none;border-color:var(--b);margin-top:8px"><small class="m">判定</small><div><b style="font-size:18px">${r?esc(uxLbl(r)):'判定できませんでした'}</b></div>${r&&r.t=='q'&&at&&!note?uxPv(g,r.k):''}${note?`<p style="color:#c23;margin:4px 0">${esc(note)}</p>`:''}${!r?'<p class="m">言い方を変えるか、通常のボタンで入力してください。</p>':''}</div>`:''}<div class="r" style="margin-top:8px"><button style="flex:1" data-a="uxvx">閉じる</button><button class="p" style="flex:2;margin:0" data-a="uxvok" ${r&&!note?'':'disabled'}>✓ この内容で入力</button></div><p class="m">誤認識を防ぐため、音声入力は毎回この画面で確認してから入力します。</p>`}
+return`<div class="sh"><div class="shb">${h}</div></div>`};
+/* 入力途中の保護 */
+const uxDraft=()=>{try{const g=cg(),X=uxX();let dr=null;if(g&&g.n&&UXDS.includes(sh))dr={gid:g.id,sh,ip:JSON.parse(JSON.stringify(ip||{})),rd:JSON.parse(JSON.stringify(typeof rd=='object'?rd:{})),ts:Date.now()};const k=JSON.stringify(dr&&{gid:dr.gid,sh:dr.sh,ip:dr.ip,rd:dr.rd});if(k===uxDk)return;uxDk=k;X.dr=dr;save()}catch(_){}};
+const uxShN={play:'インプレー（打球）',run:'インプレー（走者）',dplay:'相手の打球',drun2:'相手の走者',drun:'ランダンプレー',arun:'ランダンプレー',sq:'スクイズ'};
+{const r0=V.rec;V.rec=()=>{const g=cg();let h=r0();if(!g||!g.n)return h;const X=uxX(),n=g.n,at=uxAt(g);
+h=h.replace('<div class="sh"><div class="shb"></div></div>',['uxc','uxset','uxm','uxv'].includes(sh)?uxSheet(g):'<div class="sh"><div class="shb"></div></div>');
+if(h.includes('<div class="sh"><div class="shb"></div></div>'))h=h.replace('<div class="sh"><div class="shb"></div></div>','');
+let pre=`<div class="r" style="align-items:center;margin:0 0 4px"><small class="m" style="flex:1">${uxOnl()?'🟢 オンライン':'📴 オフライン'}・記録は自動で端末に保存されます</small></div>`;
+if(X.lk)pre+=`<div class="c uxlb" style="border:2px solid var(--a);display:flex;align-items:center;gap:8px"><b style="flex:1">🔒 ロック中（誤タップ防止）</b><button class="p" data-a="uxlk" style="margin:0">解除（2回押す）</button></div>`;
+if(X.dr&&X.dr.gid==g.id&&!sh)pre+=`<div class="c" style="border:2px solid #d98a00"><b>入力の途中でした</b><p class="m" style="margin:4px 0">${esc(uxShN[X.dr.sh]||'入力')}の入力が途中で止まっています。</p><div class="r"><button class="p" style="flex:2;margin:0" data-a="uxrs">続きから入力</button><button style="flex:1" data-a="uxrx">破棄</button></div></div>`;
+if(n.o==0&&n.b==0&&n.s==0&&!(n.inn==1&&n.top==1)&&g.mi!=n.inn+':'+n.top&&!sh)pre+=`<div class="c" style="border:1px solid var(--b)"><b>📝 イニング間メモ</b> <small class="m">${n.inn}回${n.top?'表':'裏'}の前</small><div class="r" style="margin-top:6px"><button class="p" style="flex:2;margin:0" data-a="uxmi" data-k="1">メモを書く</button><button style="flex:1" data-a="uxmi" data-k="0">あとで</button></div></div>`;
+const lsc=`<details class="c" style="padding:8px 12px"><summary><b>イニング別スコア</b> <small class="m">自動集計</small></summary>${uxLineH(g)}</details>`;
+const panel=uxPanel(g,at);
+{const A1='<div class="g"><button class="bg" data-a="p1"',A2='<div class="c"><b>相手の攻撃</b>';if(at)h=h.replace(A1,()=>panel+A1);else h=h.replace(A2,()=>panel+A2)}
+{const S1='<h3 style="margin:0 0 8px">交代・設定</h3>';h=h.replace(S1,()=>S1+'<input id="uxsq" placeholder="🔍 選手名・背番号で絞り込み（下の選択欄に反映）" autocomplete="off" style="margin-bottom:8px">')}
+h=h.split('<details class="c" ').join('<details class="c uxd" ').replace('<div class="c"><label>相手打者','<div class="c uxd"><label>相手打者').replace('<div class="c"><div class="r" style="align-items:center"><span><small class="m">この打席','<div class="c uxd"><div class="r" style="align-items:center"><span><small class="m">この打席').replace('<div class="r"><div class="c" style="flex:1.3">','<div class="r uxd"><div class="c" style="flex:1.3">');
+{const SP='<div style="height:100px"></div>';const i=h.lastIndexOf(SP);h=i>=0?h.slice(0,i)+lsc+h.slice(i):h+lsc}
+return`<div class="${X.mode=='s'?'uxs':''}${X.lk?' uxlk':''}">`+pre+h+'</div>'}}
+{const a=V.gd;V.gd=()=>{const h=a(),g=S.g.find(x=>x.id==rid);return h&&g?h+`<div class="c"><h3 style="margin-top:0">イニング別スコア</h3>${uxLineH(g)}</div>`+((g.mm||[]).length?`<div class="c"><h3 style="margin-top:0">試合中・イニング間メモ</h3>${uxMemoH(g)}</div>`:''):h}}
+{const st=document.createElement('style');st.textContent='.uxq .bg{padding:14px 2px;min-height:54px;font-size:15px}.uxsh{display:none}.uxs .uxsh{display:block}.uxs .uxd{display:none}.uxb{font-size:13px;word-break:keep-all}.uxs .c svg{max-height:104px}.uxlk>*:not(.uxlb){pointer-events:none;opacity:.55}.uxq .ch{flex-wrap:wrap;overflow:visible}';document.head.appendChild(st)}
+/* 操作の割り込み（ロック・確認・ワンタップ・音声・メモ） */
+$d.addEventListener('click',e=>{if(uxIn)return;const t=e.target.closest('[data-a]');if(!t)return;const d=t.dataset,a=d.a;if(!a)return;const g=cg(),X=uxX(),stop=()=>{e.stopImmediatePropagation();e.preventDefault()},done=()=>{stop();save();draw()};
+if(X.lk&&tab=='rec'&&a!='uxlk'&&g&&g.n){stop();tpill('ロック中です（「解除」を2回押してください）',1);return}
+if(a=='uxlk'){const n0=Date.now();if(X.lk){if(n0-uxUl<3000){X.lk=0;uxUl=0}else{uxUl=n0;tpill('もう一度押すと解除します');stop();return}}else X.lk=1;return done()}
+if((a=='dra'||a=='chg'||a=='chg2')&&X.cf&&g&&g.n&&!d.ok){uxq={raw:{t:a=='dra'?'失点 ＋1':'チェンジ（攻守交代）',m:a=='dra'?'相手に1点を記録します。':'このイニングを終えて、攻守を交代します。'},a};sh='uxc';return done()}
+if(!a.startsWith('ux')&&a!='uq')return;
+if(!g||!g.n){return}
+if(a=='uq'){const k=d.k;if(!UXM[k]||!uxAt(g))return done();const now=Date.now();if(uxDq.k==k&&now-uxDq.t<700){stop();oplog('二重登録防止','uq '+k);return}uxDq={k,t:now};const er=uxOk(g,k);if(er){tpill(er,1);stop();return}const pv=uxPrev(g,k);if(uxNeed(g,k,pv)){uxq={k};sh='uxc';return done()}stop();uxGo(k);return}
+if(a=='uxp'){if(!uxAt(g))return done();const now=Date.now();if(uxDq.k=='p'+d.k&&now-uxDq.t<700){stop();return}uxDq={k:'p'+d.k,t:now};stop();uxFire('p1',{k:d.k});return}
+if(a=='uxcok'){const q=uxq;uxq=null;sh='';if(!q)return done();stop();if(q.raw)uxFire(q.a,{ok:1});else uxGo(q.k);return}
+if(a=='uxcx'){uxq=null;sh='';return done()}
+if(a=='uxx'){sh='';return done()}
+if(a=='uxset'){sh='uxset';return done()}
+if(a=='uxmode'){X.mode=d.k?d.k:(X.mode=='s'?'d':'s');return done()}
+if(a=='uxbt'){const i=X.btns.indexOf(d.k);if(i>=0){if(X.btns.length>1)X.btns.splice(i,1);else tpill('最低1つは表示してください',1)}else if(X.btns.length>=UXMAX)tpill('表示できるのは最大'+UXMAX+'個です',1);else X.btns.push(d.k);return done()}
+if(a=='uxup'){const i=X.btns.indexOf(d.k);if(i>0){X.btns.splice(i,1);X.btns.unshift(d.k)}return done()}
+if(a=='uxrst'){X.btns=UXDEF.slice();return done()}
+if(a=='uxcf'){X.cf=X.cf?0:1;return done()}
+if(a=='uxvc'){X.vc=X.vc?0:1;return done()}
+if(a=='uxm0'){sh='uxm';return done()}
+if(a=='uxmk'){X.md=($('#uxmt')||{}).value||X.md;X.mk=d.k=='i'?'i':'g';return done()}
+if(a=='uxmt'){const cur=(($('#uxmt')||{}).value||X.md||'').trim();X.md=((cur?cur+' ':'')+'【'+d.k+'】').slice(0,300);return done()}
+if(a=='uxms'){const x=(($('#uxmt')||{}).value||'').trim().slice(0,300);if(!x){tpill('メモが空です',1);stop();return}g.mm=g.mm||[];g.mm.push({id:id(),ts:Date.now(),inn:g.n.inn,top:g.n.top?1:0,k:X.mk,x});X.md='';g.mi=g.n.inn+':'+g.n.top;oplog('メモ保存',X.mk);tpill('メモを保存しました');return done()}
+if(a=='uxmd'){g.mm=(g.mm||[]).filter(x=>x.id!=d.i);return done()}
+if(a=='uxmi'){g.mi=g.n.inn+':'+g.n.top;if(d.k=='1'){X.mk='i';sh='uxm'}return done()}
+if(a=='uxrs'){const r=X.dr;if(r&&r.gid==g.id){sh=r.sh;ip=r.ip||{};if(r.rd)rd=r.rd}X.dr=null;uxDk='';return done()}
+if(a=='uxrx'){X.dr=null;uxDk='';sh='';ip={};return done()}
+if(a=='uxv0'){uxv={st:'',txt:'',r:null,msg:''};sh='uxv';return done()}
+if(a=='uxvx'){try{if(uxSR)uxSR.abort()}catch(_){}uxSR=null;sh='';return done()}
+if(a=='uxvs'){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){uxv.st='unsup';return done()}try{const r=new SR();uxSR=r;r.lang='ja-JP';r.interimResults=false;r.maxAlternatives=3;r.continuous=false;uxv.st='listen';uxv.msg='';r.onresult=ev=>{try{const alts=[...ev.results[0]].map(x=>x.transcript);let pick=alts[0]||'',pr=voiceParse(pick);for(const s of alts){const q=voiceParse(s);if(q){pick=s;pr=q;break}}uxv.txt=pick;uxv.r=pr;uxv.st='done'}catch(_){uxv.st='err';uxv.msg='聞き取り結果を読めませんでした。'}if(sh=='uxv')draw()};r.onerror=ev=>{const c=ev&&ev.error;uxv.st='err';uxv.msg=c=='not-allowed'||c=='service-not-allowed'?'マイクの使用が許可されていません。':c=='no-speech'?'声が聞き取れませんでした。':c=='network'?'音声認識にはインターネット接続が必要な端末があります。':'音声を認識できませんでした。';if(sh=='uxv')draw()};r.onend=()=>{if(uxv.st=='listen'){uxv.st='err';uxv.msg='声が聞き取れませんでした。'}if(sh=='uxv')draw()};r.start()}catch(_){uxv.st='err';uxv.msg='音声入力を開始できませんでした。'}return done()}
+if(a=='uxvp'){uxv.txt=(($('#uxvt')||{}).value||'').trim();uxv.r=voiceParse(uxv.txt);uxv.st='done';return done()}
+if(a=='uxvok'){const r=uxv.r;if(!r)return done();const at=uxAt(g);try{if(uxSR)uxSR.abort()}catch(_){}uxSR=null;sh='';uxv={st:'',txt:'',r:null,msg:''};stop();save();
+if(r.t=='u'){uxFire('undo')}else if(r.t=='c'){uxFire('chg',{ok:1})}else if(r.t=='p'){uxFire(at?'p1':'dpit',{k:r.k})}else if(r.t=='q'&&at&&!uxOk(g,r.k))uxGo(r.k);else draw();return}
+return done()});
+$d.addEventListener('input',e=>{const t=e.target;if(t.id=='uxsq')uxFilt(t.value);else if(t.id=='uxmt'){const X=uxX();X.md=t.value.slice(0,300);clearTimeout(uxMt);uxMt=setTimeout(()=>{try{save()}catch(_){}},700)}else if(t.id=='uxvt')uxv.txt=t.value});
+$d.addEventListener('click',()=>{Promise.resolve().then(uxDraft)});
+addEventListener('online',()=>{uxOf();if(tab=='rec'&&!sh)draw()});addEventListener('offline',()=>{uxOf();if(tab=='rec'&&!sh)draw()});uxOf();uxX().lk=0;uxDk=JSON.stringify(S.ux.dr&&{gid:S.ux.dr.gid,sh:S.ux.dr.sh,ip:S.ux.dr.ip,rd:S.ux.dr.rd});
 const DUPA=new Set(['gwms','gadd','gpadd','rok','ibb','ci','ofr','sqr','ent','sach','sflc','hbp','ap','am','msave','gstart']);let dupL={k:'',t:0};
 $d.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;const d=t.dataset,a=d.a,v=s=>$(s)?$(s).value:'';const c0=[S.pt.length,S.a.length,S.df.length,S.sb.length,S.ev.length,S.pk.length],pre6=(()=>{try{const g=cg();if(!g||!g.n)return null;const n=g.n;return{gid:g.id,inn:n.inn,o:n.o,bs:(n.bs||[]).slice(),cob:n.cob||'',cat:fp(g,'捕')||''}}catch(_){return null}})();if(a&&DUPA.has(a)){const k=a+'|'+JSON.stringify(d)+(a=='ap'?v('#pn')+v('#pno'):''),n=Date.now();if(dupL.k==k&&n-dupL.t<(a=='ap'||a=='gstart'||a=='am'||a=='msave'?1200:600)){oplog('二重登録防止',a);return}dupL={k,t:n}}
 if(d.t){tab=d.t;sh='';draw();scrollTo(0,0);return}
