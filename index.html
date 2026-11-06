@@ -66,6 +66,18 @@ nav button{flex:1;border:0;border-radius:0;background:none;padding:14px 0;font-s
 @media print{nav,button{display:none}}.sbp{background:#fff!important;color:#1b2a22!important}.sbt{border-collapse:collapse;font-size:11px;background:#fff;color:#1b2a22}.sbt td,.sbt th{border:1px solid #9bbfa9;padding:2px;text-align:center}.sbt th{background:#e3f1ea;color:#1c4a33;padding:4px 3px}.mlb .sbt th{background:#1F5FA8;color:#fff}.mlb .sbt td,.mlb .sbt th{border-color:#9DBDE3}@media print{@page{size:A4 landscape;margin:8mm}body.sbpr #v>*:not(.sbw){display:none!important}body.sbpr .sbw{position:static!important;background:none!important}body.sbpr .sbp{position:static!important;max-height:none!important;overflow:visible!important;border-radius:0!important;padding:0!important;box-shadow:none!important}}
 </style></head><body><div id="v"></div><nav id="n"></nav>
 <script>
+/* Phase 9: 起動の見守り。アプリが起動できなかったときだけ復旧画面を出す（データには触れません） */
+(function(){var K='hope_boot',n=0;try{n=+localStorage.getItem(K)||0;localStorage.setItem(K,String(n+1))}catch(e){}
+window.__hopeOk=0;window.__hopeErr=[];window.addEventListener('error',function(e){if(!window.__hopeOk)window.__hopeErr.push(String(e&&e.message||e))});
+function box(){if(window.__hopeOk||document.getElementById('hrec'))return;var d=document.createElement('div');d.id='hrec';d.style.cssText='position:fixed;inset:0;z-index:99999;background:#fff;color:#1b2a22;padding:20px;font:14px/1.7 sans-serif;overflow:auto';
+d.innerHTML='<h3>アプリを起動できませんでした</h3><p>記録したデータは端末に残っています。次の順にお試しください。</p><p><button id="hr1" style="padding:10px 14px;margin:4px">① 再読み込み</button></p><p><button id="hr2" style="padding:10px 14px;margin:4px">② アプリを再取得して再起動（データは消えません）</button></p><p><button id="hr3" style="padding:10px 14px;margin:4px">③ 保存データをファイルに書き出す</button></p><p style="font-size:12px;color:#a00">'+(window.__hopeErr.slice(0,2).join(' / ')||'')+'</p>';document.body.appendChild(d);
+document.getElementById('hr1').onclick=function(){location.reload()};
+document.getElementById('hr2').onclick=function(){var p=[];try{if(navigator.serviceWorker)p.push(navigator.serviceWorker.getRegistrations().then(function(r){return Promise.all(r.map(function(x){return x.unregister()}))}))}catch(e){}try{if(window.caches)p.push(caches.keys().then(function(k){return Promise.all(k.filter(function(x){return x.indexOf('diamondlens-')==0}).map(function(x){return caches.delete(x)}))}))}catch(e){}Promise.all(p).catch(function(){}).then(function(){try{localStorage.setItem(K,'0')}catch(e){}location.reload()})};
+document.getElementById('hr3').onclick=function(){try{var t=localStorage.getItem('dl')||'';var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));a.download='hope_raw_backup_'+Date.now()+'.json';document.body.appendChild(a);a.click()}catch(e){alert('書き出せませんでした：'+e.message)}}}
+window.addEventListener('load',function(){setTimeout(box,5000)});
+})();
+</script>
+<script>
 const $=s=>$d.querySelector(s),$d=document;
 const showErr=m=>{try{let b=document.getElementById('eb');if(!b){b=document.createElement('div');b.id='eb';b.style.cssText='position:fixed;left:8px;right:8px;top:8px;z-index:50;background:#fde7e7;color:#a00;border:1px solid #d93b3b;border-radius:10px;padding:10px;font-size:12px';b.onclick=()=>b.remove();document.body.appendChild(b)}b.textContent='エラー: '+m+'（タップで閉じる）'}catch(x){}};
 window.addEventListener('error',e=>showErr(e.message));
@@ -1994,6 +2006,202 @@ const fin8=()=>{try{save()}catch(_){}draw()};
 $d.addEventListener('change',e=>{const t=e.target,i=t.id||'';try{if(i=='o8e'){o8s.e=t.value}else if(i=='o8fy'){o8s.fy=+t.value}else if(t.dataset&&t.dataset.o8car!==undefined){const ev=o8Ev(o8s.e);if(ev){const tr=ev.tr=ev.tr||{};tr.ride=tr.ride||{};if(t.value)tr.ride[t.dataset.o8car]=t.value;else delete tr.ride[t.dataset.o8car]}}else if(i.startsWith('o8rs_')){const ev=o8Ev(o8s.e);if(ev){ev.ar=ev.ar||{};ev.ar[i.slice(5)]=t.value.slice(0,30);fin8x();return}}else if(i=='t8inn'){t8s.inn=+t.value}else if(i=='t8per'){t8s.per=t.value}else if(i=='t8pool'){t8s.pool=t.value}else if(i=='t8rep'){t8s.rep=t.value}else if(i=='t8run'){t8s.run=t.value}else return;fin8()}catch(err){tpill('処理に失敗しました：'+err.message,1)}});
 const fin8x=()=>{try{save()}catch(_){}};
 
+/* ===== Phase 9 PWA：更新・診断・復旧 ===== */
+const U9K='hope_upd',U9L='hope_updlog',APP9='Phase 9';
+const u9={reg:null,wait:null,ver:'',st:null,chk:0,busy:0,apply:0,rl:0,msg:'',err:'',est:null,per:null,dp:null,vr:null,scan:0,ref:0};
+const u9ls=(k,v)=>{try{if(v===undefined){const j=localStorage.getItem(k);return j?JSON.parse(j):null}if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,JSON.stringify(v));return true}catch(_){return null}};
+$d.addEventListener('click',e=>{if(u9.busy){e.stopImmediatePropagation();e.preventDefault()}},true);
+$d.addEventListener('keydown',e=>{if(u9.busy){e.stopImmediatePropagation();e.preventDefault()}},true);
+BKN.update='更新前';BKG.update='safe';
+const u9Plat=(ua,pf,tp,sa)=>{ua=ua==null?(navigator.userAgent||''):ua;pf=pf==null?(navigator.platform||''):pf;tp=tp==null?(navigator.maxTouchPoints||0):tp;const ios=/iPhone|iPad|iPod/.test(ua)||(pf=='MacIntel'&&tp>1),and=/Android/.test(ua),win=/Windows/.test(ua),mac=!ios&&/Macintosh|Mac OS X/.test(ua),edge=/Edg(e|A|iOS)?\//.test(ua),ff=/Firefox|FxiOS/.test(ua),sam=/SamsungBrowser/.test(ua),cr=/Chrome|CriOS/.test(ua)&&!edge&&!sam,sf=/Safari/.test(ua)&&!cr&&!edge&&!ff&&!sam;
+let sa2=sa;if(sa2==null){try{sa2=!!(matchMedia('(display-mode: standalone)').matches||navigator.standalone)}catch(_){sa2=false}}
+return{os:ios?'iOS':and?'Android':win?'Windows':mac?'Mac':/Linux/.test(ua)?'Linux':'その他',br:edge?'Edge':sam?'Samsung Internet':ff?'Firefox':cr?'Chrome':sf?'Safari':'その他',ios,and,win,standalone:sa2}};
+const u9Guide=P=>{if(P.standalone)return'ホーム画面（アプリ）から開いています。この状態ではWebサイトデータが自動で削除されにくく、安定して使えます。';
+if(P.ios)return P.br=='Safari'||P.br=='Chrome'?'【iPhone/iPad】共有ボタン（□↑）→「ホーム画面に追加」で、アプリのように使えます。ブラウザで開いたままだと、長期間使わない場合にSafariがデータを消すことがあるため、ホーム画面への追加と定期的なバックアップをおすすめします。':'【iPhone/iPad】SafariまたはChromeで開き、共有ボタン→「ホーム画面に追加」を行ってください。';
+if(P.and)return P.br=='Chrome'||P.br=='Samsung Internet'?'【Android】右上のメニュー（︙）→「アプリをインストール」または「ホーム画面に追加」。下の「インストール」ボタンが出る場合はそれでも追加できます。':'【Android】Chromeで開き、メニュー（︙）→「アプリをインストール」を行ってください。';
+if(P.win)return P.br=='Edge'||P.br=='Chrome'?'【Windows】アドレスバー右端のインストールアイコン、またはメニュー→「アプリ」→「このサイトをアプリとしてインストール」。':P.br=='Firefox'?'【Windows】Firefoxはインストール機能に対応していません。ブラウザのままでも使えます（ブックマーク推奨）。EdgeまたはChromeならアプリとして追加できます。':'【Windows】EdgeまたはChromeで開くとアプリとしてインストールできます。';
+return'ブラウザのメニューから「インストール」または「ホーム画面に追加」を探してください。ブラウザのままでも使えます。'};
+const u9Stat=()=>new Promise(res=>{try{const c=navigator.serviceWorker&&navigator.serviceWorker.controller;if(!c)return res(null);const ch=new MessageChannel(),t=setTimeout(()=>res(null),3000);ch.port1.onmessage=e=>{clearTimeout(t);res(e.data)};c.postMessage({type:'STATUS'},[ch.port2])}catch(_){res(null)}});
+const u9Ov=(m)=>{let b=document.getElementById('u9ov');if(!m){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='u9ov';b.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px';document.body.appendChild(b)}b.innerHTML='<div style="background:#fff;color:#1b2a22;border-radius:14px;padding:18px;max-width:340px;text-align:center;font-size:14px;line-height:1.7"><b>🔄 アプリを更新しています</b><br><span id="u9ovm">'+esc(m)+'</span><br><small style="color:#a00">操作せず、そのままお待ちください</small></div>'};
+const u9Ovm=m=>{const e=document.getElementById('u9ovm');if(e)e.textContent=m;else u9Ov(m)};
+const u9Ban=(html,bad)=>{try{let b=document.getElementById('u9b');if(!html){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='u9b';document.body.appendChild(b)}b.style.cssText='position:fixed;left:8px;right:8px;bottom:126px;z-index:58;border-radius:12px;padding:10px;font-size:13px;line-height:1.6;box-shadow:0 2px 10px rgba(0,0,0,.25);'+(bad?'background:#fde7e7;color:#a00;border:1px solid #d93b3b':'background:#e8f5ee;color:#1c4a33;border:1px solid #2e9f6b');b.innerHTML=html}catch(_){}};
+const u9Found=w=>{u9.wait=w;u9.msg='新しい版を取得しました。';u9Ban(`🆕 <b>新しい版があります。</b>更新前に自動でバックアップを作成します。<div class="r" style="margin-top:6px;gap:8px"><button class="p" data-a="u9app">更新する</button><button class="x" data-a="u9later">あとで</button><button class="x" data-a="u9go">詳細</button></div>`);if(tab=='pwa')draw()};
+const u9Check=async(man)=>{if(!u9.reg){u9.msg=u9.err||'この環境では更新を確認できません';return}if(!navigator.onLine){u9.msg='オフラインのため確認できません（オンラインになると自動で確認します）';return}try{u9.msg='確認中…';await Promise.race([u9.reg.update(),new Promise((_,j)=>setTimeout(()=>j(new Error('時間切れ')),15000))]);u9.chk=Date.now();if(u9.reg.waiting&&navigator.serviceWorker.controller)u9Found(u9.reg.waiting);else if(!u9.reg.installing)u9.msg='最新の版です（'+(u9.ver||'?')+'）'}catch(e){u9.msg='更新の確認に失敗しました：'+(e&&e.message||e)}};
+const u9Ctl=()=>{if(u9.apply&&!u9.rl){u9.rl=1;u9.busy=1;try{location.reload()}catch(_){}}};
+const u9Log=o=>{const l=u9ls(U9L)||[];l.push(o);u9ls(U9L,l.slice(-10))};
+const u9Rec=()=>{try{const g=typeof cg=='function'?cg():null;return tab=='rec'&&!!g&&!g.fin}catch(_){return false}};
+const u9Apply=async()=>{if(u9.busy||!u9.wait)return;if(u9Rec()&&!confirm('試合を記録中です。更新すると画面が再読み込みされます（記録済みのデータは保存・バックアップされます）。更新しますか？'))return;
+u9.busy=1;u9Ban('');u9Ov('データを保存しています…');
+try{try{save()}catch(_){}await new Promise(r=>setTimeout(r,200));
+u9Ovm('更新前のバックアップを作成しています…');const ok=await bkMake('update','アプリ更新前（'+(u9.ver||'?')+'）');
+if(!ok){u9.busy=0;u9Ov('');u9.msg='バックアップを作成できなかったため更新を中止しました（データはそのままです）。';showErr(u9.msg);if(tab=='pwa')draw();return}
+const bk=(BKL||[]).filter(x=>x.kind=='update')[0];u9ls(U9K,{ph:'applying',from:u9.ver||'',at:new Date().toISOString(),cnt:stats(S),bk:bk?bk.id:'',lat:bk?bk.at:''});
+u9Ovm('新しい版に切り替えています…');u9.apply=1;u9.rl=0;
+const w=u9.wait;try{w.postMessage({type:'SKIP_WAITING'})}catch(e){throw e}
+await new Promise(r=>setTimeout(r,12000));
+if(!u9.rl){u9.apply=0;u9.busy=0;u9Ov('');u9ls(U9K,null);u9.msg='切り替えに失敗しました。データは変わっていません。アプリを一度閉じて開き直すか、「アプリの状態」から「キャッシュを再取得」を試してください。';u9Log({at:new Date().toISOString(),from:u9.ver,ok:false,why:'切り替え時間切れ'});showErr(u9.msg);if(tab=='pwa')draw()}}
+catch(e){u9.apply=0;u9.busy=0;u9Ov('');u9ls(U9K,null);u9.msg='更新に失敗しました：'+(e&&e.message||e);showErr(u9.msg)}};
+const u9Verify=async()=>{const U=u9ls(U9K);if(!U||U.ph!='applying')return;const s=await u9Stat(),cur=stats(S),diff=[];Object.keys(U.cnt||{}).forEach(k=>{if((U.cnt[k]||0)!=(cur[k]||0))diff.push(STN[k]+'：'+U.cnt[k]+'→'+cur[k])});const to=s?s.version:'?',ok=!diff.length&&!DLERR;u9.vr={ok,diff,from:U.from,to,at:new Date().toISOString(),cnt:cur};u9ls(U9K,{ph:'done',ok,from:U.from,to,at:U.at,at2:u9.vr.at,diff});u9Log({at:u9.vr.at,from:U.from,to,ok,diff:diff.join('、')});oplog('更新',(U.from||'?')+'→'+to+(ok?' データ一致':' 差異あり'));
+const t=Object.keys(cur).filter(k=>cur[k]).map(k=>STN[k]+cur[k]).slice(0,6).join('・');
+if(ok)u9Ban(`✅ <b>更新が完了しました</b>（${esc(U.from||'?')}→${esc(to)}）。更新前後でデータ件数が一致しています（${esc(t||'データなし')}）。<div class="r" style="margin-top:6px"><button class="x" data-a="u9ok">閉じる</button></div>`);
+else u9Ban(`⚠ <b>更新後にデータの件数が更新前と違います。</b>${esc(diff.join('、')||'保存データに問題があります')}<br>更新前のバックアップがあります。「チーム」→「データ」から復元できます。<div class="r" style="margin-top:6px;gap:8px"><button class="p" data-a="u9bk">バックアップを開く</button><button class="x" data-a="u9ok">閉じる</button></div>`,1)};
+const u9Reg=async()=>{if(!('serviceWorker' in navigator)||!location.protocol.startsWith('http')){u9.err='この環境（http/https以外）ではオフライン機能と更新機能は使えません';return}
+try{const reg=await navigator.serviceWorker.register('./sw.js');u9.reg=reg;navigator.serviceWorker.addEventListener('controllerchange',u9Ctl);
+if(reg.waiting&&navigator.serviceWorker.controller)u9Found(reg.waiting);
+reg.addEventListener('updatefound',()=>{const w=reg.installing;if(!w)return;w.addEventListener('statechange',()=>{if(w.state=='installed'&&navigator.serviceWorker.controller)u9Found(w);else if(w.state=='redundant'&&!u9.wait){u9.msg='更新ファイルを取得できませんでした。通信状態を確認して、後でもう一度お試しください（今の版はそのまま使えます）。'}})});
+const s=await u9Stat();if(s)u9.ver=s.version;else if(reg.active){}
+setTimeout(()=>u9Check(),4000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState=='visible'&&Date.now()-u9.chk>36e5)u9Check()});
+addEventListener('online',()=>{if(Date.now()-u9.chk>6e5)u9Check()});
+await u9Verify()}catch(e){u9.err='Service Workerを登録できませんでした：'+(e&&e.message||e)}};
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();u9.dp=e;if(tab=='pwa')draw()});addEventListener('appinstalled',()=>{u9.dp=null;tpill('インストールしました');if(tab=='pwa')draw()});
+const u9Scan=async()=>{u9.scan=1;try{if(navigator.storage&&navigator.storage.estimate)u9.est=await navigator.storage.estimate()}catch(_){u9.est=null}try{u9.per=navigator.storage&&navigator.storage.persisted?await navigator.storage.persisted():null}catch(_){u9.per=null}const s=await u9Stat();u9.st=s;if(s)u9.ver=s.version;u9.scan=0;if(tab=='pwa')draw()};
+const u9T=t=>t?new Date(t).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'-';
+const u9Row=(l,v,ok)=>`<div class="i"><span>${esc(l)}</span><b${ok===0?' style="color:#c0392b"':ok===1?' style="color:#1e8a4f"':''}>${v}</b></div>`;
+const u9Diag=()=>{const P=u9Plat(),s=u9.st,U=u9ls(U9K),u=lsUse(),q=u9.est,L=[];L.push('【HOPE Data Analysis 診断】'+lt());L.push('アプリ：'+APP9+' / SW版 '+(u9.ver||'不明'));L.push('端末：'+P.os+' / '+P.br+' / '+(P.standalone?'アプリとして起動':'ブラウザ表示')+' / '+(navigator.onLine?'オンライン':'オフライン'));L.push('Service Worker：'+('serviceWorker' in navigator?(navigator.serviceWorker.controller?'有効':'未制御'):'非対応')+(u9.wait?'（更新待ちあり）':''));
+if(s)L.push('キャッシュ：'+s.cache+' '+s.assets.filter(x=>x[1]).length+'/'+s.assets.length+'ファイル保存済み');
+L.push('localStorage：'+Math.round(u/1024)+'KB（上限目安の'+Math.round(u/LSMAX*100)+'%）');if(q&&q.quota)L.push('端末の保存領域：'+fmtKB(q.usage||0)+' / '+fmtKB(q.quota)+'　永続化：'+(u9.per==null?'不明':u9.per?'許可':'未許可'));L.push('IndexedDB：'+IDBS.st+'　最終保存：'+(SV.at?u9T(SV.at):'-')+(SV.ok?'':'（失敗中）'));
+const bk=(BKL||[])[0];L.push('最新バックアップ：'+(bk?u9T(bk.at)+'（'+(BKN[bk.kind]||bk.kind)+'）':'なし'));if(U)L.push('直近の更新：'+(U.from||'?')+'→'+(U.to||'?')+(U.ok?' データ一致':U.ph=='applying'?' 確認前':' 差異あり'));const d=diag();L.push('データ診断：'+(d.length?d.length+'件 '+d.join(' / '):'問題なし'));if(u9.err)L.push('注意：'+u9.err);L.push('データ件数：'+Object.entries(stats(S)).filter(x=>x[1]).map(x=>STN[x[0]]+x[1]).join('・'));return L.join('\n')};
+V.pwa=()=>{const P=u9Plat(),s=u9.st,q=u9.est,u=lsUse(),pr=Math.round(u/LSMAX*100),sw='serviceWorker' in navigator,ctl=sw&&!!navigator.serviceWorker.controller,U=u9ls(U9K),Lg=(u9ls(U9L)||[]).slice().reverse().slice(0,4),bk=(BKL||[])[0],ok=s?s.assets.filter(x=>x[1]).length:0,tot=s?s.assets.length:0,qp=q&&q.quota?Math.round((q.usage||0)/q.quota*100):null;
+return`<button class="x" data-t="team">‹ チーム</button><h2 style="margin:4px 0 6px">🔄 アプリの状態・更新</h2>
+<div class="c"><b>アプリの更新</b>${u9Row('このアプリ',esc(APP9)+'（'+esc(u9.ver||'確認中')+'）')}${u9Row('更新',u9.wait?'新しい版あり':u9.err?'利用できません':'最新',u9.wait?null:u9.err?0:1)}${u9Row('最後の確認',u9.chk?u9T(u9.chk):'-')}${U?u9Row('直近の更新',esc((U.from||'?')+'→'+(U.to||'?'))+(U.ph=='done'?(U.ok?' ✅データ一致':' ⚠差異あり'):'')):''}<p class="m" style="margin:6px 0">${esc(u9.msg||u9.err||'更新があるときは画面に通知が出ます。更新する前に、自動でバックアップを作成します。')}</p><div class="r" style="gap:8px;flex-wrap:wrap"><button class="x" data-a="u9chk">更新を確認</button><button class="p" data-a="u9app"${u9.wait?'':' disabled'}>更新する</button></div>${Lg.length?'<p class="m" style="margin:8px 0 2px">更新の履歴</p>'+Lg.map(x=>`<div class="m" style="font-size:12px">${esc(u9T(x.at))}　${esc((x.from||'?')+'→'+(x.to||'?'))}　${x.ok?'データ一致':'要確認 '+esc(x.diff||x.why||'')}</div>`).join(''):''}</div>
+<div class="c"><b>保存容量・保存状態</b>${u9Row('このアプリのデータ',fmtKB(u)+'（目安'+pr+'%）',pr>85?0:1)}${q&&q.quota?u9Row('端末の保存領域',fmtKB(q.usage||0)+' / '+fmtKB(q.quota)+'（'+qp+'%）',qp>80?0:1):u9Row('端末の保存領域','取得できません')}${u9Row('消されにくい保存',u9.per==null?'不明':u9.per?'許可済み':'未許可',u9.per?1:null)}${u9Row('IndexedDB（二重保存）',esc({none:'未移行',ok:'同期中',failed:'失敗'}[IDBS.st]||IDBS.st))}${u9Row('最後の保存',SV.at?u9T(SV.at):'-',SV.ok?1:0)}${u9Row('最新バックアップ',bk?esc(u9T(bk.at))+'（'+esc(BKN[bk.kind]||bk.kind)+'）':'なし',bk?1:0)}<div class="r" style="margin-top:6px;gap:8px;flex-wrap:wrap">${u9.per?'':'<button class="x" data-a="u9per">消されにくくする（許可を求める）</button>'}<button class="x" data-a="u9bk">バックアップ画面へ</button></div></div>
+<div class="c"><b>オフライン対応</b>${u9Row('Service Worker',!sw?'非対応':ctl?'有効（オフラインで起動できます）':'まだ有効になっていません（一度再読み込みしてください）',ctl?1:0)}${u9Row('通信',navigator.onLine?'オンライン':'オフライン')}${u9Row('保存済みファイル',s?ok+' / '+tot+(ok==tot?'':'（足りません）'):'未確認',s?(ok==tot?1:0):null)}${s&&s.keys.length>1?u9Row('古いキャッシュ',s.keys.length-1+'個（次回の更新で削除）'):''}<div class="r" style="margin-top:6px;gap:8px;flex-wrap:wrap"><button class="x" data-a="u9ref"${ctl?'':' disabled'}>キャッシュを再取得（データは消えません）</button><button class="x" data-a="u9scan">状態を再確認</button></div></div>
+<div class="c"><b>お使いの端末</b>${u9Row('端末・ブラウザ',esc(P.os+' / '+P.br))}${u9Row('起動方法',P.standalone?'アプリ（ホーム画面）':'ブラウザ')}<p class="m" style="margin:6px 0">${esc(u9Guide(P))}</p>${u9.dp?'<button class="p" data-a="u9inst">📲 インストール</button>':''}</div>
+<div class="c"><b>診断</b><p class="m" style="margin:4px 0">不具合を連絡するときは、診断結果をコピーして送ってください（名前などの個人情報は含みません）。</p><pre style="white-space:pre-wrap;font:12px/1.5 inherit;margin:6px 0">${esc(u9Diag())}</pre><div class="r" style="gap:8px;flex-wrap:wrap"><button class="p" data-a="u9copy">📋 診断結果をコピー</button></div></div>`};
+NV.pwa='home';
+{const t0=V.team;V.team=()=>{const x=t0();let b='';try{b=`<button class="x" data-t="pwa" style="width:100%;margin-bottom:8px">🔄 アプリの状態・更新${u9.wait?' <b style="color:#c0392b">（更新あり）</b>':''} ▶</button>`}catch(_){}const i=x.indexOf('</button>');return i>=0?x.slice(0,i+9)+b+x.slice(i+9):b+x}}
+$d.addEventListener('click',async e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a||'';if(!a.startsWith('u9'))return;e.stopImmediatePropagation();e.preventDefault();
+try{if(a=='u9chk'){await u9Check(1);draw()}
+else if(a=='u9app')await u9Apply();
+else if(a=='u9later'){u9Ban('')}
+else if(a=='u9ok'){u9Ban('')}
+else if(a=='u9go'){u9Ban('');tab='pwa';draw();u9Scan()}
+else if(a=='u9bk'){u9Ban('');tab='team';draw()}
+else if(a=='u9scan'){await u9Scan()}
+else if(a=='u9per'){try{const r=await navigator.storage.persist();u9.per=r;tpill(r?'消されにくい保存を許可しました':'許可されませんでした（ブラウザの判断です）',!r)}catch(_){tpill('この端末では設定できません',1)}draw()}
+else if(a=='u9inst'){const d=u9.dp;if(d){u9.dp=null;try{d.prompt();await d.userChoice}catch(_){}}draw()}
+else if(a=='u9copy'){const ok=await r9Copy(u9Diag());tpill(ok?'コピーしました':'コピーできませんでした',!ok)}
+else if(a=='u9ref'){if(u9.ref)return;u9.ref=1;tpill('キャッシュを再取得中…');const c=navigator.serviceWorker.controller;if(!c){u9.ref=0;return}const r=await new Promise(res=>{const ch=new MessageChannel(),tm=setTimeout(()=>res({ok:false,err:'時間切れ'}),30000);ch.port1.onmessage=ev=>{clearTimeout(tm);res(ev.data)};c.postMessage({type:'REFRESH_CACHE'},[ch.port2])});u9.ref=0;u9.msg=r.ok?'キャッシュを再取得しました。':'再取得に失敗しました：'+(r.err||'')+'（今のキャッシュは変更されていません）';oplog('キャッシュ再取得',r.ok?'成功':'失敗');await u9Scan()}}
+catch(err){u9.busy=0;showErr('操作に失敗しました：'+(err&&err.message||err))}},true);
+
+/* ===== Phase 9 帳票 ===== */
+const r9s={k:'game',gid:'',tn:'',ym:'',fy:0,pid:'',ty:'x',busy:'',msg:''};
+const R9K=[['game','試合報告書'],['tour','大会成績一覧'],['mon','月間成績'],['yr','年間成績'],['bat','選手別成績'],['pit','投手成績'],['fld','守備成績'],['grow','成長レポート'],['coach','指導者向け'],['par','保護者向け'],['raw','全データCSV']];
+const r9n=v=>v==null||(typeof v=='number'&&!isFinite(v))?'-':v;
+const r9Gs=()=>S.g.filter(g=>r9s.ty=='all'||(r9s.ty=='x'?g.t!='紅白戦':g.t==r9s.ty)).slice().sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+const r9Fy=()=>r9s.fy||fyOf(lt());
+const r9Res=g=>g.rs>g.ra?'○':g.rs<g.ra?'●':'△';
+const r9Rec=L=>{const w=L.filter(g=>g.rs>g.ra).length,l=L.filter(g=>g.rs<g.ra).length,d=L.length-w-l,rs=L.reduce((a,g)=>a+(g.rs||0),0),ra=L.reduce((a,g)=>a+(g.ra||0),0);return{n:L.length,w,l,d,rs,ra,wp:(w+l)?w/(w+l):NaN}};
+const r9PlayersOf=ids=>S.p.filter(p=>S.a.some(x=>x.p==p.id&&ids.has(x.gid)));
+const r9BatRow=(p,ids)=>{const A=S.a.filter(x=>x.p==p.id&&ids.has(x.gid)),q=st(A),gs=new Set(A.map(x=>x.gid)).size;return{p,q,gs,row:[pn(p.id),gs,q.pa,q.ab,q.h,f3(q.avg),f3(q.obp),f3(q.slg),f3(q.ops),q.rbi,q.hr,q.bb+q.hbp,q.k]}};
+const R9BH=['選手','試合','打席','打数','安打','打率','出塁率','長打率','OPS','打点','本塁打','四死球','三振'];
+const r9TeamLine=L=>{const ids=new Set(L.map(g=>g.id)),q=st(S.a.filter(x=>ids.has(x.gid))),r=r9Rec(L);return[`${r.n}試合 ${r.w}勝${r.l}敗${r.d}分`,'勝率 '+f3(r.wp),`得点${r.rs} 失点${r.ra}`,'チーム打率 '+f3(q.avg),'OPS '+f3(q.ops)]};
+const r9Hdr=(t,s)=>({t,s:(S.team||'')+(s?'　'+s:''),secs:[],at:lt()});
+const r9KV=(h,rows)=>({h,c:['項目','内容'],r:rows,kv:1});
+const r9Build=()=>{const k=r9s.k,H=r9Hdr,fy=r9Fy();
+if(k=='game'){const g=S.g.find(x=>x.id==r9s.gid)||r9Gs().slice(-1)[0];if(!g)return null;r9s.gid=g.id;const R=H('試合報告書',g.d),L=uxLine(g),ids=new Set([g.id]);
+R.secs.push(r9KV('試合概要',[['日付',g.d],['対戦相手',g.o||'-'],['球場',g.v||'-'],['種別',g.t||'-'],['大会',g.tn||'-'],['結果',(g.rs||0)+' - '+(g.ra||0)+'　'+r9Res(g)+(g.ho?'（後攻）':'（先攻）')]]));
+const lr=(nm,a,o,t)=>[nm,...a,o?(o>0?'+':'')+o:'-',t],rows=[lr(S.team,L.us,L.ou,L.rs),lr(g.o||'相手',L.th,L.ot,L.ra)];if(g.ho)rows.reverse();
+R.secs.push({h:'イニング別得点',c:['',...[...Array(L.m)].map((_,i)=>String(i+1)),'他','計'],r:rows});
+const bp=r9PlayersOf(ids).map(p=>{const A=S.a.filter(x=>x.p==p.id&&x.gid==g.id),q=st(A);return[pn(p.id),q.pa,q.ab,q.h,q.rbi,q.bb+q.hbp,q.k,q.hr]});
+R.secs.push({h:'打撃成績',c:['選手','打席','打数','安打','打点','四死球','三振','本塁打'],r:bp.length?bp:[['記録なし','','','','','','','']]});
+const pits=S.p.map(p=>({p,s:pstat(p.id,ids)})).filter(x=>x.s.G>0||x.s.P>0);
+if(pits.length)R.secs.push({h:'投手成績',c:['投手','投球数','アウト','被安打','与四死球','奪三振','失点','自責点'],r:pits.map(({p,s})=>[pn(p.id),s.P,s.outs,s.H,s.BB+s.HB,s.SO,s.R,s.ER])});
+const fe=S.p.map(p=>({p,f:fstat(p.id,ids)})).filter(x=>x.f.E>0||x.f.PB>0);
+R.secs.push({h:'守備（失策・捕逸）',c:['選手','失策','捕逸'],r:fe.length?fe.map(({p,f})=>[pn(p.id),f.E,f.PB]):[['なし','0','0']]});
+const mm=(g.mm||[]).map(x=>[x.inn+'回'+(x.top?'表':'裏'),String(x.t||x.txt||x.md||'').slice(0,80)]).filter(x=>x[1]);if(mm.length)R.secs.push({h:'メモ',c:['時点','内容'],r:mm});
+return R}
+if(k=='tour'){const tns=[...new Set(S.g.map(g=>g.tn).filter(Boolean))];const tn=r9s.tn&&tns.includes(r9s.tn)?r9s.tn:tns[tns.length-1];if(!tn)return null;r9s.tn=tn;const L=S.g.filter(g=>g.tn==tn).sort((a,b)=>a.d<b.d?-1:1),ids=new Set(L.map(g=>g.id)),r=r9Rec(L),R=H('大会成績一覧',tn);
+R.secs.push(r9KV('大会成績',[['試合数',r.n],['成績',r.w+'勝'+r.l+'敗'+r.d+'分'],['勝率',f3(r.wp)],['得点／失点',r.rs+' ／ '+r.ra]]));
+R.secs.push({h:'試合結果',c:['日付','相手','結果','得点','失点','球場'],r:L.map(g=>[g.d,g.o||'-',r9Res(g),g.rs||0,g.ra||0,g.v||'-'])});
+const B=r9PlayersOf(ids).map(p=>r9BatRow(p,ids).row);R.secs.push({h:'選手別打撃（大会内）',c:R9BH,r:B.length?B:[['記録なし',...Array(12).fill('')]]});return R}
+if(k=='mon'||k=='yr'){const mon=k=='mon',ym=(r9s.ym||lt().slice(0,7)),L=r9Gs().filter(g=>mon?g.d.slice(0,7)==ym:fyOf(g.d)==fy),ids=new Set(L.map(g=>g.id)),R=H(mon?'月間チーム成績':'年間チーム成績',mon?ym:fy+'年度'),tl=r9TeamLine(L),r=r9Rec(L);
+R.secs.push(r9KV('チーム成績',[['試合数',r.n],['成績',r.w+'勝'+r.l+'敗'+r.d+'分'],['勝率',f3(r.wp)],['得点／失点',r.rs+' ／ '+r.ra],['チーム打率',tl[3].slice(7)],['OPS',tl[4].slice(4)]]));
+if(!mon){const ms={};L.forEach(g=>{(ms[g.d.slice(0,7)]=ms[g.d.slice(0,7)]||[]).push(g)});R.secs.push({h:'月別',c:['月','試合','勝','敗','分','得点','失点'],r:Object.keys(ms).sort().map(m=>{const q=r9Rec(ms[m]);return[m,q.n,q.w,q.l,q.d,q.rs,q.ra]})})}
+R.secs.push({h:'試合一覧',c:['日付','相手','種別','結果','得点','失点'],r:L.map(g=>[g.d,g.o||'-',g.t||'-',r9Res(g),g.rs||0,g.ra||0])});
+const B=r9PlayersOf(ids).map(p=>r9BatRow(p,ids).row);if(B.length)R.secs.push({h:'選手別打撃',c:R9BH,r:B});return R}
+if(k=='bat'){const L=r9Gs().filter(g=>fyOf(g.d)==fy),ids=new Set(L.map(g=>g.id)),R=H('選手別成績表',fy+'年度（'+(r9s.ty=='all'?'全試合':r9s.ty=='x'?'紅白戦除く':r9s.ty)+'）'),B=r9PlayersOf(ids).map(p=>r9BatRow(p,ids)).sort((a,b)=>b.q.pa-a.q.pa).map(x=>x.row);R.secs.push({h:'打撃成績',c:R9BH,r:B.length?B:[['記録なし',...Array(12).fill('')]]});R.secs.push({h:'',p:'打率＝安打÷打数、出塁率＝(安打+四死球)÷(打数+四死球+犠飛)、OPS＝出塁率＋長打率。打席数が少ない選手は参考値です。'});return R}
+if(k=='pit'){const ids=new Set(r9Gs().filter(g=>fyOf(g.d)==fy).map(g=>g.id)),R=H('投手成績表',fy+'年度'),P=S.p.map(p=>({p,s:pstat(p.id,ids)})).filter(x=>x.s.G>0||x.s.P>0);R.secs.push({h:'投手成績',c:['投手','登板','先発','勝','負','回','被安打','四死球','奪三振','失点','自責','防御率','WHIP','球数'],r:P.length?P.map(({p,s})=>[pn(p.id),s.G,s.GS,s.W,s.L,(s.outs/3).toFixed(1),s.H,s.BB+s.HB,s.SO,s.R,s.ER,f2(s.era),f2(s.whip),s.P]):[['記録なし',...Array(13).fill('')]]});R.secs.push({h:'',p:'防御率は7回換算（学童野球）です。投球回が少ない選手は参考値です。'});return R}
+if(k=='fld'){const ids=new Set(r9Gs().filter(g=>fyOf(g.d)==fy).map(g=>g.id)),R=H('守備成績表',fy+'年度'),F=S.p.map(p=>({p,f:fstat(p.id,ids)})).filter(x=>x.f.ch>0||x.f.E>0||x.f.PB>0);R.secs.push({h:'守備成績',c:['選手','刺殺','補殺','失策','守備機会','守備率','捕逸'],r:F.length?F.map(({p,f})=>[pn(p.id),f.PO,f.A,f.E,f.ch,f3(f.fp),f.PB]):[['記録なし','','','','','','']]});return R}
+if(k=='grow'){const p=S.p.find(x=>x.id==r9s.pid)||act()[0];if(!p)return null;r9s.pid=p.id;const R=H('成長レポート',p.name),D=lt();
+R.secs.push({h:'身体能力（測定・60点＝同学年の目安）',c:['領域','得点','前回との差'],r:gwAreaTb(p.id,D).map(x=>[x.n,x.a?x.a.v+(x.a.ref?'（参考）':''):'未測定',x.d==null?'-':(x.d>0?'+':'')+Math.round(x.d*10)/10])});
+const pl=gwPlay(p.id,fyOf(D)),tr=gwTrend(p.id);R.secs.push(r9KV('実戦能力（'+pl.fy+'年度）',[['打撃',pl.bat.pa+'打席 OPS '+f3(pl.bat.ops)],['投球',pl.pit.n+'球 ストライク率 '+pc(pl.pit.sr)],['守備',pl.fld.tc+'機会 守備率 '+f3(pl.fld.fp)],['成長度',tr.t+'（'+tr.d+'）']]));
+const is=gwIssues(p.id),mn=gwMenu(is);R.secs.push({h:'課題と練習のヒント',p:(is.length?is.slice(0,4).map(i=>'・'+i.m).join('\n'):'目立った課題はありません。')+'\n'+mn.map(m=>'・'+m.k+'：'+m.l.join(' ／ ')).join('\n')});R.secs.push({h:'',p:'※体の成長には個人差があります。評価は他の選手との順位ではなく、同学年・同性別の目安との比較です。'});return R}
+if(k=='coach'){const L=r9Gs().filter(g=>fyOf(g.d)==fy),ids=new Set(L.map(g=>g.id)),R=H('指導者向けレポート',fy+'年度（指導者用・保護者への配布不可）'),tl=r9TeamLine(L);
+R.secs.push(r9KV('チームの状況',tl.map((x,i)=>[['試合','勝率','得失点','打撃','OPS'][i],x])));
+const B=r9PlayersOf(ids).map(p=>r9BatRow(p,ids)).filter(x=>x.q.pa>=10).sort((a,b)=>b.q.ops-a.q.ops);R.secs.push({h:'打撃 上位（10打席以上・OPS順）',c:['選手','打席','打率','出塁率','OPS','打点'],r:B.slice(0,5).map(x=>[pn(x.p.id),x.q.pa,f3(x.q.avg),f3(x.q.obp),f3(x.q.ops),x.q.rbi])});
+const pit=S.p.map(p=>({p,s:pstat(p.id,ids)})).filter(x=>x.s.P>0).sort((a,b)=>b.s.P-a.s.P);R.secs.push({h:'投手の負担（球数の多い順）',c:['投手','登板','球数','回','失点'],r:pit.slice(0,5).map(({p,s})=>[pn(p.id),s.G,s.P,(s.outs/3).toFixed(1),s.R])});
+const al=[];try{o8Alerts().slice(0,8).forEach(a=>al.push(String(a.m||a.t||a).replace(/<[^>]+>/g,'')))}catch(_){}try{alerts().slice(0,6).forEach(a=>al.push(String(a).replace(/<[^>]+>/g,'')))}catch(_){}
+R.secs.push({h:'要確認',p:al.length?al.map(x=>'・'+x).join('\n'):'現在、要確認の項目はありません。'});
+const at=act().map(p=>({p,r:o8Rate(p.id,fy)})).filter(x=>x.r.n>0).sort((a,b)=>a.r.r-b.r.r).slice(0,5);if(at.length)R.secs.push({h:'出席率の低い選手（出欠入力のある練習・試合）',c:['選手','出席','対象','出席率'],r:at.map(x=>[pn(x.p.id),x.r.a,x.r.n,Math.round(x.r.r*100)+'%'])});
+R.secs.push({h:'',p:'数値は参考情報です。起用・指導の最終判断は指導者が行ってください。'});return R}
+if(k=='par'){const p=S.p.find(x=>x.id==r9s.pid)||act()[0];if(!p)return null;r9s.pid=p.id;const L=r9Gs().filter(g=>fyOf(g.d)==fy),ids=new Set(L.map(g=>g.id)),R=H('保護者向けレポート',p.name+'（'+fy+'年度）'),b=r9BatRow(p,ids),r=r9Rec(L);
+R.secs.push(r9KV('チームの成績',[['試合数',r.n],['成績',r.w+'勝'+r.l+'敗'+r.d+'分'],['得点／失点',r.rs+' ／ '+r.ra]]));
+R.secs.push(r9KV(p.name+'さんの記録',[['出場試合',b.gs],['打席',b.q.pa],['安打',b.q.h],['打点',b.q.rbi],['四死球',b.q.bb+b.q.hbp],['打率',b.q.pa?f3(b.q.avg):'-']]));
+const tr=gwTrend(p.id),gl=S.gl.filter(g=>g.p==p.id);R.secs.push({h:'成長のようす',p:'成長度：'+tr.t+'（'+tr.d+'）'+(gl.length?'\n目標：'+gl.map(g=>RN[g.k]+' '+g.v+U[g.k]).join('、'):'')});
+const up=(()=>{try{return o8Sort(O8().ev).filter(e=>e.d>=lt()).slice(0,5).map(e=>[e.d,e.ty,e.ti||'',(e.t0?e.t0+(e.t1?'〜'+e.t1:''):''),e.pl||''])}catch(_){return[]}})();if(up.length)R.secs.push({h:'今後の予定',c:['日付','種別','内容','時間','場所'],r:up});
+R.secs.push({h:'',p:'この資料には他の選手の個人成績は含まれていません。成長には個人差があります。順位ではなく、本人の伸びを大切にしましょう。'});return R}
+return null};
+/* --- 出力: HTML / CSV / テキスト --- */
+const r9Cell=v=>esc(r9n(v));
+const r9Html=R=>R?`<div class="r9w"><div class="r9p"><h2 class="r9h">${esc(R.t)}</h2><div class="r9s">${esc(R.s)}　<span class="m">出力日 ${esc(R.at)}</span></div>${R.secs.map(s=>(s.h?`<h3>${esc(s.h)}</h3>`:'')+(s.p?`<p class="r9n">${esc(s.p).replace(/\n/g,'<br>')}</p>`:'')+(s.c?`<div class="w"><table class="r9t${s.kv?' kv':''}"><tr>${s.c.map(x=>`<th>${esc(x)}</th>`).join('')}</tr>${s.r.map(r=>`<tr>${r.map((x,i)=>`<td${i?'':' class="l"'}>${r9Cell(x)}</td>`).join('')}</tr>`).join('')}</table></div>`:'')).join('')}</div></div>`:'<div class="c"><p class="m">この条件に該当する記録がありません。</p></div>';
+const r9Safe=v=>{let s=String(r9n(v)==='-'&&v!=='-'?'':v==null?'':v);if(/^[=+\-@\t\r]/.test(s)&&!/^[-+]?[\d.\-]*%?$/.test(s))s="'"+s;return'"'+s.replace(/"/g,'""')+'"'};
+const r9Csv=R=>'﻿'+[[R.t],[R.s],['出力日',R.at],...R.secs.flatMap(s=>[[],...(s.h?[[s.h]]:[]),...(s.p?s.p.split('\n').map(x=>[x]):[]),...(s.c?[s.c,...s.r]:[])])].map(r=>r.map(r9Safe).join(',')).join('\r\n')+'\r\n';
+const r9Text=R=>[R.t,R.s,'',...R.secs.flatMap(s=>[...(s.h?['■ '+s.h]:[]),...(s.p?[s.p]:[]),...(s.c?(s.kv?s.r.map(r=>' '+r[0]+'：'+r9n(r[1])):s.r.map(r=>' '+r.map(r9n).join(' / '))):[]),''])].join('\n');
+const r9Name=R=>'HOPE_'+r9s.k+'_'+String(R.at).replace(/[^0-9A-Za-z-]/g,'');
+/* --- 画像 (Canvas) --- */
+const R9W=794,R9H=1123,R9FN='"Hiragino Sans","Noto Sans JP","Yu Gothic","Meiryo",sans-serif';
+const r9Pages=R=>{const pages=[];let cv,c,y;const np=()=>{cv=document.createElement('canvas');cv.width=R9W*2;cv.height=R9H*2;c=cv.getContext('2d');c.scale(2,2);c.fillStyle='#fff';c.fillRect(0,0,R9W,R9H);c.textBaseline='middle';y=44;pages.push(cv)};np();
+const M=44,CW=R9W-M*2,tw=(t,f)=>{c.font=f;return c.measureText(t).width},fit=(t,f,w)=>{t=String(t);if(tw(t,f)<=w)return t;while(t.length>1&&tw(t+'…',f)>w)t=t.slice(0,-1);return t+'…'};
+const room=h=>{if(y+h>R9H-46)np()};
+const wrap=(t,f,w)=>{const o=[];String(t).split('\n').forEach(l=>{let a='';for(const ch of l){if(tw(a+ch,f)>w){o.push(a);a=ch}else a+=ch}o.push(a)});return o};
+c.fillStyle='#1c4a33';c.font='bold 22px '+R9FN;c.fillText(fit(R.t,'bold 22px '+R9FN,CW),M,y);y+=26;c.fillStyle='#555';c.font='12px '+R9FN;c.fillText(fit(R.s+'　出力日 '+R.at,'12px '+R9FN,CW),M,y);y+=10;c.fillStyle='#2e9f6b';c.fillRect(M,y,CW,2);y+=16;
+R.secs.forEach(s=>{if(s.h){room(60);c.fillStyle='#1c4a33';c.font='bold 14px '+R9FN;c.fillText(fit(s.h,'bold 14px '+R9FN,CW),M,y+8);y+=24}
+if(s.p){const f='12px '+R9FN;wrap(s.p,f,CW).forEach(l=>{room(20);c.fillStyle='#222';c.font=f;c.fillText(l,M,y+8);y+=18});y+=6}
+if(s.c){let fs=11,cols=s.c.length,ws;const all=[s.c,...s.r].map(r=>r.map(r9n));const calc=()=>all[0].map((_,i)=>Math.max(...all.map(r=>tw(String(r[i]),(r===all[0]?'bold ':'')+fs+'px '+R9FN)))+10);ws=calc();while(ws.reduce((a,b)=>a+b,0)>CW&&fs>7){fs--;ws=calc()}const tot=ws.reduce((a,b)=>a+b,0);if(tot>CW){const k=CW/tot;ws=ws.map(w=>w*k)}else if(tot<CW&&!s.kv){const k=Math.min(1.6,CW/tot);ws=ws.map(w=>w*k)}else if(s.kv){ws=[CW*.3,CW*.7]}
+const RH=fs+12,drow=(r,hd,odd)=>{room(RH);let x=M;if(hd){c.fillStyle='#e3f1ea';c.fillRect(M,y,ws.reduce((a,b)=>a+b,0),RH)}else if(odd){c.fillStyle='#f6faf7';c.fillRect(M,y,ws.reduce((a,b)=>a+b,0),RH)}r.forEach((v,i)=>{c.fillStyle=hd?'#1c4a33':'#222';const f=(hd?'bold ':'')+fs+'px '+R9FN;c.font=f;const t=fit(String(v),f,ws[i]-6);if(i==0||s.kv){c.textAlign='left';c.fillText(t,x+4,y+RH/2)}else{c.textAlign='center';c.fillText(t,x+ws[i]/2,y+RH/2)}c.textAlign='left';c.strokeStyle='#b9d4c4';c.lineWidth=.6;c.strokeRect(x,y,ws[i],RH);x+=ws[i]});y+=RH};
+drow(all[0],1,0);all.slice(1).forEach((r,i)=>{const b=y;drow(r,0,i%2);if(y<b){/*改ページ後は見出しを再描画*/}});y+=12}});
+pages.forEach((p,i)=>{const q=p.getContext('2d');q.font='10px '+R9FN;q.fillStyle='#888';q.textBaseline='middle';q.textAlign='left';q.fillText((S.team||'')+'　HOPE Data Analysis',M,R9H-24);q.textAlign='right';q.fillText((i+1)+' / '+pages.length,R9W-M,R9H-24);q.textAlign='left'});return pages};
+/* --- PDF（JPEG埋め込み・手書き） --- */
+const r9Pdf=async R=>{const pages=r9Pages(R),E=new TextEncoder(),parts=[],off=[];let len=0;const put=b=>{const u=typeof b=='string'?E.encode(b):b;parts.push(u);len+=u.length};const obj=(n,body)=>{off[n]=len;put(n+' 0 obj\n');put(body);put('\nendobj\n')};
+const n=pages.length,jp=[];for(const cv of pages){const d=cv.toDataURL('image/jpeg',.92),b=u2b(d);jp.push(new Uint8Array(await b.arrayBuffer()))}
+put('%PDF-1.4\n');put(new Uint8Array([37,226,227,207,211,10]));
+obj(1,'<< /Type /Catalog /Pages 2 0 R >>');obj(2,'<< /Type /Pages /Count '+n+' /Kids ['+pages.map((_,i)=>(3+i*3)+' 0 R').join(' ')+'] >>');
+jp.forEach((j,i)=>{const a=3+i*3,W=595.28,H=841.89,cs='q '+W+' 0 0 '+H+' 0 0 cm /Im0 Do Q';obj(a,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /XObject << /Im0 '+(a+2)+' 0 R >> >> /Contents '+(a+1)+' 0 R >>');obj(a+1,'<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream');off[a+2]=len;put((a+2)+' 0 obj\n<< /Type /XObject /Subtype /Image /Width '+R9W*2+' /Height '+R9H*2+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+j.length+' >>\nstream\n');put(j);put('\nendstream\nendobj\n')});
+const N=3+n*3,x0=len;put('xref\n0 '+N+'\n0000000000 65535 f \n');for(let i=1;i<N;i++)put(String(off[i]).padStart(10,'0')+' 00000 n \n');put('trailer\n<< /Size '+N+' /Root 1 0 R /Info << /Title <'+[...R.t].map(ch=>ch.charCodeAt(0).toString(16).padStart(4,'0')).join('').replace(/^/,'feff')+'> >> >>\nstartxref\n'+x0+'\n%%EOF\n');
+return new Blob(parts,{type:'application/pdf'})};
+const r9Dl=async(blob,name)=>{try{let f=null;try{f=new File([blob],name,{type:blob.type})}catch(_){}if(f&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return true}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},2500);return true}catch(e){if(e&&e.name=='AbortError')return false;showErr('この端末では保存できませんでした：'+(e&&e.message||e));return false}};
+const r9Raw=()=>{const G=S.g.slice().sort((a,b)=>a.d<b.d?-1:1),R={t:'全データ（試合・打席）',s:S.team||'',at:lt(),secs:[{h:'試合一覧',c:['日付','相手','球場','種別','大会','得点','失点','結果'],r:G.map(g=>[g.d,g.o||'',g.v||'',g.t||'',g.tn||'',g.rs||0,g.ra||0,r9Res(g)])},{h:'打席一覧',c:['日付','相手','選手','結果','打点'],r:S.a.slice().sort((a,b)=>(a.d||'')<(b.d||'')?-1:1).map(x=>[x.d||'',x.o||'',pn(x.p),x.r,x.rbi||0])},{h:'選手一覧',c:['背番号','名前','ポジション','投','打','学年'],r:S.p.map(p=>[p.no||'',p.name,p.pos||'',p.th||'',p.bt||'',gn(p)])}]};return R};
+const r9Cur=()=>{try{return r9s.k=='raw'?r9Raw():r9Build()}catch(e){showErr('帳票の作成に失敗しました：'+e.message);return null}};
+
+/* ===== Phase 9 帳票画面 ===== */
+{const st9=document.createElement('style');st9.textContent='button:disabled{opacity:.45;pointer-events:none}.r9w{overflow-x:auto}.r9p{background:#fff;color:#1b2a22;border-radius:10px;padding:12px;margin:8px 0;min-width:300px}.r9h{margin:0 0 2px;color:#1c4a33}.r9s{font-size:12px;color:#555;margin-bottom:6px;border-bottom:2px solid #2e9f6b;padding-bottom:6px}.r9p h3{color:#1c4a33;font-size:14px;margin:12px 0 4px}.r9n{font-size:12px;line-height:1.6;margin:4px 0}.r9t{border-collapse:collapse;font-size:11px;width:100%;background:#fff;color:#1b2a22}.r9t th,.r9t td{border:1px solid #b9d4c4;padding:3px 4px;text-align:center;white-space:nowrap}.r9t td.l{text-align:left}.r9t th{background:#e3f1ea;color:#1c4a33}.r9t.kv td{text-align:left;white-space:normal}.r9t tr:nth-child(even) td{background:#f6faf7}.r9p .m{color:#666}@media print{body.r9pr #v>*:not(.r9w):not(.r9only){display:none!important}body.r9pr .r9w{overflow:visible!important}body.r9pr .r9p{border-radius:0;padding:0;margin:0}body.r9pr nav,body.r9pr #eb,body.r9pr #svb,body.r9pr #svw,body.r9pr #svt{display:none!important}body.r9pr{background:#fff!important}.r9t{font-size:10px}.r9p h3{break-after:avoid}.r9t tr{break-inside:avoid}}';document.head.appendChild(st9)}
+const r9Opt=(l,cur)=>l.map(([v,t])=>`<option value="${esc(v)}"${String(v)==String(cur)?' selected':''}>${esc(t)}</option>`).join('');
+const r9Ctl=()=>{const k=r9s.k,fy0=fyOf(lt()),fys=[...new Set([fy0,...S.g.map(g=>fyOf(g.d))])].sort((a,b)=>b-a),ty=`<label>対象試合<select id="r9ty">${r9Opt([['x','紅白戦を除く'],['all','すべて'],['公式戦','公式戦のみ'],['練習試合','練習試合のみ'],['紅白戦','紅白戦のみ']],r9s.ty)}</select></label>`,fy=`<label>年度<select id="r9fy">${r9Opt(fys.map(y=>[y,y+'年度']),r9Fy())}</select></label>`;
+if(k=='game'){const L=r9Gs().slice().reverse();return`<label>試合<select id="r9g">${r9Opt(L.map(g=>[g.id,g.d+' vs '+(g.o||'?')+' '+(g.rs||0)+'-'+(g.ra||0)]),r9s.gid||(L[0]||{}).id)}</select></label>${ty}`}
+if(k=='tour'){const t=[...new Set(S.g.map(g=>g.tn).filter(Boolean))];return t.length?`<label>大会<select id="r9tn">${r9Opt(t.map(x=>[x,x]),r9s.tn||t[t.length-1])}</select></label>`:'<p class="m">大会名が入った試合がありません。</p>'}
+if(k=='mon'){const ms=[...new Set([lt().slice(0,7),...S.g.map(g=>g.d.slice(0,7))])].sort().reverse();return`<label>月<select id="r9ym">${r9Opt(ms.map(m=>[m,m]),r9s.ym||lt().slice(0,7))}</select></label>${ty}`}
+if(k=='yr'||k=='bat'||k=='pit'||k=='fld'||k=='coach')return fy+(k=='pit'||k=='fld'?'':ty);
+if(k=='grow'||k=='par'){const P=act();return`<label>選手<select id="r9p">${r9Opt(P.map(p=>[p.id,pn(p.id)]),r9s.pid||(P[0]||{}).id)}</select></label>`+(k=='par'?fy+ty:'')+(k=='par'?'<p class="m">他の選手の個人成績は含まれません。</p>':'')}
+return'<p class="m">全試合・全打席・選手名簿をCSVで書き出します（Excelで開けます）。</p>'};
+V.rpt=()=>{const R=r9Cur(),k=r9s.k;return`<button class="x" data-t="ana">‹ 分析</button><h2 style="margin:4px 0 6px">📄 帳票</h2><div class="ch" style="flex-wrap:wrap;overflow:visible">${R9K.map(([a,t])=>o8Chip('r9k',a,t,k==a)).join('')}</div><div class="c">${r9Ctl()}${k=='raw'?'':''}<div class="r" style="margin-top:8px;flex-wrap:wrap;gap:6px"><button class="p" data-a="r9pr"${R?'':' disabled'}>🖨 印刷</button><button class="x" data-a="r9pdf"${R?'':' disabled'}>📄 PDF</button><button class="x" data-a="r9png"${R?'':' disabled'}>🖼 画像</button><button class="x" data-a="r9csv"${R?'':' disabled'}>📊 CSV</button><button class="x" data-a="r9txt"${R?'':' disabled'}>📋 コピー</button></div><p class="m" style="margin:6px 0 0">${esc(r9s.msg||'印刷はA4で出力されます。PDFは画像形式のため文字の選択はできません。')}</p></div>${k=='raw'?'':r9Html(R)}`};
+NV.rpt='ana';
+{const a2=V.ana;V.ana=()=>`<button class="x" data-t="rpt" style="width:100%;margin-bottom:8px">📄 帳票（試合報告書・大会・月間年間・選手別・投手・守備・成長・指導者・保護者／印刷・PDF・画像・CSV）▶</button>`+a2()}
+const r9Pr=()=>{const b=document.body;b.classList.add('r9pr');const off=()=>{b.classList.remove('r9pr');removeEventListener('afterprint',off)};addEventListener('afterprint',off);try{window.print()}catch(e){showErr('印刷を開始できませんでした：'+e.message)}setTimeout(off,1500)};
+const r9Copy=async t=>{try{await navigator.clipboard.writeText(t);return true}catch(_){try{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;left:-999px';document.body.appendChild(a);a.select();const ok=document.execCommand('copy');a.remove();return ok}catch(__){return false}}};
+$d.addEventListener('click',async e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a||'';if(!a.startsWith('r9'))return;e.stopImmediatePropagation();e.preventDefault();
+try{if(a=='r9k'){r9s.k=t.dataset.k;r9s.msg='';draw();return}
+if(r9s.busy)return;const R=r9Cur();if(!R){showErr('出力できる記録がありません');return}
+if(a=='r9pr'){r9Pr();return}
+if(a=='r9csv'){await r9Dl(new Blob([r9Csv(R)],{type:'text/csv;charset=utf-8'}),r9Name(R)+'.csv');oplog('帳票CSV',R.t);return}
+if(a=='r9txt'){const ok=await r9Copy(r9Text(R));tpill(ok?'コピーしました':'コピーできませんでした',!ok);return}
+r9s.busy=a;tpill('作成中…');await new Promise(r=>setTimeout(r,30));
+try{if(a=='r9png'){const P=r9Pages(R);for(let i=0;i<P.length;i++){const u=P[i].toDataURL('image/png');await dlImg(u,r9Name(R)+(P.length>1?'_'+(i+1):'')+'.png')}oplog('帳票画像',R.t)}
+else if(a=='r9pdf'){const b=await r9Pdf(R);await r9Dl(b,r9Name(R)+'.pdf');oplog('帳票PDF',R.t)}}
+finally{r9s.busy=''}}catch(err){r9s.busy='';showErr('帳票の出力に失敗しました：'+(err&&err.message||err))}},true);
+$d.addEventListener('change',e=>{const t=e.target,i=t.id||'';if(!i.startsWith('r9'))return;const m={r9g:'gid',r9tn:'tn',r9ym:'ym',r9p:'pid',r9ty:'ty'};if(m[i])r9s[m[i]]=t.value;else if(i=='r9fy')r9s.fy=+t.value;else return;draw()});
+
 const DUPA=new Set(['gwms','gadd','gpadd','rok','ibb','ci','ofr','sqr','ent','sach','sflc','hbp','ap','am','msave','gstart']);let dupL={k:'',t:0};
 $d.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;const d=t.dataset,a=d.a,v=s=>$(s)?$(s).value:'';const c0=[S.pt.length,S.a.length,S.df.length,S.sb.length,S.ev.length,S.pk.length],pre6=(()=>{try{const g=cg();if(!g||!g.n)return null;const n=g.n;return{gid:g.id,inn:n.inn,o:n.o,bs:(n.bs||[]).slice(),cob:n.cob||'',cat:fp(g,'捕')||''}}catch(_){return null}})();if(a&&DUPA.has(a)){const k=a+'|'+JSON.stringify(d)+(a=='ap'?v('#pn')+v('#pno'):''),n=Date.now();if(dupL.k==k&&n-dupL.t<(a=='ap'||a=='gstart'||a=='am'||a=='msave'?1200:600)){oplog('二重登録防止',a);return}dupL={k,t:n}}
 if(d.t){tab=d.t;sh='';draw();scrollTo(0,0);return}
@@ -2220,6 +2428,6 @@ else if(a=='print'){print();return}else if(a=='mlo'){mlS.o=1}else if(a=='mlx'){m
 else if(a=='imp'){const txt=v('#bk');bkRestore('all',txt).then(m=>{if(m.includes('復元しました')){tab='home'}else alert(m);draw()});return}
 try{x6stamp(c0,pre6,a,d)}catch(_){}tagNew(c0);save();draw();autoBkMaybe()});
 draw();dpInit();
-try{if('serviceWorker' in navigator&&location.protocol.startsWith('http')){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
+try{window.__hopeOk=1;try{localStorage.setItem('hope_boot','0')}catch(_){}u9Reg().catch(()=>{});
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
 </script></body></html>
