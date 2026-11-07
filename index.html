@@ -2202,6 +2202,237 @@ else if(a=='r9pdf'){const b=await r9Pdf(R);await r9Dl(b,r9Name(R)+'.pdf');oplog(
 finally{r9s.busy=''}}catch(err){r9s.busy='';showErr('帳票の出力に失敗しました：'+(err&&err.message||err))}},true);
 $d.addEventListener('change',e=>{const t=e.target,i=t.id||'';if(!i.startsWith('r9'))return;const m={r9g:'gid',r9tn:'tn',r9ym:'ym',r9p:'pid',r9ty:'ty'};if(m[i])r9s[m[i]]=t.value;else if(i=='r9fy')r9s.fy=+t.value;else return;draw()});
 
+/* ===== Phase 10 クラウド同期（エンジン） ===== */
+const CLK='hope_cloud',CLA='hope_auth',SYA=['p','a','m','g','pt','gl','px','sb','sn','op','df','pk','ao','ev','ob','opp','gr','rs'];
+BKN.sync='同期前';BKG.sync='safe';
+const c10={st:'idle',msg:'',run:0,ref:null,dirty:0,pend:null,tm:0,last:0,seen:'',roles:{admin:'管理者',coach:'指導者',viewer:'閲覧者'}};
+const SY10={v:1,bind:null,since:0,base:{},conf:[],hold:{},hist:[],last:null,auto:true,ready:0};
+const yIdb=()=>new Promise((res,rej)=>{try{const q=indexedDB.open('hope_sync10',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}catch(e){rej(e)}});
+const yLoad=async()=>{let j=null;try{const d=await yIdb();j=await new Promise((res,rej)=>{const r=d.transaction('kv').objectStore('kv').get('meta');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});d.close()}catch(_){try{j=JSON.parse(localStorage.getItem('hope_sync_meta')||'null')}catch(__){}}
+if(j&&typeof j=='object'){SY10.bind=j.bind||null;SY10.since=+j.since||0;SY10.base=j.base||{};SY10.conf=Array.isArray(j.conf)?j.conf:[];SY10.hold=j.hold||{};SY10.hist=Array.isArray(j.hist)?j.hist:[];SY10.last=j.last||null;SY10.auto=j.auto!==false}SY10.ready=1};
+let yT=0;const ySave=()=>new Promise(res=>{clearTimeout(yT);yT=setTimeout(async()=>{const o={v:1,bind:SY10.bind,since:SY10.since,base:SY10.base,conf:SY10.conf,hold:SY10.hold,hist:SY10.hist.slice(-50),last:SY10.last,auto:SY10.auto};try{const d=await yIdb();await new Promise((r,j)=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(o,'meta');t.oncomplete=r;t.onerror=()=>j(t.error)});d.close()}catch(_){try{localStorage.setItem('hope_sync_meta',JSON.stringify(o))}catch(__){}}res()},60)});
+const ySaveNow=async()=>{await ySave()};
+const yHist=(o)=>{SY10.hist.push(Object.assign({at:new Date().toISOString()},o));if(SY10.hist.length>50)SY10.hist.splice(0,SY10.hist.length-50)};
+/* --- 設定・認証 --- */
+const clCfg=()=>{try{const j=JSON.parse(localStorage.getItem(CLK)||'null');return j&&j.u&&j.k?j:null}catch(_){return null}};
+const clUrlOk=u=>/^https:\/\/[^\s/]+\/?$/.test(u)||/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/.test(u);
+const clCode=(u,k)=>'HOPE1:'+btoa(unescape(encodeURIComponent(JSON.stringify({u,k}))));
+const clParse=s=>{try{s=String(s||'').trim();if(!s.startsWith('HOPE1:'))return null;const j=JSON.parse(decodeURIComponent(escape(atob(s.slice(6)))));return j&&j.u&&j.k?{u:String(j.u),k:String(j.k)}:null}catch(_){return null}};
+const clSetCfg=(u,k)=>{u=String(u||'').trim().replace(/\/+$/,'');k=String(k||'').trim();if(!clUrlOk(u+'/'))return'接続先のURLが正しくありません（https:// で始まるアドレスが必要です）';if(k.length<10||/\s/.test(k))return'公開キーが正しくありません';try{localStorage.setItem(CLK,JSON.stringify({u,k}))}catch(_){return'この端末に設定を保存できませんでした'}return''};
+const clAu=()=>{try{return JSON.parse(localStorage.getItem(CLA)||'null')}catch(_){return null}};
+const clSetAu=a=>{try{if(a)localStorage.setItem(CLA,JSON.stringify(a));else localStorage.removeItem(CLA)}catch(_){}};
+const CLM={invalid_invite:'招待コードが正しくないか、期限切れ・使用済みです',too_many_attempts:'失敗が続いたため、しばらく入力できません（1時間後にもう一度お試しください）',forbidden:'このチームの操作権限がありません',forbidden_role:'この操作はあなたの権限ではできません',last_admin:'最後の管理者は変更・退出できません',too_many_teams:'参加できるチーム数の上限です',bad_name:'チーム名は1〜60文字で入力してください',not_found:'見つかりません',record_too_large:'1件のデータが大きすぎて送れません',backup_too_large:'バックアップが大きすぎて保存できません',empty_backup:'バックアップが空です',too_many_changes:'一度に送る件数が多すぎます',bad_role:'権限の指定が正しくありません',unauthenticated:'ログインが必要です','Invalid login credentials':'メールアドレスまたはパスワードが違います','User already registered':'このメールアドレスは登録済みです。ログインしてください','Email not confirmed':'メールの確認が済んでいません。届いたメールのリンクを開いてください'};
+const clMsg=e=>{const m=String(e&&e.msg||e&&e.message||e||'');return CLM[m]||(/weak|short|least/i.test(m)?'パスワードが短すぎます（8文字以上）':/rate limit|too many/i.test(m)?'操作が多すぎます。しばらくしてからお試しください':m)||'不明なエラー'};
+class CLE extends Error{constructor(s,m,net){super(m);this.status=s;this.msg=m;this.net=!!net}}
+const clFetch=async(path,o)=>{o=o||{};const c=clCfg();if(!c)throw new CLE(0,'クラウド接続が未設定です');const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),o.timeout||25000);
+try{const h={apikey:c.k,'Content-Type':'application/json'};if(o.auth){const a=clAu();if(!a)throw new CLE(401,'ログインが必要です');h.Authorization='Bearer '+a.at}else h.Authorization='Bearer '+c.k;
+const r=await fetch(c.u+path,{method:o.method||'POST',headers:h,body:o.body==null?undefined:JSON.stringify(o.body),signal:ctl.signal});let j=null;const t=await r.text();try{j=t?JSON.parse(t):null}catch(_){}
+if(!r.ok){const m=j&&(j.message||j.msg||j.error_description||j.error)||('HTTP '+r.status);throw new CLE(r.status,m)}return j}
+catch(e){if(e instanceof CLE)throw e;throw new CLE(0,e&&e.name=='AbortError'?'通信がタイムアウトしました':'通信できません（オフライン、または接続先に届きません）',1)}finally{clearTimeout(tm)}};
+const clExp=a=>!a||a.exp-30<Date.now()/1000;
+const clRefresh=async()=>{if(c10.ref)return c10.ref;c10.ref=(async()=>{const a=clAu();if(!a||!a.rt)throw new CLE(401,'ログインが必要です');try{const j=await clFetch('/auth/v1/token?grant_type=refresh_token',{body:{refresh_token:a.rt}});clSetAu(clSess(j));return true}catch(e){if(e.status==400||e.status==401){clSetAu(null);c10.st='auth';throw new CLE(401,'ログインが必要です（有効期限が切れました）')}throw e}finally{c10.ref=null}})();return c10.ref};
+const clSess=j=>({at:j.access_token,rt:j.refresh_token,exp:j.expires_at||Math.floor(Date.now()/1000)+(j.expires_in||3600),uid:j.user&&j.user.id,email:j.user&&j.user.email});
+const clCall=async(fn,args,o)=>{o=o||{};let a=clAu();if(a&&clExp(a))await clRefresh();try{return await clFetch('/rest/v1/rpc/'+fn,{auth:1,body:args||{},timeout:o.timeout})}catch(e){if(e.status==401&&!o.retried){await clRefresh();return clCall(fn,args,Object.assign({},o,{retried:1}))}throw e}};
+const clSignUp=async(em,pw)=>{if(String(pw).length<8)throw new CLE(0,'パスワードは8文字以上にしてください');const j=await clFetch('/auth/v1/signup',{body:{email:em,password:pw}});if(j&&j.access_token){clSetAu(clSess(j));return{ok:1}}return{ok:0,confirm:1}};
+const clLogin=async(em,pw)=>{const j=await clFetch('/auth/v1/token?grant_type=password',{body:{email:em,password:pw}});clSetAu(clSess(j));c10.st='idle';c10.msg='';return clAu()};
+const clLogout=async()=>{const a=clAu();clSetAu(null);c10.st='out';c10.msg='';try{if(a&&clCfg())await fetch(clCfg().u+'/auth/v1/logout',{method:'POST',headers:{apikey:clCfg().k,Authorization:'Bearer '+a.at}})}catch(_){}};
+/* --- 記録の抽出・ハッシュ --- */
+const sj=v=>{if(v===null||v===undefined)return'null';const t=typeof v;if(t=='number')return isFinite(v)?String(v):'null';if(t=='string'||t=='boolean')return JSON.stringify(v);if(Array.isArray(v))return'['+v.map(x=>x===undefined||typeof x=='function'?'null':sj(x)).join(',')+']';if(t=='object'){return'{'+Object.keys(v).sort().filter(k=>v[k]!==undefined&&typeof v[k]!='function').map(k=>JSON.stringify(k)+':'+sj(v[k])).join(',')+'}'}return'null'};
+const s10h0=s=>{let a=0x811c9dc5,b=5381;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a^=c;a=Math.imul(a,16777619)>>>0;b=(Math.imul(b,33)^c)>>>0}return a.toString(16).padStart(8,'0')+b.toString(16).padStart(8,'0')+s.length.toString(36)};
+const s10H=d=>s10h0(sj(d));
+const s10Tm=()=>{const t=Object.assign({},S.tm);delete t.logo;return t};
+const s10Recs=()=>{const m=new Map();const st={dup:0,noid:0};const add=(coll,rid,data,grp)=>{const k=coll+'|'+rid;if(m.has(k)){st.dup++;return}m.set(k,{k,coll,rid,data,grp:grp||null,h:s10H(data)})};
+SYA.forEach(c=>{(Array.isArray(S[c])?S[c]:[]).forEach(x=>{if(x&&typeof x=='object'&&x.id!=null&&x.id!=='')add(c,String(x.id),x,c=='g'?String(x.id):(x.gid!=null?String(x.gid):null));else st.noid++})});
+if(S.o8&&typeof S.o8=='object')Object.keys(S.o8).forEach(k=>{const v=S.o8[k];if(Array.isArray(v))v.forEach(x=>{if(x&&typeof x=='object'&&x.id!=null)add('o8.'+k,String(x.id),x,null);else st.noid++});else if(v!==undefined)add('obj','o8.'+k,{v},null)});
+add('obj','tm',{v:s10Tm()},null);add('obj','team',{v:S.team},null);
+Object.keys(S.gd||{}).forEach(k=>add('obj','gd.'+k,{v:S.gd[k]},null));
+m.st=st;return m};
+const s10Arr=c=>{if(c.startsWith('o8.')){S.o8=S.o8||{};const k=c.slice(3);if(!Array.isArray(S.o8[k]))S.o8[k]=[];return S.o8[k]}if(!Array.isArray(S[c]))S[c]=[];return S[c]};
+const s10Diff=(recs)=>{recs=recs||s10Recs();const up=[],del=[];recs.forEach(r=>{const b=SY10.base[r.k];if(!b||b.h!==r.h)up.push(r)});Object.keys(SY10.base).forEach(k=>{if(!recs.has(k))del.push(k)});return{recs,up,del}};
+const s10Conf=k=>SY10.conf.find(c=>c.type=='rec'&&c.key==k);
+const s10Held=(r,gk)=>{if(!r)return false;return(gk&&SY10.hold[gk]!==undefined)||s10Conf(r.k||r)||(r.grp&&SY10.hold[r.grp]!==undefined)};
+const s10Pending=(d)=>{d=d||s10Diff();let n=0,held=0;const gs=[];d.up.forEach(r=>{if(s10Held(r))held++;else{n++}});d.del.forEach(k=>{const b=SY10.base[k]||{};if((b.grp&&SY10.hold[b.grp]!==undefined)||s10Conf(k))held++;else n++});return{n,held}};
+/* --- 受け取った記録を端末へ反映 --- */
+const s10Put=(coll,rid,data)=>{if(coll=='obj'){const v=data&&data.v;if(rid=='tm'){const lg=S.tm&&S.tm.logo;S.tm=Object.assign({},v||{});if(lg)S.tm.logo=lg}else if(rid=='team'){if(typeof v=='string')S.team=v}else if(rid.startsWith('gd.')){S.gd=S.gd||{};S.gd[rid.slice(3)]=v}else if(rid.startsWith('o8.')){S.o8=S.o8||{};S.o8[rid.slice(3)]=v}return}
+const a=s10Arr(coll),i=a.findIndex(x=>x&&String(x.id)==rid);const d=JSON.parse(JSON.stringify(data));if(i>=0)a[i]=d;else a.push(d)};
+const s10Del=(coll,rid)=>{if(coll=='obj'){if(rid.startsWith('gd.')&&S.gd)delete S.gd[rid.slice(3)];return}const a=s10Arr(coll),i=a.findIndex(x=>x&&String(x.id)==rid);if(i>=0)a.splice(i,1)};
+const s10Order=(colls)=>{colls.forEach(c=>{if(c=='obj')return;const a=s10Arr(c),ord=x=>{const b=SY10.base[c+'|'+x.id];return b&&b.ord!=null?b.ord:null};const sy=[],un=[];a.forEach(x=>{if(x&&x.id!=null&&ord(x)!=null)sy.push(x);else un.push(x)});sy.sort((x,y)=>ord(x)-ord(y));const n=sy.concat(un);for(let i=0;i<n.length;i++)a[i]=n[i]})};
+const s10SetBase=(k,row,h)=>{if(row.deleted){delete SY10.base[k];return}SY10.base[k]={h:h||s10H(row.data),rev:row.rev,seq:row.seq,ord:row.ord==null?null:row.ord,grp:row.grp||null}};
+/* --- 競合の記録 --- */
+const s10AddRec=(k,coll,rid,row,L)=>{let c=s10Conf(k);const rm={data:row.data,rev:row.rev,deleted:!!row.deleted,seq:row.seq,ord:row.ord,grp:row.grp};if(c){c.remote=rm;c.at=new Date().toISOString()}else{SY10.conf.push({id:'R'+k,type:'rec',key:k,coll,rid,remote:rm,at:new Date().toISOString()})}};
+const s10AddGame=(grp,row)=>{if(!SY10.hold[grp])SY10.hold[grp]={rows:{},at:new Date().toISOString()};if(row)SY10.hold[grp].rows[row.coll+'|'+row.rid]=row;if(!SY10.conf.some(c=>c.type=='game'&&c.grp==grp))SY10.conf.push({id:'G'+grp,type:'game',grp,at:new Date().toISOString()})};
+const s10Rec=()=>{try{return tab=='rec'&&!!S.cur&&(S.g||[]).some(g=>g.id==S.cur&&!g.fin)}catch(_){return false}};
+const s10Who=()=>{const a=clAu();return a&&SY10.bind&&a.uid==SY10.bind.uid};
+/* --- 同期本体 --- */
+const s10Pull=async(R)=>{let since=SY10.since,more=true,loops=0;const touched=new Set(),appl=[];let recs=s10Recs();
+while(more&&loops++<400){const r=await clCall('sync_pull',{p_team:SY10.bind.team,p_since:since,p_limit:500});const rows=r.rows||[];
+const pg=new Set(),dd=s10Diff(recs);dd.up.forEach(x=>{if(x.grp)pg.add(x.grp)});dd.del.forEach(k=>{const b=SY10.base[k];if(b&&b.grp)pg.add(b.grp)});
+for(const row of rows){const k=row.coll+'|'+row.rid,L=recs.get(k),b=SY10.base[k];if(b&&b.rev>=row.rev)continue;
+const lc=L?(!b||b.h!==L.h):!!b;
+if(row.grp&&(SY10.hold[row.grp]!==undefined||pg.has(row.grp))){s10AddGame(row.grp,row);R.conf++;continue}
+if(!lc){if(row.deleted){s10Del(row.coll,row.rid);recs.delete(k)}else{s10Put(row.coll,row.rid,row.data);recs.set(k,{k,coll:row.coll,rid:row.rid,data:row.data,grp:row.grp||null,h:s10H(row.data)})}s10SetBase(k,row);appl.push(k);touched.add(row.coll);R.pulled++;continue}
+const same=row.deleted?!L:(L&&L.h==s10H(row.data));if(same){s10SetBase(k,row,L?L.h:null);continue}
+s10AddRec(k,row.coll,row.rid,row,L);R.conf++}
+since=r.seq>since?r.seq:since;SY10.since=since;more=!!r.more&&rows.length>0}
+if(touched.size){s10Order([...touched]);try{norm()}catch(_){}try{if(typeof setG=='function')setG()}catch(_){}const cur=s10Recs();appl.forEach(k=>{if(SY10.base[k]&&cur.has(k))SY10.base[k].h=cur.get(k).h})}};
+const s10Push=async(R)=>{if(!SY10.bind||SY10.bind.role=='viewer'){R.skip='viewer';return}let guard=0;
+while(guard++<4){const d=s10Diff();const items=[];
+d.up.forEach(r=>{if(s10Held(r))return;const b=SY10.base[r.k];items.push({k:r.k,coll:r.coll,rid:r.rid,base_rev:b?b.rev:0,data:r.data,grp:r.grp,h:r.h,isNew:!b})});
+d.del.forEach(k=>{const b=SY10.base[k];if((b.grp&&SY10.hold[b.grp]!==undefined)||s10Conf(k))return;const[c,...rr]=k.split('|');items.push({k,coll:c,rid:rr.join('|'),base_rev:b.rev,data:null,grp:b.grp,h:null,isDel:true})});
+if(!items.length)return;
+const ordBase=Date.now();let oi=0;items.forEach(x=>{if(x.isNew)x.ord=ordBase+(oi++)*0.001});
+let i=0,progressed=0;const conflicts=[];
+while(i<items.length){let sz=0,j=i;const chunk=[];while(j<items.length&&chunk.length<200&&sz<700000){const x=items[j],c={coll:x.coll,rid:x.rid,base_rev:x.base_rev,data:x.data,grp:x.grp};if(x.ord!=null)c.ord=x.ord;const l=JSON.stringify(c).length;if(chunk.length&&sz+l>700000)break;chunk.push(c);sz+=l;j++}
+const res=await clCall('sync_push',{p_team:SY10.bind.team,p_changes:chunk,p_device:c10.dev||null});
+res.applied.forEach(a=>{const k=a.coll+'|'+a.rid,x=items.find(y=>y.k==k);if(!x)return;if(x.isDel)delete SY10.base[k];else SY10.base[k]={h:x.h,rev:a.rev,seq:a.seq,ord:x.ord!=null?x.ord:(SY10.base[k]&&SY10.base[k].ord!=null?SY10.base[k].ord:null),grp:x.grp||null};R.pushed++;progressed++});
+res.conflicts.forEach(c=>conflicts.push(c));i=j;await ySaveNow()}
+let again=0;
+for(const c of conflicts){const k=c.coll+'|'+c.rid,L=s10Recs().get(k),sv=Object.assign({coll:c.coll,rid:c.rid},c.server),grp=sv.grp||(L&&L.grp);
+if(sv.deleted&&!L){delete SY10.base[k];continue}
+if(!sv.deleted&&L&&L.h==s10H(sv.data)){s10SetBase(k,sv,L.h);continue}
+if(grp){s10AddGame(grp,Object.assign({},sv,{grp}));again=1}else s10AddRec(k,c.coll,c.rid,sv,L);R.conf++}
+if(!again&&!progressed)return;if(!again)return;
+await s10Pull(R);}};
+const s10Sync=async(manual)=>{if(c10.run)return{skip:'busy'};if(typeof u9!='undefined'&&u9.busy)return{skip:'update'};
+const c=clCfg(),a=clAu();if(!c){c10.st='none';return{skip:'noconfig'}}if(!SY10.bind||!SY10.bind.team){c10.st='noteam';return{skip:'noteam'}}if(!a){c10.st='auth';return{skip:'noauth'}}if(a.uid!=SY10.bind.uid){c10.st='acct';c10.msg='この端末のデータは別のアカウントのものです。「クラウド同期」画面で確認してください。';return{skip:'acct'}}
+if(!navigator.onLine){c10.st='off';return{skip:'offline'}}
+c10.run=1;c10.st='run';const t0=Date.now(),R={pushed:0,pulled:0,conf:0,skip:''};try{c10.dev=c10.dev||s10Dev();
+{const ts=await clCall('my_teams'),me=(ts||[]).find(x=>x.team_id==SY10.bind.team);if(!me)throw new CLE(403,'このチームのメンバーではなくなりました');if(me.role!=SY10.bind.role||me.name!=SY10.bind.name){SY10.bind.role=me.role;SY10.bind.name=me.name}c10.teams=ts}
+if(s10Rec()){R.skip='rec'}else await s10Pull(R);
+await s10Push(R);
+if(R.pulled){try{S.cur=S.cur;if(!save())throw new Error(SV.err||'保存に失敗')}catch(e){throw new Error('受け取ったデータを保存できませんでした：'+e.message)}}
+SY10.last={at:new Date().toISOString(),ok:1,pushed:R.pushed,pulled:R.pulled,conf:R.conf,skip:R.skip,manual:!!manual};c10.st=SY10.conf.length?'conf':'ok';c10.msg='';yHist({kind:manual?'手動':'自動',ok:1,pushed:R.pushed,pulled:R.pulled,conf:R.conf,note:R.skip=='rec'?'試合記録中のため受信は後で実行':R.skip=='viewer'?'閲覧者のため送信なし':'',ms:Date.now()-t0});
+await ySaveNow();if(R.pulled){try{draw()}catch(_){}}return R}
+catch(e){const m=clMsg(e);c10.st=e.net?'off':((e.status==401||!clAu())?'auth':e.status==403?'perm':'err');c10.msg=m;SY10.last=Object.assign({},SY10.last||{},{at2:new Date().toISOString(),ok:0,err:m});yHist({kind:manual?'手動':'自動',ok:0,err:m,ms:Date.now()-t0});await ySaveNow();return{err:m}}
+finally{c10.run=0;c10.last=Date.now();try{if(tab=='cloud'||tab=='cfg9')draw()}catch(_){}}};
+/* --- 自動同期（保存を検知して少し待ってから／オンライン復帰／画面復帰／定期） --- */
+const s10Auto=()=>{if(!SY10.auto||!SY10.ready||!clCfg()||!SY10.bind||!clAu())return;clearTimeout(c10.tm);c10.tm=setTimeout(()=>{if(!c10.run&&navigator.onLine)s10Sync(false)},c10.delay==null?15000:c10.delay)};
+const s10Watch=()=>{setInterval(()=>{try{const k=(SV&&SV.at)+'|'+(S.g||[]).length;if(k!==c10.seen){c10.seen=k;c10.dirty=1;s10Auto()}}catch(_){}},3000);
+setInterval(()=>{if(SY10.auto&&clAu()&&SY10.bind&&navigator.onLine&&!c10.run&&document.visibilityState=='visible')s10Sync(false)},c10.every||300000);
+addEventListener('online',()=>{c10.st=c10.st=='off'?'idle':c10.st;s10Auto()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState=='visible'&&Date.now()-c10.last>60000)s10Auto()})};
+
+const s10Dev=()=>{try{let d=localStorage.getItem('hope_dev');if(!d){d='d'+Math.random().toString(36).slice(2,8);localStorage.setItem('hope_dev',d)}return d}catch(_){return'd?'}};
+
+/* ===== Phase 10 チーム・競合解決・クラウドバックアップ ===== */
+const s10Modal=(title,html,btns)=>new Promise(res=>{let b=document.getElementById('s10m');if(b)b.remove();b=document.createElement('div');b.id='s10m';b.style.cssText='position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+b.innerHTML='<div style="background:#fff;color:#1b2a22;border-radius:14px;padding:16px;max-width:380px;width:100%;max-height:90vh;overflow:auto;font-size:14px;line-height:1.7"><b>'+esc(title)+'</b><div style="margin:8px 0">'+html+'</div>'+btns.map((x,i)=>'<button id="s10b'+i+'" class="'+(x.p?'p':'x')+'" style="width:100%;margin-top:6px">'+esc(x.t)+'</button>').join('')+'</div>';document.body.appendChild(b);btns.forEach((x,i)=>document.getElementById('s10b'+i).onclick=()=>{b.remove();res(i)})});
+const s10Clear=()=>{SYA.forEach(c=>{S[c]=[]});S.gd={};S.o8={};S.cur='';try{norm();O8()}catch(_){}};
+const s10Reset=()=>{SY10.base={};SY10.since=0;SY10.conf=[];SY10.hold={};SY10.last=null};
+const s10Attach=async(t)=>{const a=clAu(),b=SY10.bind,c=clCfg();if(!a||!c)return false;const same=b&&b.uid==a.uid&&b.team==t.team;
+if(same){SY10.bind=Object.assign({},b,{name:t.name,role:t.role});await ySaveNow();return true}
+const local=hasData(),other=!!b;let top=0;try{const r=await clCall('sync_pull',{p_team:t.team,p_since:0,p_limit:1});top=r.top||0}catch(e){throw e}
+const nb={uid:a.uid,email:a.email,team:t.team,name:t.name,role:t.role,url:c.u};
+if(!local){s10Reset();SY10.bind=nb;await ySaveNow();return true}
+const info='<p>このチーム「'+esc(t.name)+'」には'+(top?'すでにデータがあります。':'まだデータがありません。')+'</p>'+(other?'<p style="color:#a00">この端末のデータは、<b>別のアカウントまたはチームのもの</b>です。別のチームには追加しません（情報が混ざるのを防ぐためです）。</p>':'');
+const btns=[];if(!other)btns.push({t:top?'この端末のデータをこのチームに追加して同期':'この端末のデータをアップロードして開始',p:!top});btns.push({t:top||other?'この端末のデータをバックアップに退避して、チームのデータを受け取る':'この端末のデータを退避して、空のチームで始める',p:!!top||other});btns.push({t:'キャンセル'});
+const i=await s10Modal('この端末にあるデータの扱い',info+'<p style="font-size:12px;color:#555">退避したデータは「チーム → データ」のバックアップに「同期前」として残ります。削除はしません。</p>',btns);
+const ch=btns[i].t;if(ch=='キャンセル')return false;
+if(/退避/.test(ch)){const ok=await bkMake('sync','チーム参加・アカウント切替前');if(!ok){showErr('退避バックアップを作れなかったため中止しました（データはそのままです）');return false}s10Clear();try{save()}catch(_){}}
+s10Reset();SY10.bind=nb;yHist({kind:'設定',ok:1,note:(/退避/.test(ch)?'端末データを退避してチーム「':'端末データを引き継いでチーム「')+t.name+'」に接続'});await ySaveNow();return true};
+const s10MyTeams=async()=>{c10.teams=await clCall('my_teams');return c10.teams};
+const s10Run=async(f)=>{try{const r=await f();return r}catch(e){const m=clMsg(e);c10.msg=m;if(e.status==401){c10.st='auth'}showErr(m);return null}finally{try{draw()}catch(_){}}};
+/* --- 競合の比較・解決 --- */
+const s10Pv=v=>v===undefined?'（なし）':v===null?'null':typeof v=='object'?JSON.stringify(v).slice(0,120):String(v);
+const s10Flat=(d)=>{const v=d&&d.v!==undefined&&Object.keys(d).length==1?d.v:d;return v&&typeof v=='object'&&!Array.isArray(v)?v:{'（値）':v}};
+const s10FieldDiff=(a,b)=>{const A=s10Flat(a),B=s10Flat(b),ks=[...new Set([...Object.keys(A||{}),...Object.keys(B||{})])];return ks.map(k=>({k,a:(A||{})[k],b:(B||{})[k],diff:sj((A||{})[k])!==sj((B||{})[k])}))};
+const s10Local=k=>s10Recs().get(k);
+const s10Fin=async(msg)=>{try{norm()}catch(_){}try{save()}catch(_){}yHist({kind:'競合解決',ok:1,note:msg});await ySaveNow();try{draw()}catch(_){}return s10Sync(true)};
+const s10ResRec=async(cid,mode,picks)=>{const c=SY10.conf.find(x=>x.id==cid);if(!c)return;const r=c.remote,L=s10Local(c.key);
+if(mode=='theirs'){if(r.deleted)s10Del(c.coll,c.rid);else s10Put(c.coll,c.rid,r.data);s10SetBase(c.key,r);s10Order([c.coll]);const cur=s10Recs();if(SY10.base[c.key]&&cur.has(c.key))SY10.base[c.key].h=cur.get(c.key).h}
+else{let nd=null;if(mode=='merge'&&L&&!r.deleted){const A=JSON.parse(JSON.stringify(L.data)),flat=A&&A.v!==undefined&&Object.keys(A).length==1&&typeof A.v=='object'&&A.v&&!Array.isArray(A.v),T=flat?A.v:A,B=s10Flat(r.data);Object.keys(picks||{}).forEach(k=>{if(picks[k]=='theirs'){if(B[k]===undefined)delete T[k];else T[k]=JSON.parse(JSON.stringify(B[k]))}});nd=A}
+if(nd)s10Put(c.coll,c.rid,nd);SY10.base[c.key]={h:'~',rev:r.rev,seq:r.seq,ord:r.ord==null?null:r.ord,grp:r.grp||null}}
+SY10.conf=SY10.conf.filter(x=>x.id!=cid);return s10Fin('項目の競合を解決（'+(mode=='theirs'?'クラウドを採用':mode=='merge'?'項目ごとに選択':'この端末を採用')+'）')};
+const s10ResGame=async(grp,mode)=>{const h=SY10.hold[grp];if(!h)return;const rows=Object.values(h.rows);
+if(mode=='theirs'){const ok=await bkMake('sync','試合の競合を解決する前');if(!ok){showErr('バックアップを作れなかったため中止しました');return}
+const recs=s10Recs();recs.forEach(r=>{if(r.grp==grp&&!SY10.base[r.k]){s10Del(r.coll,r.rid)}});
+const co=new Set();rows.forEach(row=>{const k=row.coll+'|'+row.rid;if(row.deleted)s10Del(row.coll,row.rid);else s10Put(row.coll,row.rid,row.data);s10SetBase(k,row);co.add(row.coll)});s10Order([...co]);try{norm()}catch(_){}const cur=s10Recs();rows.forEach(row=>{const k=row.coll+'|'+row.rid;if(SY10.base[k]&&cur.has(k))SY10.base[k].h=cur.get(k).h})}
+else{const recs=s10Recs();rows.forEach(row=>{const k=row.coll+'|'+row.rid,L=recs.get(k);if(row.deleted&&!L){delete SY10.base[k];return}SY10.base[k]={h:'~',rev:row.rev,seq:row.seq,ord:row.ord==null?null:row.ord,grp};if(!L&&!row.deleted){/* この端末に無い＝端末の内容では削除済み → 削除を送る */}})}
+delete SY10.hold[grp];SY10.conf=SY10.conf.filter(x=>!(x.type=='game'&&x.grp==grp));return s10Fin('試合の競合を解決（'+(mode=='theirs'?'クラウドを採用・端末の追加分は退避':'この端末を採用')+'）')};
+const s10GameCmp=grp=>{const h=SY10.hold[grp]||{rows:{}},recs=s10Recs(),per={};const bump=(c,f)=>{(per[c]=per[c]||{la:0,lm:0,ld:0,ra:0,rm:0,rd:0})[f]++};
+recs.forEach(r=>{if(r.grp!=grp)return;const b=SY10.base[r.k];if(!b)bump(r.coll,'la');else if(b.h!==r.h)bump(r.coll,'lm')});Object.keys(SY10.base).forEach(k=>{const b=SY10.base[k];if(b.grp==grp&&!recs.has(k))bump(k.split('|')[0],'ld')});
+Object.values(h.rows).forEach(w=>{const k=w.coll+'|'+w.rid;if(w.deleted)bump(w.coll,'rd');else if(SY10.base[k])bump(w.coll,'rm');else bump(w.coll,'ra')});
+const gl=recs.get('g|'+grp),gr=h.rows['g|'+grp];return{per,fields:gl&&gr&&!gr.deleted?s10FieldDiff(gl.data,gr.data):null,gl:gl&&gl.data,gr:gr&&!gr.deleted?gr.data:null,grDel:gr&&gr.deleted}};
+/* --- クラウドバックアップ --- */
+const s10BkMake=async(label)=>{const txt=bkd('all');const r=await clCall('backup_create',{p_team:SY10.bind.team,p_label:label||'手動',p_payload:txt},{timeout:120000});oplog('クラウドバックアップ','作成');yHist({kind:'バックアップ',ok:1,note:'クラウドに保存（'+Math.round(txt.length/1024)+'KB）'});return r};
+const s10BkList=async()=>{c10.bks=await clCall('backup_list',{p_team:SY10.bind.team});return c10.bks};
+const s10BkRestore=async(id)=>{const r=await clCall('backup_get',{p_team:SY10.bind.team,p_id:id},{timeout:120000});const v=bkVerify(r.payload,'all');if(!v.ok)throw new CLE(0,'バックアップの内容が正しくありません：'+v.msg);const m=await bkRestore('all',r.payload);yHist({kind:'復元',ok:/復元しました/.test(m),note:'クラウドバックアップから：'+m});await ySaveNow();return m};
+
+/* ===== Phase 10 クラウド同期（画面） ===== */
+c10.f={};
+const clT=t=>t?new Date(t).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'-';
+const s10Count=()=>{const k=(SV&&SV.at)+'|'+(SY10.last&&SY10.last.at)+'|'+SY10.conf.length+'|'+Object.keys(SY10.base).length;if(c10.pk!==k){try{const d=s10Diff();c10.pc=s10Pending(d);c10.pc.warn=d.recs.st}catch(_){c10.pc={n:0,held:0}}c10.pk=k}return c10.pc||{n:0,held:0}};
+const s10Chip=()=>{const c=clCfg(),a=clAu(),n=s10Count(),v=SY10.bind&&SY10.bind.role=='viewer';let t='',bad=0;
+if(!c)return{t:'クラウド同期：未設定（使わなくても全機能が使えます）',bad:0};
+if(!a)t='クラウド：ログインしていません（この端末のデータはそのまま使えます）';else if(!SY10.bind)t='クラウド：チーム未選択';else if(a.uid!=SY10.bind.uid){t='クラウド：別のアカウントです（確認が必要）';bad=1}
+else if(c10.run)t='クラウド：同期中…';
+else if(c10.st=='off'||!navigator.onLine)t='クラウド：オフライン（'+(v?'':n.n+'件の変更はこの端末に保存済み。')+'つながると同期します）';
+else if(SY10.conf.length){t='クラウド：競合 '+SY10.conf.length+'件（確認が必要）';bad=1}
+else if(c10.st=='err'||c10.st=='perm'){t='クラウド：同期エラー（'+(c10.msg||'')+'）';bad=1}
+else t='クラウド：最終同期 '+(SY10.last&&SY10.last.ok?clT(SY10.last.at):'まだ')+(v?'（閲覧のみ）':'　未同期 '+n.n+'件');
+return{t,bad}};
+const s10Inp=(id,ph,type,w)=>`<input id="cl_${id}" type="${type||'text'}" placeholder="${esc(ph||'')}" value="${esc(c10.f['cl_'+id]||'')}" autocomplete="off" style="width:100%;margin:3px 0;${w||''}">`;
+const clRow=(l,v,ok)=>`<div class="i"><span>${esc(l)}</span><b${ok===0?' style="color:#c0392b"':ok===1?' style="color:#1e8a4f"':''}>${v}</b></div>`;
+const clLoad=async(force)=>{if(!clAu()||!SY10.bind||!navigator.onLine)return;if(!force&&Date.now()-(c10.ts||0)<30000)return;c10.ts=Date.now();try{await s10MyTeams();const me=(c10.teams||[]).find(x=>x.team_id==SY10.bind.team);if(me){SY10.bind.role=me.role;SY10.bind.name=me.name}
+c10.mem=await clCall('list_members',{p_team:SY10.bind.team}).catch(()=>null);const adm=me&&me.role=='admin',cch=me&&me.role!='viewer';c10.inv=adm?await clCall('list_invites',{p_team:SY10.bind.team}).catch(()=>null):null;c10.bks=cch?await clCall('backup_list',{p_team:SY10.bind.team}).catch(()=>null):null}catch(e){c10.msg=clMsg(e)}try{if(tab=='cloud')draw()}catch(_){}};
+const s10CfV=c=>{if(c.type=='game'){const m=s10GameCmp(c.grp),g=m.gl||{},g2=m.gr||{};const nm={g:'試合',a:'打席',pt:'投球',df:'守備',pk:'牽制',ao:'走塁',ev:'イベント',sb:'盗塁',m:'記録',ob:'観察',sn:'スナップ',op:'メモ'};
+return`<div class="c"><b>⚠ 同じ試合を複数の端末で変更しています</b><p class="m" style="margin:4px 0">${esc(g.d||g2.d||'')} vs ${esc(g.o||g2.o||'?')}（${esc(String(g.rs??'?'))}-${esc(String(g.ra??'?'))}）。試合の記録は自動では確定しません。内容を比べて選んでください。</p>
+<table class="r9t"><tr><th>種類</th><th>この端末<br>追加/変更/削除</th><th>クラウド<br>追加/変更/削除</th></tr>${Object.keys(m.per).map(k=>{const p=m.per[k];return`<tr><td class="l">${esc(nm[k]||k)}</td><td>${p.la} / ${p.lm} / ${p.ld}</td><td>${p.ra} / ${p.rm} / ${p.rd}</td></tr>`}).join('')}</table>
+${m.fields?`<p class="m" style="margin:6px 0 2px">試合情報の違い</p><table class="r9t"><tr><th>項目</th><th>この端末</th><th>クラウド</th></tr>${m.fields.filter(f=>f.diff).map(f=>`<tr><td class="l">${esc(f.k)}</td><td>${esc(s10Pv(f.a))}</td><td>${esc(s10Pv(f.b))}</td></tr>`).join('')||'<tr><td colspan="3">試合情報は同じです</td></tr>'}</table>`:''}${m.grDel?'<p style="color:#a00">クラウドではこの試合が削除されています。</p>':''}
+<div class="r" style="flex-wrap:wrap;gap:6px;margin-top:8px"><button class="p" data-a="clcg" data-m="mine" data-g="${esc(c.grp)}">この端末の内容を採用（クラウドを上書き）</button><button class="x" data-a="clcg" data-m="theirs" data-g="${esc(c.grp)}">クラウドの内容を採用（端末の追加分は退避）</button></div><p class="m" style="margin:6px 0 0">どちらも、選ぶ前の端末データをバックアップに残します（クラウドを採用する場合）。決められないときは何もせず、そのままにできます（送受信を止めたまま）。</p></div>`}
+const L=s10Local(c.key),r=c.remote,fl=L&&!r.deleted?s10FieldDiff(L.data,r.data):null;
+return`<div class="c"><b>⚠ 同じデータが別々に変更されています</b><p class="m" style="margin:4px 0">種類：${esc(c.coll)} ／ ${esc(c.rid)}</p>${!L?'<p>この端末では削除済み／クラウドでは変更されています。</p>':r.deleted?'<p>クラウドでは削除済み／この端末では変更されています。</p>':''}
+${fl?`<table class="r9t"><tr><th>項目</th><th>この端末</th><th>クラウド</th><th>採用</th></tr>${fl.filter(f=>f.diff).map(f=>`<tr><td class="l">${esc(f.k)}</td><td>${esc(s10Pv(f.a))}</td><td>${esc(s10Pv(f.b))}</td><td><select data-cf="${esc(f.k)}" id="clpk_${esc(c.id)}_${esc(f.k)}"><option value="mine">端末</option><option value="theirs">クラウド</option></select></td></tr>`).join('')||'<tr><td colspan="4">内容は同じです</td></tr>'}</table>`:''}
+<div class="r" style="flex-wrap:wrap;gap:6px;margin-top:8px"><button class="p" data-a="clcr" data-m="mine" data-c="${esc(c.id)}">この端末を採用</button><button class="x" data-a="clcr" data-m="theirs" data-c="${esc(c.id)}">クラウドを採用</button>${fl?`<button class="x" data-a="clcr" data-m="merge" data-c="${esc(c.id)}">項目ごとの選択で確定</button>`:''}</div></div>`};
+V.cloud=()=>{try{clLoad()}catch(_){}const c=clCfg(),a=clAu(),b=SY10.bind,ch=s10Chip(),n=s10Count(),role=b&&b.role,isA=role=='admin',isC=role=='admin'||role=='coach';
+let h=`<button class="x" data-t="team">‹ チーム</button><h2 style="margin:4px 0 6px">☁ クラウド同期</h2><p class="m" style="margin:0 0 6px">端末内のデータが基本です。クラウドは複数の端末で共有するための任意の機能で、使わなくてもすべての機能が使えます。</p>`;
+h+=`<div class="c" id="clst"><div style="${ch.bad?'color:#a00':''}"><b>${esc(ch.t)}</b></div>${c&&a&&b?clRow('チーム',esc(b.name)+'（'+esc(c10.roles[role]||'')+'）')+clRow('最終同期',SY10.last&&SY10.last.ok?clT(SY10.last.at):(SY10.last&&SY10.last.err?'失敗 '+clT(SY10.last.at2):'-'),SY10.last&&SY10.last.ok?1:null)+clRow('未同期の変更',role=='viewer'?'送信しません（閲覧のみ）':n.n+'件'+(n.held?'（競合で保留 '+n.held+'件）':''),n.n?null:1)+(c10.msg?`<p style="color:#a00;margin:4px 0">${esc(c10.msg)}</p>`:'')+`<div class="r" style="gap:8px;flex-wrap:wrap;margin-top:6px"><button class="p" data-a="clsync"${c10.run?' disabled':''}>今すぐ同期</button><label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="cl_auto" ${SY10.auto?'checked':''}> 自動で同期</label></div>`:''}</div>`;
+if(SY10.conf.length)h+=`<h3 style="margin:10px 0 4px">競合（${SY10.conf.length}件）</h3>`+SY10.conf.map(s10CfV).join('');
+if(!c){h+=`<div class="c"><b>① 接続先の設定</b><p class="m" style="margin:4px 0">チームの管理者から受け取った「接続コード」を貼り付けるか、URLと公開キーを入力してください。通信は暗号化（https）が必須です。</p>${s10Inp('code','接続コード（HOPE1:…）')}<button class="p" data-a="clcode">接続コードで設定</button><p class="m" style="margin:8px 0 2px">または手入力</p>${s10Inp('url','https://xxxx.supabase.co')}${s10Inp('key','公開キー（anon public key）')}<button class="x" data-a="clsave">保存</button></div>`}
+else{h+=`<div class="c"><b>接続先</b>${clRow('URL',esc(c.u))}${clRow('公開キー',esc(c.k.slice(0,6))+'…（秘密ではない公開用のキー）')}<div class="r" style="gap:8px;flex-wrap:wrap;margin-top:6px"><button class="x" data-a="clshare">接続コードを表示（管理者→メンバー）</button><button class="x" data-a="clrmcfg">接続設定を削除</button></div>${c10.code?`<p class="m" style="word-break:break-all;user-select:all;margin:6px 0 0">${esc(c10.code)}</p>`:''}</div>`}
+if(c&&!a)h+=`<div class="c"><b>② ログイン</b><p class="m" style="margin:4px 0">ログインしなくても、この端末のデータは今までどおり使えます。</p>${s10Inp('em','メールアドレス','email')}${s10Inp('pw','パスワード（8文字以上）','password')}<div class="r" style="gap:8px;flex-wrap:wrap"><button class="p" data-a="cllogin">ログイン</button><button class="x" data-a="clsignup">新規登録</button><button class="x" data-a="clrec">パスワードを忘れた</button></div>${c10.note?`<p class="m" style="margin:6px 0 0">${esc(c10.note)}</p>`:''}</div>`;
+if(c&&a){h+=`<div class="c"><b>アカウント</b>${clRow('ログイン中',esc(a.email||''))}<div class="r" style="margin-top:6px"><button class="x" data-a="cllogout">ログアウト</button></div><p class="m" style="margin:6px 0 0">ログアウトしても、この端末のデータは削除されません。</p></div>`;
+if(b&&a.uid!=b.uid)h+=`<div class="c" style="border:1px solid #d93b3b"><b style="color:#a00">⚠ この端末のデータは別のアカウント（${esc(b.email||'')}）で同期していたものです</b><p class="m" style="margin:4px 0">別のアカウントには自動では同期しません。下でチームを選ぶと、端末データの扱い（バックアップに退避して受け取る等）を選べます。</p></div>`;
+h+=`<div class="c"><b>③ チーム</b>${(c10.teams||[]).length?(c10.teams||[]).map(t=>`<div class="i"><span>${esc(t.name)}（${esc(c10.roles[t.role]||'')}）${b&&b.team==t.team_id&&a.uid==b.uid?' ✔':''}</span><button class="x" data-a="clpick" data-tm="${esc(t.team_id)}">${b&&b.team==t.team_id&&a.uid==b.uid?'使用中':'このチームを使う'}</button></div>`).join(''):'<p class="m" style="margin:4px 0">参加しているチームはまだありません。</p>'}<p class="m" style="margin:8px 0 2px">新しいチームを作る</p>${s10Inp('tn','チーム名')}<button class="x" data-a="clmk">チームを作成（あなたが管理者になります）</button><p class="m" style="margin:8px 0 2px">招待コードで参加する</p>${s10Inp('jc','招待コード（XXXX-XXXX-XXXX-XXXX）')}<button class="x" data-a="cljoin">参加</button></div>`}
+if(c&&a&&b&&a.uid==b.uid){
+if(isA){h+=`<div class="c"><b>メンバーと権限（管理者のみ）</b>${(c10.mem||[]).map(m=>`<div class="i"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(m.email||m.user_id.slice(0,8))}${m.me?'（あなた）':''}</span><span><select data-role="${esc(m.user_id)}"><option value="admin"${m.role=='admin'?' selected':''}>管理者</option><option value="coach"${m.role=='coach'?' selected':''}>指導者</option><option value="viewer"${m.role=='viewer'?' selected':''}>閲覧者</option></select>${m.me?'':` <button class="x" data-a="clkick" data-u="${esc(m.user_id)}">削除</button>`}</span></div>`).join('')}
+<p class="m" style="margin:8px 0 2px">招待コードを作る</p><div class="r" style="gap:6px;flex-wrap:wrap"><select id="cl_irole"><option value="coach">指導者</option><option value="viewer">閲覧者</option><option value="admin">管理者</option></select><select id="cl_idays"><option value="1">1日</option><option value="7" selected>7日</option><option value="30">30日</option></select><select id="cl_imax"><option value="1" selected>1人まで</option><option value="5">5人まで</option><option value="20">20人まで</option></select><button class="p" data-a="clinv">作成</button></div>${c10.newcode?`<p style="margin:6px 0;font-size:18px;letter-spacing:1px;user-select:all"><b>${esc(c10.newcode)}</b></p><p class="m" style="margin:0">このコードを相手に伝えてください（期限・人数に制限があります）。</p>`:''}
+${(c10.inv||[]).filter(i=>i.live).map(i=>`<div class="i"><span>${esc(i.code)}（${esc(c10.roles[i.role])}・${i.uses}/${i.max}）</span><button class="x" data-a="clinvrv" data-cd="${esc(i.code)}">取り消し</button></div>`).join('')}</div>`}
+else h+=`<div class="c"><b>メンバー</b>${(c10.mem||[]).map(m=>`<div class="i"><span>${esc(m.email||'')}${m.me?'（あなた）':''}</span><b>${esc(c10.roles[m.role])}</b></div>`).join('')||'<p class="m">読み込み中…</p>'}</div>`;
+h+=`<div class="c"><b>クラウドバックアップ</b><p class="m" style="margin:4px 0">${isC?'今のデータ全体をクラウドに保存します（最新20件）。復元できるのは管理者です。':'閲覧者は利用できません。'}</p>${isC?`<button class="p" data-a="clbk">今すぐクラウドにバックアップ</button>`:''}${(c10.bks||[]).map(x=>`<div class="i"><span>${esc(clT(x.created_at))} ${esc(x.label||'')}（${Math.round(x.size/1024)}KB）</span>${isA?`<button class="x" data-a="clbr" data-b="${esc(x.id)}">復元</button>`:''}</div>`).join('')}</div>`;
+h+=`<div class="c"><b>この端末とクラウドの紐づけ</b><p class="m" style="margin:4px 0">解除しても、端末のデータは削除されません。解除後に別のチームへ参加すると、端末のデータの扱いを選ぶ画面が出ます。</p><button class="x" data-a="clunbind">紐づけを解除</button> <button class="x" data-a="clleave">このチームから退出</button></div>`}
+h+=`<div class="c"><b>同期の履歴</b>${SY10.hist.length?SY10.hist.slice().reverse().slice(0,12).map(x=>`<div class="m" style="font-size:12px;${x.ok?'':'color:#a00'}">${esc(clT(x.at))}　${esc(x.kind||'')}　${x.ok?(x.pushed!=null?'送信'+x.pushed+'・受信'+x.pulled+(x.conf?'・競合'+x.conf:''):''):'失敗：'+esc(x.err||'')} ${esc(x.note||'')}</div>`).join(''):'<p class="m" style="margin:4px 0">まだありません。</p>'}</div>`;
+return h};
+NV.cloud='home';
+const s10TeamV=V.team;V.team=()=>{const x=s10TeamV();let t='';try{const ch=s10Chip();t=`<button class="x" data-t="cloud" style="width:100%;margin-bottom:8px;${ch.bad?'color:#a00':''}">☁ ${esc(ch.t.replace(/^クラウド(同期)?：/,''))} ▶</button>`}catch(_){}const i=x.indexOf('</button>');return i>=0?x.slice(0,i+9)+t+x.slice(i+9):t+x};
+$d.addEventListener('input',e=>{const t=e.target;if(t&&t.id&&t.id.startsWith('cl_')&&t.tagName=='INPUT'&&t.type!='checkbox')c10.f[t.id]=t.value},true);
+$d.addEventListener('change',async e=>{const t=e.target;if(!t)return;if(t.id=='cl_auto'){SY10.auto=t.checked;await ySaveNow();if(SY10.auto)s10Auto();return}
+if(t.dataset&&t.dataset.role){e.stopImmediatePropagation();await s10Run(async()=>{await clCall('set_role',{p_team:SY10.bind.team,p_user:t.dataset.role,p_role:t.value});tpill('権限を変更しました');await clLoad(1)})}},true);
+$d.addEventListener('click',async e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a||'';if(!/^cl[a-z]+$/.test(a)||a=='cl')return;if(!['clcode','clsave','clrmcfg','clshare','cllogin','clsignup','clrec','cllogout','clpick','clmk','cljoin','clsync','clinv','clinvrv','clkick','clbk','clbr','clunbind','clleave','clcr','clcg'].includes(a))return;e.stopImmediatePropagation();e.preventDefault();
+const F=id=>String(c10.f['cl_'+id]||document.getElementById('cl_'+id)&&document.getElementById('cl_'+id).value||'').trim();
+try{if(a=='clcode'){const p=clParse(F('code'));if(!p){showErr('接続コードが正しくありません');return}const m=clSetCfg(p.u,p.k);if(m){showErr(m);return}c10.f={};draw()}
+else if(a=='clsave'){const m=clSetCfg(F('url'),F('key'));if(m){showErr(m);return}c10.f={};draw()}
+else if(a=='clrmcfg'){if(!confirm('接続設定を削除します（端末のデータは削除されません）。よろしいですか？'))return;localStorage.removeItem(CLK);clSetAu(null);c10.code='';c10.st='none';draw()}
+else if(a=='clshare'){const c=clCfg();c10.code=clCode(c.u,c.k);draw()}
+else if(a=='cllogin'||a=='clsignup'){const em=F('em'),pw=F('pw');if(!em||!pw){showErr('メールアドレスとパスワードを入力してください');return}await s10Run(async()=>{if(a=='clsignup'){const r=await clSignUp(em,pw);c10.note=r.confirm?'確認メールを送りました。メールのリンクを開いてから、ログインしてください。':'登録しました。'}else await clLogin(em,pw);c10.f['cl_pw']='';c10.ts=0;if(clAu()){try{await s10MyTeams()}catch(_){}}})}
+else if(a=='clrec'){const em=F('em');if(!em){showErr('メールアドレスを入力してください');return}await s10Run(async()=>{await clFetch('/auth/v1/recover',{body:{email:em}});c10.note='パスワード再設定のメールを送りました（登録済みのアドレスの場合）。'})}
+else if(a=='cllogout'){await clLogout();SY10.auto=SY10.auto;c10.teams=null;c10.mem=null;c10.inv=null;c10.bks=null;yHist({kind:'設定',ok:1,note:'ログアウト（端末のデータは保持）'});await ySaveNow();tpill('ログアウトしました（端末のデータはそのままです）');draw()}
+else if(a=='clmk'){const nm=F('tn');if(!nm){showErr('チーム名を入力してください');return}await s10Run(async()=>{const r=await clCall('create_team',{p_name:nm});const ok=await s10Attach({team:r.team_id,name:r.name,role:'admin'});await s10MyTeams();c10.f={};if(ok){c10.ts=0;s10Sync(true)}})}
+else if(a=='cljoin'){const cd=F('jc');if(!cd){showErr('招待コードを入力してください');return}await s10Run(async()=>{const r=await clCall('join_team',{p_code:cd});if(r&&r.error)throw new CLE(400,r.error);const ok=await s10Attach({team:r.team_id,name:r.name,role:r.role});await s10MyTeams();c10.f={};if(ok){c10.ts=0;s10Sync(true)}})}
+else if(a=='clpick'){await s10Run(async()=>{const tm=(c10.teams||[]).find(x=>x.team_id==t.dataset.tm);if(!tm)return;const ok=await s10Attach({team:tm.team_id,name:tm.name,role:tm.role});if(ok){c10.ts=0;c10.mem=null;c10.inv=null;s10Sync(true)}})}
+else if(a=='clsync'){c10.msg='';draw();await s10Sync(true);draw()}
+else if(a=='clinv'){await s10Run(async()=>{const r=await clCall('create_invite',{p_team:SY10.bind.team,p_role:document.getElementById('cl_irole').value,p_days:+document.getElementById('cl_idays').value,p_max:+document.getElementById('cl_imax').value});c10.newcode=r.code;await clLoad(1)})}
+else if(a=='clinvrv'){await s10Run(async()=>{await clCall('revoke_invite',{p_team:SY10.bind.team,p_code:t.dataset.cd});await clLoad(1)})}
+else if(a=='clkick'){if(!confirm('このメンバーをチームから削除しますか？'))return;await s10Run(async()=>{await clCall('remove_member',{p_team:SY10.bind.team,p_user:t.dataset.u});await clLoad(1)})}
+else if(a=='clbk'){await s10Run(async()=>{await s10BkMake('手動');tpill('クラウドにバックアップしました');await clLoad(1)})}
+else if(a=='clbr'){if(!confirm('クラウドのバックアップから復元します。今のデータは先に端末内のバックアップに残します。復元した内容は、同期で他の端末にも反映されます（競合があれば確認が出ます）。続けますか？'))return;await s10Run(async()=>{const m=await s10BkRestore(t.dataset.b);tpill(m);c10.pk=''})}
+else if(a=='clunbind'){if(!confirm('この端末とクラウドの紐づけを解除します（端末のデータは削除されません）。よろしいですか？'))return;s10Reset();SY10.bind=null;yHist({kind:'設定',ok:1,note:'紐づけを解除'});await ySaveNow();c10.st='noteam';draw()}
+else if(a=='clleave'){if(!confirm('このチームから退出します（端末のデータは削除されません）。よろしいですか？'))return;await s10Run(async()=>{await clCall('remove_member',{p_team:SY10.bind.team,p_user:clAu().uid});s10Reset();SY10.bind=null;await ySaveNow();await s10MyTeams()})}
+else if(a=='clcr'){const id=t.dataset.c,picks={};document.querySelectorAll('[data-cf]').forEach(s=>{if(s.id.startsWith('clpk_'+id+'_'))picks[s.dataset.cf]=s.value});await s10Run(()=>s10ResRec(id,t.dataset.m,picks))}
+else if(a=='clcg'){if(t.dataset.m=='theirs'&&!confirm('クラウドの内容を採用します。この端末で追加した記録は取り除かれます（バックアップには残ります）。よろしいですか？'))return;if(t.dataset.m=='mine'&&!confirm('この端末の内容でクラウドを上書きします。よろしいですか？'))return;await s10Run(()=>s10ResGame(t.dataset.g,t.dataset.m))}}
+catch(err){showErr('操作に失敗しました：'+clMsg(err))}},true);
+yLoad().then(()=>{s10Watch();try{if(tab=='cloud')draw()}catch(_){}});
+
 const DUPA=new Set(['gwms','gadd','gpadd','rok','ibb','ci','ofr','sqr','ent','sach','sflc','hbp','ap','am','msave','gstart']);let dupL={k:'',t:0};
 $d.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;const d=t.dataset,a=d.a,v=s=>$(s)?$(s).value:'';const c0=[S.pt.length,S.a.length,S.df.length,S.sb.length,S.ev.length,S.pk.length],pre6=(()=>{try{const g=cg();if(!g||!g.n)return null;const n=g.n;return{gid:g.id,inn:n.inn,o:n.o,bs:(n.bs||[]).slice(),cob:n.cob||'',cat:fp(g,'捕')||''}}catch(_){return null}})();if(a&&DUPA.has(a)){const k=a+'|'+JSON.stringify(d)+(a=='ap'?v('#pn')+v('#pno'):''),n=Date.now();if(dupL.k==k&&n-dupL.t<(a=='ap'||a=='gstart'||a=='am'||a=='msave'?1200:600)){oplog('二重登録防止',a);return}dupL={k,t:n}}
 if(d.t){tab=d.t;sh='';draw();scrollTo(0,0);return}
