@@ -2982,7 +2982,7 @@ const g14Snap=g=>{const A=S.a.filter(x=>x.gid==g.id);let h=0;A.forEach(x=>{const
 const G14F={rs:'自チーム得点',ra:'相手得点',wn:'勝利投手',ls:'敗戦投手',sv:'セーブ',d:'日付',o:'相手',na:'打席の件数',ah:'打席の内容',np:'投球の件数',nd:'守備の件数'};
 const g14Diff=g=>{const r=g.rv14;if(!r||!r.snap)return[];const c=g14Snap(g),o=[];Object.keys(G14F).forEach(k=>{if(String(c[k])!=String(r.snap[k]))o.push(G14F[k]+(k=='na'||k=='np'||k=='nd'?'：'+r.snap[k]+' → '+c[k]:k=='ah'?'が変わりました':'：'+(r.snap[k]===''?'（なし）':r.snap[k])+' → '+(c[k]===''?'（なし）':c[k])))});return o};
 /* 記録チェック：{lv:'err'|'warn'|'info', m} の一覧。記録は変更しない */
-const g14Chk=g=>{const o=[],add=(lv,m)=>o.push({lv,m}),A=S.a.filter(x=>x.gid==g.id),ps=new Set(S.p.map(p=>p.id)),today=new Date().toISOString().slice(0,10);
+const g14Chk=g=>{const o=[],add=(lv,m)=>o.push({lv,m}),A=S.a.filter(x=>x.gid==g.id),ps=new Set(S.p.map(p=>p.id)),today=lt();
 if(!g.d)add('err','日付が未入力です');else if(g.d>today)add('warn','日付が未来になっています（'+g.d+'）');
 if(!g.o)add('warn','相手チーム名が未入力です');
 const rs=g.rs||0,ra=g.ra||0;
@@ -3036,6 +3036,44 @@ if(a=='gres'||a=='gtns'||a=='fok'){const g=S.g.find(x=>x.id==(a=='fok'?t.dataset
 if(g14St(g)=='final'){if(!confirm('この試合は「確定」済みです。編集すると状態を「確認済み」に戻します（履歴に残ります）。続けますか？')){e.stopImmediatePropagation();return}if(!g14Set(g,'checked','確定後の編集'))e.stopImmediatePropagation()}
 else if(a=='fok'){const c=Object.assign({},g,{fin:1,wn:(document.querySelector('#fwn')||{}).value||'',ls:(document.querySelector('#fls')||{}).value||'',sv:(document.querySelector('#fsv')||{}).value||''}),L=g14Chk(c).filter(x=>x.lv!='info');if(L.length&&!confirm('試合を終了する前の記録チェックで、確認事項が'+L.length+'件あります。\n\n'+L.map(x=>(x.lv=='err'?'✖ ':'⚠ ')+x.m).join('\n')+'\n\nこのまま確定しますか？（「キャンセル」で戻れます）')){e.stopImmediatePropagation()}}}
 }catch(er){oplog('確認処理エラー',er&&er.message);showErr('処理でエラーが発生しました：'+(er&&er.message||er))}},true);
+/* ===== Phase 14：対戦投手別の成績・打者別の対戦履歴・先頭打者／得点後の状況分析（分析 → 対戦・状況分析） ===== */
+let x14s={k:''};
+/* 打席ごとの相手投手：試合の相手投手と交代の記録（opl）から復元する。記録は変更しない。
+   交代の記録がない試合は、試合に登録された相手投手で代用し、「推定」とする */
+const x14Pit=ids=>{const idx=new Map();S.a.forEach((x,i)=>idx.set(x,i));const info={};S.g.forEach(g=>{if(!ids.has(g.id))return;const ch=(g.opl||[]).filter(c=>c&&c.na!=null).slice().sort((a,b)=>a.na-b.na);info[g.id]={o:g.o||'',init:ch.length?(ch[0].a||''):(g.op||''),ch,est:!ch.length}});
+return x=>{const f=info[x.gid];if(!f)return{o:'',name:'',est:true};let p=f.init;const k=idx.get(x);f.ch.forEach(c=>{if(c.na<=k)p=c.b||''});return{o:f.o,name:p,est:f.est}}};
+const x14Thr=(o,n)=>{const q=S.opp.find(x=>x.tm==o&&x.name==n);return q?q.thr:''};
+const x14Rows=(P,pf)=>{const m={};P.forEach(x=>{const r=pf(x),k=r.o+'¦'+r.name;const e=m[k]||(m[k]={k,o:r.o,name:r.name,l:[],g:new Set(),est:0});e.l.push(x);e.g.add(x.gid);if(r.est)e.est++});return Object.values(m).map(e=>({...e,q:x4st(e.l)})).sort((a,b)=>b.l.length-a.l.length)};
+const x14Ref=n=>n<X4MIN.pa?' <small class="m">参考値</small>':'';
+const x14Tb=rows=>tb(['相手投手','試合','打席','打数','安打','打率','出塁率','OPS','三振','四球','本塁打','打点'],rows.map(r=>{const q=r.q,nm=r.name?esc(r.name):'（相手投手 未登録）';return`<tr data-a="x14p" data-k="${esc(r.k)}" style="cursor:pointer;${x14s.k==r.k?'background:rgba(47,138,126,.15)':''}"><td style="text-align:left;white-space:nowrap">${nm}<br><small class="m">${esc(r.o||'—')}${x14Thr(r.o,r.name)?'・'+x14Thr(r.o,r.name)+'投げ':''}${r.est?'・推定':''}</small></td><td>${r.g.size}</td><td>${q.pa}${x14Ref(q.pa)}</td><td>${q.ab}</td><td>${q.h}</td><td>${f3(q.avg)}</td><td>${f3(q.obp)}</td><td>${f3(q.ops)}</td><td>${q.k}</td><td>${q.bb}</td><td>${q.hr}</td><td>${q.rbi}</td></tr>`}));
+/* 状況の分類：先頭打者・得点後 */
+const x14Ctx=()=>{const{L,ids}=AP(),all=S.a.filter(x=>ids.has(x.gid)),byG={};all.forEach(x=>(byG[x.gid]=byG[x.gid]||[]).push(x));const out=[];let noInn=0,noRu=0;
+Object.values(byG).forEach(l=>{const inn={};l.forEach(x=>{if(x.inn>=1)(inn[x.inn]=inn[x.inn]||[]).push(x);else noInn++});const K=Object.keys(inn).map(Number).sort((a,b)=>a-b),runs={},known={};K.forEach(k=>{known[k]=inn[k].every(x=>x.ru!=null);runs[k]=inn[k].reduce((s,x)=>s+(x.ru||0),0)});
+K.forEach(k=>{inn[k].forEach((x,i)=>{const prev=inn[k][i-1],pk=known[k-1]&&inn[k-1]?runs[k-1]>0:null;out.push({x,inn:k,lead:i==0,innRuns:known[k]?runs[k]:null,afterIn:i==0?pk:null,afterPa:i>0&&prev&&prev.ru!=null?prev.ru>0:null})})})});
+return{out,noInn,noRu,L}};
+const x14Reach=x=>{const q=x4st([x]);return q.h+q.bb+q.hbp>0};
+const x14Sec=(t,body,fm)=>`<div class="c"><h3 style="margin-top:0">${t}</h3>${body}${fm?`<details style="margin-top:8px"><summary class="m">計算式・集計条件</summary><p class="m" style="margin:4px 0">${fm}</p></details>`:''}</div>`;
+const x14SitRow=(lb,l)=>{const q=x4st(l);return`<tr><td style="text-align:left;white-space:nowrap">${lb}</td><td>${q.pa}${x14Ref(q.pa)}</td><td>${f3(q.avg)}</td><td>${f3(q.obp)}</td><td>${f3(q.ops)}</td><td>${q.pa?Math.round(q.k/q.pa*100)+'%':'-'}</td></tr>`};
+const x14SitTb=R=>tb(['状況','打席','打率','出塁率','OPS','三振率'],R.map(([lb,l])=>x14SitRow(lb,l)));
+V.x14=()=>{const back='<button class="x" data-t="ana">‹ 分析</button>',{L,ids,P}=AP(),pf=x14Pit(ids);let body='';
+const rows=x14Rows(P,pf),nm=rows.reduce((s,r)=>s+r.est,0),unk=rows.filter(r=>!r.name).reduce((s,r)=>s+r.l.length,0);
+body+=x14Sec('対戦投手別の打撃成績'+(an.who?'（'+esc((S.p.find(p=>p.id==an.who)||{}).name||'')+'）':''),(P.length?x14Tb(rows):'<p class="m">打席の記録がありません。</p>')+`<p class="m">${P.length}打席・相手投手 ${rows.filter(r=>r.name).length}人。${unk?'相手投手が未登録の打席：'+unk+'件（「（相手投手 未登録）」に分けて表示）。':''}${nm?'「推定」＝試合に登録された相手投手で代用（投手交代の記録がない試合）。':''}行を押すと、打者別の内訳を表示します。上の絞り込みで選手を選ぶと、その選手の対戦履歴になります。</p>`,
+'相手投手＝試合で登録した相手投手。投手交代を登録した試合は、交代した時点の打席数で分けて、各打席の相手投手を決めます。交代の記録がない試合は、その試合の相手投手の打席として扱うため、途中で交代していても反映されません（推定）。打率・出塁率・OPS・三振・四球・本塁打・打点は、打撃分析（拡張分析）と同じ集計です。'+X4MIN.pa+'打席未満は参考値です。');
+if(x14s.k){const e=rows.find(r=>r.k==x14s.k);if(e){const by={};e.l.forEach(x=>(by[x.p]=by[x.p]||[]).push(x));const BR=Object.keys(by).map(p=>({p,l:by[p],q:x4st(by[p])})).sort((a,b)=>b.l.length-a.l.length);body+=x14Sec((e.name?esc(e.name):'相手投手 未登録')+' との対戦：打者別',tb(['打者','打席','打数','安打','打率','出塁率','三振','四球','本塁打','打点'],BR.map(r=>{const p=S.p.find(z=>z.id==r.p),q=r.q;return`<tr><td style="text-align:left;white-space:nowrap">${p?esc(p.name):'（選手不明）'}</td><td>${q.pa}${x14Ref(q.pa)}</td><td>${q.ab}</td><td>${q.h}</td><td>${f3(q.avg)}</td><td>${f3(q.obp)}</td><td>${q.k}</td><td>${q.bb}</td><td>${q.hr}</td><td>${q.rbi}</td></tr>`})),'同じ集計条件で、この相手投手の打席を自チームの打者ごとに分けたものです。')}}
+const C=x14Ctx(),W=C.out.filter(o=>!an.who||o.x.p==an.who),lead=W.filter(o=>o.lead),notLead=W.filter(o=>!o.lead);
+body+=x14Sec('先頭打者',x14SitTb([['先頭打者（各回の最初の打席）',lead.map(o=>o.x)],['先頭打者以外',notLead.map(o=>o.x)],['すべての打席',W.map(o=>o.x)]])+`<p class="m">イニングが分かる打席だけを対象にしています${C.noInn?'（イニング不明の打席 '+C.noInn+'件は除外）':''}。</p>`,'先頭打者＝その試合のそのイニングで、記録された最初の打席。打率・出塁率・OPS・三振率は拡張分析と同じ集計です。');
+const LR=lead.filter(o=>o.innRuns!=null),R1=LR.filter(o=>x14Reach(o.x)),R0=LR.filter(o=>!x14Reach(o.x)),sc=a=>a.length?Math.round(a.filter(o=>o.innRuns>0).length/a.length*100)+'%（'+a.filter(o=>o.innRuns>0).length+'/'+a.length+'）':'-';
+body+=x14Sec('先頭打者の出塁とその回の得点',tb(['先頭打者','回数','その回に得点'],[['出塁した',R1],['出塁しなかった',R0],['全体',LR]].map(([lb,a])=>`<tr><td style="text-align:left">${lb}</td><td>${a.length}${a.length<X4MIN.st?' <small class="m">参考値</small>':''}</td><td>${sc(a)}</td></tr>`))+'<p class="m">その回の得点は、打席の記録に残った得点（本塁打・安打・犠飛などによる得点）の合計です。盗塁・暴投・捕逸など打席以外で入った得点は含みません。</p>','出塁＝安打・四球・死球のいずれか（失策出塁は含まない）。「その回に得点」＝同じイニングの打席記録の得点（ru）の合計が1以上。得点の記録（ru）がない古い試合は除外。'+X4MIN.st+'回未満は参考値です。');
+const AI=W.filter(o=>o.afterIn==true),AN=W.filter(o=>o.afterIn==false),AP2=W.filter(o=>o.afterPa==true),AP0=W.filter(o=>o.afterPa==false);
+body+=x14Sec('得点後の打撃',x14SitTb([['前の回に得点した後の先頭打者',AI.map(o=>o.x)],['前の回に無得点だった後の先頭打者',AN.map(o=>o.x)],['同じ回で、直前の打席に得点が入った後の打席',AP2.map(o=>o.x)],['同じ回で、直前の打席に得点がなかった打席',AP0.map(o=>o.x)]])+'<p class="m">得点は打席の記録に残ったものだけで判定します。1回の先頭打者は「前の回」がないため、前の回の判定から除きます。</p>','前の回に得点＝直前のイニングの打席記録の得点（ru）の合計が1以上。直前の打席に得点＝同じイニングの1つ前の打席の得点（ru）が1以上。得点の記録がない古い試合は除外。');
+const LB={};lead.forEach(o=>(LB[o.x.p]=LB[o.x.p]||[]).push(o.x));const LP=Object.keys(LB).map(p=>({p,l:LB[p]})).sort((a,b)=>b.l.length-a.l.length);
+if(!an.who)body+=x14Sec('先頭打者を務めた選手',tb(['選手','先頭打者の打席','打率','出塁率','OPS','三振率'],LP.map(r=>{const q=x4st(r.l),p=S.p.find(z=>z.id==r.p);return`<tr><td style="text-align:left;white-space:nowrap">${p?esc(p.name):'（選手不明）'}</td><td>${q.pa}${x14Ref(q.pa)}</td><td>${f3(q.avg)}</td><td>${f3(q.obp)}</td><td>${f3(q.ops)}</td><td>${q.pa?Math.round(q.k/q.pa*100)+'%':'-'}</td></tr>`})),'その試合・そのイニングの最初の打席に立った回数を、選手ごとに数えたものです。');
+const IN={};lead.forEach(o=>(IN[o.inn]=IN[o.inn]||[]).push(o.x));const IK=Object.keys(IN).map(Number).sort((a,b)=>a-b);
+body+=x14Sec('イニング別の先頭打者',x14SitTb(IK.map(k=>[k+'回',IN[k]])),'各イニングの先頭打者の成績。件数が少ないイニングは参考値です。');
+return back+'<h2 style="margin:4px 0">対戦・状況分析</h2>'+cond()+body+'<p class="m">既存の分析画面の数値は変わりません。この画面は記録を変更しません。記録されていない項目は集計に含めません（0として扱いません）。</p>'};
+NV.x14='ana';
+{const a1=V.ana;V.ana=()=>`<button class="x" data-t="x14" style="width:100%;margin-bottom:8px">🎯 対戦・状況分析（相手投手別・先頭打者・得点後）▶</button>`+a1()}
+$d.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-a="x14p"]');if(!t)return;e.stopImmediatePropagation();x14s.k=x14s.k==t.dataset.k?'':t.dataset.k;draw()},true);
 const DUPA=new Set(['gwms','gadd','gpadd','rok','ibb','ci','ofr','sqr','ent','sach','sflc','hbp','ap','am','msave','gstart']);let dupL={k:'',t:0};
 $d.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;const d=t.dataset,a=d.a,v=s=>$(s)?$(s).value:'';const c0=[S.pt.length,S.a.length,S.df.length,S.sb.length,S.ev.length,S.pk.length],pre6=(()=>{try{const g=cg();if(!g||!g.n)return null;const n=g.n;return{gid:g.id,inn:n.inn,o:n.o,bs:(n.bs||[]).slice(),cob:n.cob||'',cat:fp(g,'捕')||''}}catch(_){return null}})();if(a&&DUPA.has(a)){const k=a+'|'+JSON.stringify(d)+(a=='ap'?v('#pn')+v('#pno'):''),n=Date.now();if(dupL.k==k&&n-dupL.t<(a=='ap'||a=='gstart'||a=='am'||a=='msave'?1200:600)){oplog('二重登録防止',a);return}dupL={k,t:n}}
 if(d.t){tab=d.t;sh='';draw();scrollTo(0,0);return}
