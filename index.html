@@ -2975,6 +2975,67 @@ else if(a=='g12ign'){(S.gign12=S.gign12||[]).push(i);save();draw()}
 else if(a=='g12ignx'){S.gign12=[];save();draw()}}catch(er){showErr('操作に失敗しました：'+((er&&er.message)||er))}},true);
 $d.addEventListener('change',async e=>{const t=e.target;if(!t||t.id!='g12imp')return;e.stopImmediatePropagation();const f=t.files&&t.files[0];t.value='';if(!f)return;try{const j=JSON.parse(await f.text());if(!j||j.kind!='hope-game-trash'||!j.g||!j.g.id||typeof j.data!='object')throw new Error('このアプリの試合データのファイルではありません');if(S.g.some(x=>x.id==j.g.id)||T12().some(x=>x.g.id==j.g.id))throw new Error('同じ試合がすでにあります');const d={};Object.keys(j.data).forEach(k=>{if(Array.isArray(j.data[k])&&/^[a-z0-9]{1,10}$/i.test(k))d[k]=j.data[k].filter(x=>x&&typeof x=='object'&&x.id!=null)});T12().push({id:id(),ts:Date.now(),g:j.g,data:d,vids:Array.isArray(j.vids)?j.vids:[]});if(!save())throw new Error('保存に失敗しました');tpill('読み込みました。一覧から復元できます')}catch(er){showErr('読み込めませんでした：'+((er&&er.message)||er))}draw()},true);
 
+/* ===== Phase 13：試合記録の確認と確定（記録チェック・状態管理・変更検出・定期診断） ===== */
+const G14S={draft:['下書き','#8a93a0'],checked:['確認済み','#3b5b8a'],final:['確定','#2f8a7e']};
+const g14St=g=>(g&&g.rv14&&G14S[g.rv14.st])?g.rv14.st:'draft';
+const g14Snap=g=>{const A=S.a.filter(x=>x.gid==g.id);let h=0;A.forEach(x=>{const s=String(x.id)+'|'+x.p+'|'+x.r+'|'+x.rbi+'|'+x.inn;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0});return{rs:g.rs,ra:g.ra,wn:g.wn||'',ls:g.ls||'',sv:g.sv||'',d:g.d||'',o:g.o||'',na:A.length,ah:h,np:S.pt.filter(x=>x.gid==g.id).length,nd:S.df.filter(x=>x.gid==g.id).length}};
+const G14F={rs:'自チーム得点',ra:'相手得点',wn:'勝利投手',ls:'敗戦投手',sv:'セーブ',d:'日付',o:'相手',na:'打席の件数',ah:'打席の内容',np:'投球の件数',nd:'守備の件数'};
+const g14Diff=g=>{const r=g.rv14;if(!r||!r.snap)return[];const c=g14Snap(g),o=[];Object.keys(G14F).forEach(k=>{if(String(c[k])!=String(r.snap[k]))o.push(G14F[k]+(k=='na'||k=='np'||k=='nd'?'：'+r.snap[k]+' → '+c[k]:k=='ah'?'が変わりました':'：'+(r.snap[k]===''?'（なし）':r.snap[k])+' → '+(c[k]===''?'（なし）':c[k])))});return o};
+/* 記録チェック：{lv:'err'|'warn'|'info', m} の一覧。記録は変更しない */
+const g14Chk=g=>{const o=[],add=(lv,m)=>o.push({lv,m}),A=S.a.filter(x=>x.gid==g.id),ps=new Set(S.p.map(p=>p.id)),today=new Date().toISOString().slice(0,10);
+if(!g.d)add('err','日付が未入力です');else if(g.d>today)add('warn','日付が未来になっています（'+g.d+'）');
+if(!g.o)add('warn','相手チーム名が未入力です');
+const rs=g.rs||0,ra=g.ra||0;
+if(g.sus)add('warn','中断中の試合です（再開または終了が必要です）');
+else if(!g.fin&&g.n&&(A.length||rs||ra))add('info','試合終了が確定していません（勝敗・投手の確定が未実施）');
+if(g.fin&&!A.length)add('warn','打席の記録が1件もありません');
+const rb=A.reduce((s,x)=>s+(+x.rbi||0),0);if(rb>rs)add('err','打点の合計（'+rb+'）が自チームの得点（'+rs+'）を超えています');
+try{const L=uxLine(g);if(L.ou)add('warn','自チームのイニング別得点の合計が点数と'+Math.abs(L.ou)+'点ずれています（記録漏れ、または手動の点数補正）');if(L.ot)add('warn','相手のイニング別得点の合計が点数と'+Math.abs(L.ot)+'点ずれています（記録漏れ、または手動の点数補正）')}catch(_){}
+const lu=(g.lu||[]).filter(Boolean);if(lu.length){if(new Set(lu).size!=lu.length)add('err','打順に同じ選手が重複しています');if(lu.some(p=>!ps.has(p)))add('err','打順に選手名簿にいない選手がいます');const lp=(g.lp||[]).filter(p=>p&&p!='DH');if(new Set(lp).size!=lp.length)add('warn','守備位置が重複しています');if(lu.length<9)add('info','打順が'+lu.length+'人です（9人未満）')}
+const ms=A.filter(x=>x.p&&!ps.has(x.p)).length;if(ms)add('err','選手名簿にいない選手の打席が'+ms+'件あります');
+const ni=A.filter(x=>!(x.inn>=1)).length;if(ni&&A.length)add('info','イニングが分からない打席が'+ni+'件あります（手動入力など。イニング別集計に入りません）');
+const bo=A.filter(x=>x.ou!=null&&x.ou>2).length;if(bo)add('err','アウト数が3以上の状態で記録された打席が'+bo+'件あります');
+const seen={};let dp=0;A.forEach(x=>{if(!(x.inn>=1)||x.ord==null)return;const k=x.p+'|'+x.inn+'|'+x.ord+'|'+x.r;if(seen[k])dp++;else seen[k]=1});if(dp)add('info','同じ選手・同じイニング・同じ結果の打席が重なっています（'+dp+'件）。重複入力でないか確認してください');
+if(g.fin||g.wn||g.ls){if(rs>ra&&!g.wn)add('warn','勝ちの試合ですが、勝利投手が未設定です');if(rs<ra&&!g.ls)add('warn','負けの試合ですが、敗戦投手が未設定です');if(rs==ra&&(g.wn||g.ls))add('warn','引き分けの試合に勝利／敗戦投手が設定されています');if(rs<ra&&g.wn)add('warn','負けの試合に勝利投手が設定されています');if(rs>ra&&g.ls)add('warn','勝ちの試合に敗戦投手が設定されています');if(g.wn&&g.wn==g.ls)add('err','勝利投手と敗戦投手が同じ選手です');[g.wn,g.ls,g.sv].filter(Boolean).forEach(p=>{if(!ps.has(p))add('err','勝敗・セーブに選手名簿にいない投手が設定されています')})}
+if(!g.sp&&S.pt.some(x=>x.gid==g.id))add('warn','投球の記録がありますが、先発投手が未設定です');
+return o};
+const g14Sum=g=>{const L=g14Chk(g),e=L.filter(x=>x.lv=='err').length,w=L.filter(x=>x.lv=='warn').length,i=L.filter(x=>x.lv=='info').length;return{L,e,w,i,q:e?'要修正':w?'要確認':'良好'}};
+const g14Col={err:'#c0392b',warn:'#d6a041',info:'#8a93a0'},g14Ic={err:'✖',warn:'⚠',info:'ℹ'};
+const g14List=L=>L.length?L.map(x=>`<div style="padding:3px 0;color:${g14Col[x.lv]}"><b>${g14Ic[x.lv]}</b> <span style="color:var(--t)">${esc(x.m)}</span></div>`).join(''):'<p class="m" style="margin:2px 0">気になる点は見つかりませんでした。</p>';
+const g14Set=(g,to,note)=>{const r=g.rv14&&typeof g.rv14=='object'?g.rv14:{st:'draft',hist:[]};const was=g14St(g),prev=JSON.stringify(g.rv14||null);r.hist=Array.isArray(r.hist)?r.hist:[];r.hist.push({ts:Date.now(),from:was,to,note:note||''});if(r.hist.length>50)r.hist=r.hist.slice(-50);r.st=to;r.at=Date.now();if(to=='draft')delete r.snap;else r.snap=g14Snap(g);g.rv14=r;if(!save()){try{g.rv14=JSON.parse(prev)}catch(_){delete g.rv14}showErr('状態を保存できませんでした：'+(SV.err||'保存に失敗'));return false}oplog('試合の状態',g.d+' '+G14S[was][0]+'→'+G14S[to][0]);return true};
+const g14Gd=g=>{const st=g14St(g),su=g14Sum(g),df=st!='draft'?g14Diff(g):[],r=g.rv14||{},H=(r.hist||[]).slice(-5).reverse();
+const bt=(a,t,c)=>`<button class="${c||'x'}" data-a="${a}" data-i="${g.id}" style="margin:3px 4px 0 0">${t}</button>`;
+return`<details class="c" id="g14box" ${su.e||df.length?'open':''}><summary><b>記録の確認と確定</b> <span style="background:${G14S[st][1]};color:#fff;border-radius:10px;padding:1px 8px;font-size:11px">${G14S[st][0]}</span> <span class="m">記録品質：<b style="color:${su.e?g14Col.err:su.w?g14Col.warn:'#2f8a7e'}">${su.q}</b></span></summary>
+${df.length?`<div style="border:1px solid #c0392b;border-radius:8px;padding:6px 8px;margin:6px 0"><b style="color:#c0392b">⚠ ${G14S[st][0]}にした後に記録が変わっています</b><div class="m">${df.map(esc).join('<br>')}</div><div class="m" style="margin-top:4px">内容を確認して、もう一度「確認済み」または「確定」にしてください。</div></div>`:''}
+<div style="margin:6px 0"><b>記録チェック</b>（${su.e}件の誤り候補・${su.w}件の要確認・${su.i}件の参考）${g14List(su.L)}</div>
+<p class="m" style="margin:4px 0">チェックは記録を変更しません。自動で直したり消したりはしません。</p>
+<div>${st!='checked'?bt('g14chk','確認済みにする'):''}${st!='final'?bt('g14fin','確定にする','p'):''}${st!='draft'?bt('g14drf','下書きに戻す'):''}${bt('g14rn','もう一度チェック')}</div>
+${st=='final'?'<p class="m" style="margin:4px 0">確定済みの試合は、記録の再開・勝敗の変更・大会名の変更の前に確認を出します。</p>':''}
+${H.length?`<div class="m" style="margin-top:6px"><b>状態の履歴</b><br>${H.map(h=>new Date(h.ts).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+'　'+(G14S[h.from]||['?'])[0]+' → '+(G14S[h.to]||['?'])[0]+(h.note?'（'+esc(h.note)+'）':'')).join('<br>')}</div>`:''}</details>`};
+{const gd=V.gd;V.gd=()=>{let h=gd();try{const g=S.g.find(x=>x.id==rid);if(g&&h){const i=h.indexOf('<button class="p" data-a="gres">');h=i>=0?h.slice(0,i)+g14Gd(g)+h.slice(i):h+g14Gd(g)}}catch(e){oplog('確認表示エラー',e&&e.message)}return h}}
+/* 全試合の診断（定期診断・手動）：記録は変更しない */
+const G14K='hope_dg14',g14All=()=>S.g.map(g=>({g,s:g14Sum(g)}));
+const g14Last=()=>{try{return +localStorage.getItem(G14K)||0}catch(_){return 0}};
+const g14Stamp=()=>{try{localStorage.setItem(G14K,String(Date.now()))}catch(_){}};
+const g14Dg=()=>{const A=g14All(),bad=A.filter(x=>x.s.e||x.s.w),chg=A.filter(x=>g14St(x.g)!='draft'&&g14Diff(x.g).length);return{A,bad,chg,n:A.length}};
+const g14Open=()=>{const r=g14Dg(),H=r.bad.slice().sort((a,b)=>b.s.e-a.s.e||b.s.w-a.s.w).map(x=>`<div class="i" style="align-items:flex-start;gap:8px"><span style="flex:1"><b>${esc(g12Lbl(x.g))}</b> <span class="m">${G14S[g14St(x.g)][0]}</span><br><small style="color:${x.s.e?g14Col.err:g14Col.warn}">${x.s.e?'誤り候補 '+x.s.e+'件・':''}${x.s.w?'要確認 '+x.s.w+'件':''}</small></span><button class="x" data-a="gd" data-i="${x.g.id}" style="flex:0 0 auto;margin:0">開く</button></div>`).join('');return`<div class="c"><b>試合記録の診断</b><p class="m" style="margin:4px 0">${r.n}試合を調べました。誤り候補・要確認がある試合：<b>${r.bad.length}</b>件${r.chg.length?'／確認・確定後に記録が変わった試合：<b>'+r.chg.length+'</b>件':''}。記録は変更していません。</p>${H||'<p class="m">すべての試合で問題は見つかりませんでした。</p>'}</div>`};
+let g14Open_=0;
+{const g6=V.gms;V.gms=()=>{let b='';try{const lastRun=g14Last(),due=Date.now()-lastRun>7*864e5;if(g14Open_||due){const r=g14Dg();if(due)g14Stamp();if(g14Open_)b+=g14Open();else if(r.bad.length||r.chg.length)b+=`<button class="x" data-a="g14dg" style="width:100%;margin-bottom:6px;border-color:#d6a041">⚠ 記録の定期診断：確認が必要な試合が${r.bad.length}件${r.chg.length?'・確認後に変更された試合が'+r.chg.length+'件':''} — 見る</button>`}else b+=`<button class="x" data-a="g14dg" style="width:100%;margin-bottom:6px">🔎 試合記録を診断する</button>`}catch(e){oplog('診断エラー',e&&e.message)}return b+g6()}}
+$d.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a||'';try{
+if(/^g14[a-z]+$/.test(a)){e.stopImmediatePropagation();const g=S.g.find(x=>x.id==(t.dataset.i||rid));
+if(a=='g14dg'){g14Open_=!g14Open_;g14Stamp();draw();return}
+if(!g)return;
+if(a=='g14rn'){draw();tpill('もう一度チェックしました');return}
+if(a=='g14drf'){if(!confirm('「下書き」に戻します。確認・確定の状態が外れます（記録は変わりません）。よろしいですか？'))return;if(g14Set(g,'draft','手動'))draw();return}
+const to=a=='g14fin'?'final':'checked',su=g14Sum(g);
+if(su.e){if(!confirm('誤り候補が'+su.e+'件あります。\n\n'+su.L.filter(x=>x.lv=='err').map(x=>'・'+x.m).join('\n')+'\n\nこのまま「'+G14S[to][0]+'」にしますか？'))return}
+else if(su.w){if(!confirm('要確認が'+su.w+'件あります。\n\n'+su.L.filter(x=>x.lv=='warn').map(x=>'・'+x.m).join('\n')+'\n\nこのまま「'+G14S[to][0]+'」にしますか？'))return}
+if(g14Set(g,to,su.e||su.w?'警告を承知で':''))draw();return}
+/* 確定済みの試合を編集する前の確認／終了確定前のチェック */
+if(a=='gres'||a=='gtns'||a=='fok'){const g=S.g.find(x=>x.id==(a=='fok'?t.dataset.i:rid));if(!g)return;
+if(g14St(g)=='final'){if(!confirm('この試合は「確定」済みです。編集すると状態を「確認済み」に戻します（履歴に残ります）。続けますか？')){e.stopImmediatePropagation();return}if(!g14Set(g,'checked','確定後の編集'))e.stopImmediatePropagation()}
+else if(a=='fok'){const c=Object.assign({},g,{fin:1,wn:(document.querySelector('#fwn')||{}).value||'',ls:(document.querySelector('#fls')||{}).value||'',sv:(document.querySelector('#fsv')||{}).value||''}),L=g14Chk(c).filter(x=>x.lv!='info');if(L.length&&!confirm('試合を終了する前の記録チェックで、確認事項が'+L.length+'件あります。\n\n'+L.map(x=>(x.lv=='err'?'✖ ':'⚠ ')+x.m).join('\n')+'\n\nこのまま確定しますか？（「キャンセル」で戻れます）')){e.stopImmediatePropagation()}}}
+}catch(er){oplog('確認処理エラー',er&&er.message);showErr('処理でエラーが発生しました：'+(er&&er.message||er))}},true);
 const DUPA=new Set(['gwms','gadd','gpadd','rok','ibb','ci','ofr','sqr','ent','sach','sflc','hbp','ap','am','msave','gstart']);let dupL={k:'',t:0};
 $d.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;const d=t.dataset,a=d.a,v=s=>$(s)?$(s).value:'';const c0=[S.pt.length,S.a.length,S.df.length,S.sb.length,S.ev.length,S.pk.length],pre6=(()=>{try{const g=cg();if(!g||!g.n)return null;const n=g.n;return{gid:g.id,inn:n.inn,o:n.o,bs:(n.bs||[]).slice(),cob:n.cob||'',cat:fp(g,'捕')||''}}catch(_){return null}})();if(a&&DUPA.has(a)){const k=a+'|'+JSON.stringify(d)+(a=='ap'?v('#pn')+v('#pno'):''),n=Date.now();if(dupL.k==k&&n-dupL.t<(a=='ap'||a=='gstart'||a=='am'||a=='msave'?1200:600)){oplog('二重登録防止',a);return}dupL={k,t:n}}
 if(d.t){tab=d.t;sh='';draw();scrollTo(0,0);return}
