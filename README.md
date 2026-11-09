@@ -531,4 +531,4 @@ AIは指導者の判断を補助します。**AIだけで公式記録を確定�
 - 中継サーバーはNode.jsの参考実装のみ検証。Cloudflare Workers等への移植版は未検証。
 
 ### 更新するとき
-- sw.js の `const VERSION = 'v60';` を `'v61'` に変えてください。
+- sw.js の `const VERSION = 'v61';` を `'v62'` に変えてください。
