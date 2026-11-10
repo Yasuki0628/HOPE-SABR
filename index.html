@@ -100,7 +100,9 @@ const isQuota=e=>!!e&&(e.name=='QuotaExceededError'||e.name=='NS_ERROR_DOM_QUOTA
 const svFail=(why,quota)=>{const f=!SV.err;SV.ok=false;SV.err=why;SV.q=quota?1:0;svBanner('svb','⚠ 保存できていません：'+why+'。変更はまだこの端末に保存されていません。「チーム」画面の「データ」でバックアップを書き出してください。','position:fixed;left:8px;right:8px;top:8px;z-index:60;background:#fde7e7;color:#a00;border:1px solid #d93b3b;border-radius:10px;padding:10px;font-size:12px;line-height:1.5');tpill('保存に失敗しました',1);if(f)oplog('保存失敗',why);return false};
 const svOk=n=>{const was=!SV.ok;SV.ok=true;SV.err='';SV.q=0;SV.at=Date.now();SV.n=n;svBanner('svb','');tpill(was?'保存できました':'✓ 保存しました');const u=lsUse();svBanner('svw',u>LSMAX*.85?'保存容量が残りわずかです（約'+Math.round(u/LSMAX*100)+'%使用）。「チーム」画面の「データ」でバックアップを書き出し、不要なデータを整理してください。':'','position:fixed;left:8px;right:8px;top:8px;z-index:59;background:#fff4d6;color:#7a5200;border:1px solid #e0a020;border-radius:10px;padding:8px;font-size:12px;line-height:1.5');return true};
 const save=()=>{rpc.id='';if(DLERR)return svFail('保存データに問題があるため、上書きを止めています',0);let txt;try{txt=JSON.stringify(SWR?Object.assign({},S,SWR):S)}catch(e){return svFail('保存用のデータを作れませんでした',0)}let err=null;for(let i=0;i<2;i++){try{localStorage.setItem('dl',txt);if(localStorage.getItem('dl')!==txt)throw new Error('書き込み内容が一致しません');svOk(txt.length);try{IDBHOOK&&IDBHOOK(txt)}catch(_){}return true}catch(e){err=e}}return svFail(isQuota(err)?'保存容量が足りません':'端末への書き込みに失敗しました（'+((err&&err.message)||err)+'）',isQuota(err))};
-const id=()=>Math.random().toString(36).slice(2,9);
+const idRaw=()=>{try{if(window.crypto){if(crypto.randomUUID)return crypto.randomUUID().replace(/-/g,'').slice(0,16);if(crypto.getRandomValues){const u=new Uint8Array(8);crypto.getRandomValues(u);return Array.from(u,b=>('0'+b.toString(16)).slice(-2)).join('')}}}catch(_){}return Date.now().toString(36)+Math.random().toString(36).slice(2,8)+(idRaw.n=(idRaw.n||0)+1).toString(36)};
+const idUsed=c=>{try{if(typeof S!='object'||!S)return false;const f=A=>Array.isArray(A)&&A.some(x=>x&&x.id===c);for(const k of Object.keys(S)){if(f(S[k]))return true}if(S.o8&&typeof S.o8=='object')for(const k of Object.keys(S.o8)){if(f(S.o8[k]))return true}if(S.v11&&f(S.v11.vd))return true}catch(_){}return false};
+const id=()=>{let c=idRaw();for(let i=0;i<8&&idUsed(c);i++)c=idRaw();return c};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KS={学童野球:['小1','小2','小3','小4','小5','小6'],中学野球:['中1','中2','中3'],高校野球:['高1','高2','高3'],大学野球:['大1','大2','大3','大4'],社会人野球:['在籍']};let G=KS.学童野球;const setG=()=>{G=KS[S.tm.kind]||KS.学童野球},gi=p=>G.length==1?0:p.g0+fyOf(lt())-p.fy,act=()=>S.p.filter(p=>gi(p)<G.length);setG();
 const DVS=['代表','Bチーム','Cチーム','Dチーム'];
@@ -883,7 +885,7 @@ try{const d=v.d;if(k=='all'){S=Object.assign({g:[],team:'マイチーム',hide:0
 const diag=()=>{const o=[],dup=(A,n)=>{const m=new Set();let c=0;(A||[]).forEach(x=>{if(!x||x.id==null)return;if(m.has(x.id))c++;else m.add(x.id)});if(c)o.push(n+'のIDが重複しています（'+c+'件）')};[['p','選手'],['a','打席'],['m','測定'],['g','試合'],['pt','投球'],['df','守備'],['pk','牽制'],['ev','イベント'],['ao','攻撃側イベント'],['sb','盗塁']].forEach(([k,n])=>dup(S[k],n));const gs=new Set(S.g.map(g=>g.id)),ps=new Set(S.p.map(p=>p.id));[['a','打席'],['pt','投球'],['df','守備'],['pk','牽制'],['ev','イベント'],['ao','攻撃側イベント'],['sb','盗塁']].forEach(([k,n])=>{const c=(S[k]||[]).filter(x=>x.gid&&!gs.has(x.gid)).length;if(c)o.push(n+'：試合に結び付かない記録が'+c+'件あります')});const c2=S.a.filter(x=>x.p&&!ps.has(x.p)).length;if(c2)o.push('打席：選手が見つからない記録が'+c2+'件あります');const c3=S.m.filter(x=>x.p&&!ps.has(x.p)).length;if(c3)o.push('測定：選手が見つからない記録が'+c3+'件あります');let hb=0;S.g.forEach(g=>(g.h||[]).forEach(z=>{try{JSON.parse(z)}catch(_){hb++}}));if(hb)o.push('取り消し履歴が壊れている箇所が'+hb+'件あります');return o};
 const fmtKB=n=>n>=1e6?(n/1e6).toFixed(1)+'MB':Math.round(n/1e3)+'KB';
 const BKN={auto:'自動',manual:'手動',migrate:'移行前',restore:'復元前',wipe:'削除前',corrupt:'破損データ'};
-const dpPanel=()=>{const u=lsUse(),pc=Math.round(u/LSMAX*100),tm=SV.at?new Date(SV.at).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}):'';return`<h3 style="margin-top:14px">保存の状態とバックアップ</h3><div class="c"><div class="i" style="cursor:default"><span>保存の状態</span><b class="m" style="${SV.ok?'':'color:#a00'}">${SV.ok?'保存済み'+(tm?' '+tm:''):'保存に失敗しています'}</b></div><div class="i" style="cursor:default"><span>保存容量（目安）</span><b class="m" style="${pc>85?'color:#a00':''}">${fmtKB(u)} / 約${fmtKB(LSMAX)}（${pc}%）</b></div>${SV.ok?'':`<p style="color:#a00">${esc(SV.err)}</p>`}<div class="r"><button class="p" data-a="bkmk" style="flex:1">今すぐバックアップ</button><button style="flex:1" data-a="dgn">データを診断</button></div>${dgMsg?`<p class="m" style="white-space:pre-line">${esc(dgMsg)}</p>`:''}<p class="m" style="margin:10px 0 4px">バックアップの世代（自動・手動・復元前など。最新5世代ずつ、この端末に保存）</p>${BKL.length?BKL.map(e=>`<div class="i" style="cursor:default"><span><b>${BKN[e.kind]||e.kind}</b>　${new Date(e.at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}<br><small class="m">${esc(e.why||'')}${e.cnt&&e.cnt.p!=null?'　選手'+e.cnt.p+'・試合'+e.cnt.g+'・打席'+e.cnt.a+'・測定'+e.cnt.m:''}　${fmtKB(e.size)}</small></span><button data-a="bkge" data-i="${e.id}">書き出す</button>${e.kind=='corrupt'?'':`<button data-a="bkgr" data-i="${e.id}">${bkc==e.id?'もう一度押すと復元':'復元'}</button>`}</div>`).join(''):'<p class="m">まだバックアップはありません。データを保存すると自動で作られます。</p>'}<details style="margin-top:10px"><summary>操作履歴（最新30件）</summary>${OPL.slice(-30).reverse().map(x=>`<div class="m" style="font-size:12px">${new Date(x.t).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})}　${esc(x.a)}${x.x?'　'+esc(x.x):''}</div>`).join('')||'<p class="m">まだありません</p>'}</details></div>${idbPanel()}`};
+const dpPanel=()=>{const u=lsUse(),pc=Math.round(u/LSMAX*100),tm=SV.at?new Date(SV.at).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}):'';return`<h3 style="margin-top:14px">保存の状態とバックアップ</h3><div class="c"><div class="i" style="cursor:default"><span>保存の状態</span><b class="m" style="${SV.ok?'':'color:#a00'}">${SV.ok?'保存済み'+(tm?' '+tm:''):'保存に失敗しています'}</b></div><div class="i" style="cursor:default"><span>保存容量（目安）</span><b class="m" style="${pc>85?'color:#a00':''}">${fmtKB(u)} / 約${fmtKB(LSMAX)}（${pc}%）</b></div>${SV.ok?'':`<p style="color:#a00">${esc(SV.err)}</p>`}<div class="r"><button class="p" data-a="bkmk" style="flex:1">今すぐバックアップ</button><button style="flex:1" data-a="dgn">データを診断</button></div><div class="r" style="margin-top:6px"><button style="flex:1" data-t="r16">整合性の診断・修復</button><button style="flex:1" data-t="ptr">削除した選手</button></div>${dgMsg?`<p class="m" style="white-space:pre-line">${esc(dgMsg)}</p>`:''}<p class="m" style="margin:10px 0 4px">バックアップの世代（自動・手動・復元前など。最新5世代ずつ、この端末に保存）</p>${BKL.length?BKL.map(e=>`<div class="i" style="cursor:default"><span><b>${BKN[e.kind]||e.kind}</b>　${new Date(e.at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}<br><small class="m">${esc(e.why||'')}${e.cnt&&e.cnt.p!=null?'　選手'+e.cnt.p+'・試合'+e.cnt.g+'・打席'+e.cnt.a+'・測定'+e.cnt.m:''}　${fmtKB(e.size)}</small></span><button data-a="bkge" data-i="${e.id}">書き出す</button>${e.kind=='corrupt'?'':`<button data-a="bkgr" data-i="${e.id}">${bkc==e.id?'もう一度押すと復元':'復元'}</button>`}</div>`).join(''):'<p class="m">まだバックアップはありません。データを保存すると自動で作られます。</p>'}<details style="margin-top:10px"><summary>操作履歴（最新30件）</summary>${OPL.slice(-30).reverse().map(x=>`<div class="m" style="font-size:12px">${new Date(x.t).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})}　${esc(x.a)}${x.x?'　'+esc(x.x):''}</div>`).join('')||'<p class="m">まだありません</p>'}</details></div>${idbPanel()}`};
 const crBanner=()=>{svBanner('crb',DLERR?'⚠ '+DLERR+'。壊れた可能性のあるデータを上書きしないよう、保存を止めています（退避済み）。':'','position:fixed;left:8px;right:8px;top:8px;z-index:61;background:#fde7e7;color:#a00;border:1px solid #d93b3b;border-radius:10px;padding:10px;font-size:12px;line-height:1.5');const b=document.getElementById('crb');if(b&&DLERR&&!b.querySelector('button'))b.insertAdjacentHTML('beforeend','<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button data-a="crbk" style="flex:1 1 40%">バックアップから復元</button><button data-a="crdl" style="flex:1 1 40%">壊れたデータを書き出す</button><button data-a="crid" style="flex:1 1 100%">IndexedDBの写しから復元</button><button data-a="crnew" style="flex:1 1 100%">退避して新しく始める</button></div>')};
 /* ===== Phase 2: IndexedDB（段階移行。localStorageの dl が正本のまま、検証済みの写しをIndexedDBに持つ） ===== */
 const DBN='hope_main',DBV=2,SCHEMA=1,SMIG={1:d=>d};
@@ -3224,6 +3226,144 @@ const was=Object.assign({},now),sc0=g?[g.rs,g.ra]:null;C.F.forEach(f=>{const k=f
 if(!save()){C.F.forEach(f=>{if(was[f[0]]===undefined)delete x[f[0]];else x[f[0]]=was[f[0]]});if(g&&sc0){g.rs=sc0[0];g.ra=sc0[1]}delete e.rv;C15().pop();showErr('元に戻せませんでした：'+(SV.err||'保存に失敗'));draw();return}oplog('訂正を元に戻す',C.lb(x));tpill('元に戻しました');draw()};
 const c15xCard=g=>`<div style="margin:6px 0"><b>打席以外の記録の訂正</b><div class="m" style="margin:2px 0">投球・守備・盗塁・牽制・イベントを直したり削除したりできます。変更前は履歴に残り、元に戻せます。</div>${Object.keys(C15X).map(col=>{const L=S[col].filter(x=>x.gid==g.id),C=C15X[col];return`<details style="margin:3px 0"><summary class="m">${C.n}（${L.length}件）</summary><div style="max-height:220px;overflow:auto">${L.length?L.map(x=>`<div class="i" style="gap:6px"><span style="flex:1;min-width:0;font-size:12px">${esc(C.lb(x))}</span><button class="x" data-a="c15xe" data-c="${col}" data-i="${x.id}" style="margin:0">✎</button><button class="x" data-a="c15xd" data-c="${col}" data-i="${x.id}" style="margin:0">×</button></div>`).join(''):'<p class="m">記録なし</p>'}</div></details>`}).join('')}</div>`;
 $d.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a;if(a!='c15xe'&&a!='c15xd')return;e.stopImmediatePropagation();try{if(a=='c15xe')c15xEdit(t.dataset.c,t.dataset.i);else c15xDel(t.dataset.c,t.dataset.i)}catch(er){oplog('訂正エラー',er&&er.message);showErr('処理でエラーが発生しました：'+(er&&er.message||er))}},true);
+/* ===== Phase 16：データ整合性・安全管理（選手削除のごみ箱、整合性診断、修復） ===== */
+const R16N={a:'打席',m:'測定',gl:'目標',px:'ポジション経験',pt:'投球',sb:'盗塁',df:'守備の記録',pk:'牽制',ev:'イベント',ao:'攻撃側イベント',g:'試合（打順・守備位置・投手・勝敗・交代）',p:'選手',sn:'シーズン',op:'対戦相手',ob:'相手打者',opp:'相手投手',gr:'グラウンド','o8.ev':'予定','o8.mn':'練習メニュー','o8.eq':'用具','o8.bd':'収支','o8.du':'当番','o8.ct':'連絡',rs:'規則セット',vd:'動画'};
+const R16OWN=['a','m','gl','px'];
+const r16Cols=()=>{const o=[];SYA.forEach(c=>{if(Array.isArray(S[c]))o.push(c)});if(S.o8&&typeof S.o8=='object')Object.keys(S.o8).forEach(k=>{if(Array.isArray(S.o8[k]))o.push('o8.'+k)});return o};
+const r16Arr=c=>c.startsWith('o8.')?(S.o8||{})[c.slice(3)]:S[c];
+const r16Has=(o,pid,d)=>{if(o==null||d>4)return false;if(typeof o=='string')return o===pid;if(Array.isArray(o))return o.some(x=>r16Has(x,pid,d+1));if(typeof o=='object')return Object.keys(o).some(k=>r16Has(o[k],pid,d+1));return false};
+const T16=()=>{if(!Array.isArray(S.trash16))S.trash16=[];return S.trash16};
+const r16Lg=a=>(a||[]).length;
+/* 選手IDを参照しているデータを、すべての記録から探す（打席・測定・目標・経験は選手の持ち物、それ以外は参照のみ） */
+const r16Refs=pid=>{const own={},ref={},gm=[];r16Cols().forEach(c=>{if(c=='p')return;const A=r16Arr(c)||[];A.forEach(x=>{if(!x||typeof x!='object')return;const hit=Object.keys(x).some(k=>k!='id'&&r16Has(x[k],pid,0));if(!hit)return;if(R16OWN.includes(c)&&x.p===pid)(own[c]=own[c]||[]).push(x);else if(c=='g')gm.push(x);else ref[c]=(ref[c]||0)+1})});
+const vids=((S.v11&&S.v11.vd)||[]).filter(v=>v&&(v.pid===pid||(v.tg||[]).some(t=>t&&t.pid===pid)));return{own,ref,gm,vids,ownN:Object.values(own).reduce((s,l)=>s+l.length,0)}};
+/* 選手の削除：確認一覧 → 削除前バックアップ → ごみ箱へ（IDと関連付けを保ったまま） */
+const r16PDel=async pid=>{const p=S.p.find(x=>x.id==pid);if(!p)return;const R=r16Refs(pid),nm=p.name||'（名前なし）';
+const L=(o,f)=>Object.keys(o).map(c=>`<div>${esc(R16N[c]||c)}：<b>${f(o[c])}件</b></div>`).join('')||'<div class="m">なし</div>';
+const st0=R.own.a?st(R.own.a):null;
+const html=`<p style="margin:0 0 6px"><b>${esc(nm)}</b>${p.no?'（背番号'+esc(p.no)+'）':''} を削除します。</p><div style="border:1px solid #c0392b;border-radius:8px;padding:6px 8px;margin:6px 0"><b style="color:#c0392b">この選手と一緒に「削除した選手」へ移るもの</b><div class="m" style="margin:2px 0">選手本体を含み、いつでも元のIDのまま戻せます。</div>${L(R.own,l=>l.length)}${st0?`<div class="m">打席の成績（通算）：打率 ${f3(st0.avg)}・${st0.pa}打席。削除すると、チームの集計からもこの打席が外れます。</div>`:''}</div>
+<div style="border:1px solid #8a93a0;border-radius:8px;padding:6px 8px;margin:6px 0"><b>そのまま残るもの（この選手を参照しているだけ）</b><div class="m" style="margin:2px 0">削除しません。表示は「（選手不明）」になり、元に戻すと自動で元の表示に戻ります。</div>${R.gm.length?`<div>${esc(R16N.g)}：<b>${R.gm.length}試合</b></div>`:''}${L(R.ref,n=>n)}${R.vids.length?`<div>動画：<b>${R.vids.length}件</b>（動画ファイル本体は削除しません。選手の紐付けだけ残ります）</div>`:''}${!R.gm.length&&!Object.keys(R.ref).length&&!R.vids.length?'<div class="m">なし</div>':''}</div><p class="m" style="margin:6px 0 0">削除の前に、自動でバックアップを作ります。作れないときは削除しません。</p>`;
+const v=await g12M('選手を削除',html,'削除する',()=>true,true);if(!v)return;
+let bk=false;try{bk=await bkMake('wipe','選手削除前：'+nm)}catch(_){}if(!bk){showErr('削除前のバックアップを作成できなかったため、削除を中止しました（データはそのままです）');return}
+const idx=S.p.indexOf(p),own={},rm={};Object.keys(R.own).forEach(c=>{const A=S[c];own[c]=R.own[c].map(x=>({i:A.indexOf(x),r:JSON.parse(JSON.stringify(x))}));rm[c]=new Set(R.own[c])});
+const ent={id:id(),ts:Date.now(),p:JSON.parse(JSON.stringify(p)),idx,own,ref:{g:R.gm.length,v:R.vids.length,o:R.ref}},sa={};Object.keys(rm).forEach(c=>sa[c]=S[c].slice());const sp=S.p.slice(),tr=T16().slice();
+S.p=S.p.filter(x=>x!==p);Object.keys(rm).forEach(c=>{S[c]=S[c].filter(x=>!rm[c].has(x))});T16().push(ent);
+if(!save()){S.p=sp;Object.keys(sa).forEach(c=>{S[c]=sa[c]});S.trash16=tr;showErr('削除を保存できませんでした：'+(SV.err||'保存に失敗')+'（元に戻しました）');draw();return}
+oplog('選手の削除',nm+'（ごみ箱へ）');sel='';tab='pls';tpill('「削除した選手」へ移しました（元に戻せます）');draw()};
+/* 復元：元のIDのまま戻す。すでにあるIDは重複させない */
+const r16PRest=async tid=>{const e=T16().find(x=>x.id==tid);if(!e)return;if(S.p.some(x=>x.id==e.p.id)){tpill('この選手はすでに登録されています（二重の復元はできません）');return}
+const html=`<p style="margin:0 0 6px"><b>${esc(e.p.name||'')}</b> を元のIDのまま戻します。</p>${Object.keys(e.own).map(c=>`<div>${esc(R16N[c]||c)}：<b>${e.own[c].length}件</b></div>`).join('')}`;
+if(!await g12M('選手を元に戻す',html,'元に戻す',()=>true))return;
+const sp=S.p.slice(),sa={},tr=T16().slice(),added={};Object.keys(e.own).forEach(c=>sa[c]=(S[c]||[]).slice());
+S.p.splice(Math.min(e.idx==null?S.p.length:e.idx,S.p.length),0,JSON.parse(JSON.stringify(e.p)));
+let n=0,sk=0;Object.keys(e.own).forEach(c=>{if(!Array.isArray(S[c]))S[c]=[];const have=new Set(S[c].map(x=>x&&x.id));e.own[c].slice().sort((a,b)=>(a.i||0)-(b.i||0)).forEach(o=>{if(have.has(o.r.id)){sk++;return}S[c].splice(Math.min(o.i==null?S[c].length:o.i,S[c].length),0,JSON.parse(JSON.stringify(o.r)));have.add(o.r.id);n++})});
+S.trash16=T16().filter(x=>x.id!=tid);
+if(!save()){S.p=sp;Object.keys(sa).forEach(c=>{S[c]=sa[c]});S.trash16=tr;showErr('復元を保存できませんでした：'+(SV.err||'保存に失敗')+'（元に戻しました）');draw();return}
+oplog('選手の復元',e.p.name+'（'+n+'件）');tpill('元に戻しました（関連データ '+n+'件'+(sk?'・すでにあった'+sk+'件は重複させず省略':'')+'）');draw()};
+const r16PPurge=async tid=>{const e=T16().find(x=>x.id==tid);if(!e)return;if(!await g12M('完全に削除しますか？',`<p><b>${esc(e.p.name||'')}</b> と関連データを「削除した選手」からも消します。<b>元に戻せなくなります。</b></p><p class="m">実行の前にバックアップを作ります。</p>`,'完全に削除する',()=>true,true))return;
+let bk=false;try{bk=await bkMake('wipe','選手の完全削除前：'+(e.p.name||''))}catch(_){}if(!bk){showErr('バックアップを作成できなかったため、中止しました');return}
+const tr=T16().slice();S.trash16=T16().filter(x=>x.id!=tid);if(!save()){S.trash16=tr;showErr('保存できませんでした');draw();return}oplog('選手の完全削除',e.p.name);tpill('完全に削除しました');draw()};
+V.ptr=()=>{const L=T16().slice().reverse();return`<button class="x" data-t="pls">‹ 選手一覧</button><h2 style="margin:4px 0">削除した選手</h2><p class="m">削除した選手は、関連データごとここに保管されます。元のIDのまま戻せます。自動では消えません。</p>${L.length?L.map(e=>{const n=Object.values(e.own||{}).reduce((s,l)=>s+l.length,0);return`<div class="c"><div><b>${esc(e.p.name||'')}</b> <span class="m">${e.p.no?'背番号'+esc(e.p.no)+'・':''}${new Date(e.ts).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}に削除</span></div><div class="m">${Object.keys(e.own||{}).map(c=>(R16N[c]||c)+' '+e.own[c].length+'件').join('・')||'関連データなし'}（合計 ${n}件）</div><div class="r" style="gap:6px;margin-top:6px"><button class="p" data-a="r16pr" data-i="${e.id}">元に戻す</button><button class="x" data-a="r16pp" data-i="${e.id}">完全に削除</button></div></div>`}).join(''):'<div class="c m">削除した選手はいません。</div>'}`};
+NV.ptr='pls';
+{const pl=V.pls;V.pls=()=>{let h=pl();try{const n=T16().length;if(n){const i=h.indexOf('</h2>');h=i>=0?h.slice(0,i+5)+`<button class="x" data-t="ptr" style="width:100%;margin-bottom:6px">🗑 削除した選手（${n}名）▶</button>`+h.slice(i+5):h}}catch(_){}return h}}
+/* ---------- 整合性診断（検出のみ。自動では何も変更・削除しません） ---------- */
+const R16SAFE=['m','gl','px','sb','pk','ao','ev'];
+const r16Dup=()=>{const o=[];r16Cols().forEach(c=>{const A=r16Arr(c)||[],m=new Map();A.forEach((x,i)=>{if(!x||typeof x!='object'||x.id==null||x.id==='')return;const k=String(x.id);if(!m.has(k))m.set(k,[]);m.get(k).push(i)});m.forEach((ix,k)=>{if(ix.length>1)o.push({c,id:k,ix,same:ix.every(i=>sj(A[i])==sj(A[ix[0]]))})})});return o};
+const r16Scan=()=>{const F=[],add=o=>F.push(o),PS=new Set(S.p.map(p=>p&&p.id)),TP=new Set(T16().map(e=>e.p&&e.p.id)),GS=new Set(S.g.map(g=>g&&g.id));
+const nm=c=>R16N[c]||c;
+// 形式
+r16Cols().forEach(c=>{const A=r16Arr(c)||[];const bad=A.filter(x=>!x||typeof x!='object'||Array.isArray(x)).length;if(bad)add({k:'fmt-obj',sev:'err',t:nm(c)+'：記録の形式が不正です（'+bad+'件）',d:['オブジェクトではない要素があります。内容の確認が必要です。'],fix:null});
+const noid=A.filter(x=>x&&typeof x=='object'&&(x.id==null||x.id==='')).length;if(noid)add({k:'noid-'+c,sev:'warn',t:nm(c)+'：IDのない記録（'+noid+'件）',d:R16SAFE.includes(c)?['新しいIDを付けます（他の記録から参照されない種類です）。']:['この種類は他の記録から参照されるため、自動では修復しません。'],fix:R16SAFE.includes(c)?'noId':null})});
+SYA.forEach(c=>{if(S[c]!==undefined&&!Array.isArray(S[c]))add({k:'fmt-arr-'+c,sev:'err',t:nm(c)+'：配列ではありません',d:['データ形式が壊れている可能性があります。'],fix:null})});
+const DT=/^\d{4}-\d{2}-\d{2}$/;let bd=0,bn=0;[['g',S.g],['a',S.a],['m',S.m]].forEach(([c,A])=>A.forEach(x=>{if(x&&x.d!=null&&x.d!==''&&!DT.test(String(x.d)))bd++}));S.g.forEach(g=>{if(g&&(g.rs!=null&&!Number.isFinite(+g.rs)||g.ra!=null&&!Number.isFinite(+g.ra)))bn++});
+if(bd)add({k:'fmt-date',sev:'warn',t:'日付の形式が不正な記録（'+bd+'件）',d:['年-月-日（例 2026-04-01）の形式ではありません。'],fix:null});if(bn)add({k:'fmt-num',sev:'warn',t:'得点が数値でない試合（'+bn+'件）',d:[],fix:null});
+const gl=S.g.filter(g=>g&&g.lu!==undefined&&!Array.isArray(g.lu)).length;if(gl)add({k:'fmt-lu',sev:'err',t:'打順の形式が不正な試合（'+gl+'件）',d:[],fix:null});
+// 重複ID
+const D=r16Dup(),ds=D.filter(x=>x.same),dd=D.filter(x=>!x.same);
+if(ds.length)add({k:'dup-same',sev:'warn',t:'内容が完全に同じ重複記録（'+ds.reduce((s,x)=>s+x.ix.length-1,0)+'件の余分）',d:ds.slice(0,12).map(x=>nm(x.c)+'：ID '+x.id+'（'+x.ix.length+'件）'),fix:'dupSame'});
+const ddS=dd.filter(x=>R16SAFE.includes(x.c)),ddH=dd.filter(x=>!R16SAFE.includes(x.c));
+if(ddS.length)add({k:'dup-diff-safe',sev:'warn',t:'IDが重複していて内容が違う記録（'+ddS.length+'組）',d:ddS.slice(0,12).map(x=>nm(x.c)+'：ID '+x.id+'（'+x.ix.length+'件）').concat(['2件目以降に新しいIDを付けます。']),fix:'dupDiff'});
+if(ddH.length)add({k:'dup-diff',sev:'err',t:'IDが重複していて内容が違う記録（'+ddH.length+'組）',d:ddH.slice(0,12).map(x=>nm(x.c)+'：ID '+x.id+'（'+x.ix.length+'件）').concat(['他の記録から参照されるため、自動では修復しません。どちらが正しいか確認が必要です。']),fix:null});
+// 試合IDの参照
+g12Colls().forEach(c=>{const n=(S[c]||[]).filter(x=>x&&x.gid&&!GS.has(x.gid)).length;if(n)add({k:'gid-'+c,sev:'warn',t:nm(c)+'：存在しない試合を参照する記録（'+n+'件）',d:['「試合」画面の「孤立データ」から、復旧候補の確認・復元ができます。自動では削除しません。'],fix:null})});
+// 選手IDの参照
+R16OWN.forEach(c=>{const L=(S[c]||[]).filter(x=>x&&x.p&&!PS.has(x.p)),tr=L.filter(x=>TP.has(x.p)).length;if(L.length)add({k:'pid-own-'+c,sev:'warn',t:nm(c)+'：選手が見つからない記録（'+L.length+'件）',d:[tr?'うち'+tr+'件は「削除した選手」にいる選手のものです（元に戻すと解消します）。':'選手名簿に該当者がいません。内容の確認が必要です。'],fix:null})});
+const PF={pt:['p','b'],sb:['p'],df:['pit','fid'],pk:['pit','run'],ev:['pit','fids']};let miss={},trd=0;
+Object.keys(PF).forEach(c=>(S[c]||[]).forEach(x=>{if(!x)return;PF[c].forEach(k=>{[].concat(x[k]||[]).forEach(v=>{if(typeof v=='string'&&v&&!PS.has(v)){miss[c]=(miss[c]||0)+1;if(TP.has(v))trd++}})})}));
+Object.keys(miss).forEach(c=>add({k:'pid-ref-'+c,sev:'info',t:nm(c)+'：選手が見つからない参照（'+miss[c]+'件）',d:['表示は「（選手不明）」になります。削除した選手のものは元に戻すと解消します。'],fix:null}));
+let gmiss=0;S.g.forEach(g=>{if(!g)return;const ids=[].concat(g.lu||[],g.sp,g.wn,g.ls,g.sv,(g.sl||[]).flatMap(e=>[e&&e.a,e&&e.b])).filter(v=>typeof v=='string'&&v);if(ids.some(v=>!PS.has(v)))gmiss++});
+if(gmiss)add({k:'pid-ref-g',sev:'info',t:'試合：選手が見つからない打順・投手・交代の参照（'+gmiss+'試合）',d:['試合の記録は変更しません。'],fix:null});
+// 動画
+const vd=(S.v11&&S.v11.vd)||[],vg=vd.filter(v=>v&&v.gid&&!GS.has(v.gid)).length,vp=vd.filter(v=>v&&v.pid&&!PS.has(v.pid)).length,vt=vd.reduce((s,v)=>s+((v&&v.tg)||[]).filter(t=>t&&t.pid&&!PS.has(t.pid)).length,0);
+if(vg)add({k:'vid-gid',sev:'warn',t:'動画：存在しない試合を参照（'+vg+'件）',d:['動画ファイルと情報は削除しません。'],fix:null});if(vp||vt)add({k:'vid-pid',sev:'info',t:'動画：選手が見つからない紐付け（動画'+vp+'件・タグ'+vt+'件）',d:[],fix:null});
+// 取り消し履歴
+let hb=0;S.g.forEach(g=>(g&&g.h||[]).forEach(z=>{try{JSON.parse(z)}catch(_){hb++}}));if(hb)add({k:'badh',sev:'warn',t:'取り消し履歴が壊れている箇所（'+hb+'件）',d:['壊れた履歴だけを取り除きます（記録は変わりません）。'],fix:'badH'});
+// 試合の記録チェック
+try{const bad=S.g.filter(g=>g&&g14Sum(g).e>0).length;if(bad)add({k:'game-chk',sev:'info',t:'記録チェックで誤り候補のある試合（'+bad+'試合）',d:['試合一覧の「試合記録の診断」で内容を確認できます。'],fix:null})}catch(_){}
+return F};
+const r16Diag=async()=>{const F=r16Scan(),nm=c=>R16N[c]||c;
+try{const keys=await vxKeys('blob'),vd=(S.v11&&S.v11.vd)||[],set=new Set(keys.map(String)),miss=vd.filter(v=>v&&v.hasFile&&!set.has(String(v.id))),orph=keys.filter(k=>!vd.some(v=>v&&String(v.id)==String(k)));
+if(miss.length)F.push({k:'vid-miss',sev:'warn',t:'動画：情報はあるのに動画ファイルがない（'+miss.length+'件）',d:miss.slice(0,8).map(v=>v.nm||v.id).concat(['「ファイルなし」として記録し直します（動画の情報は削除しません）。']),fix:'vidMiss'});
+if(orph.length)F.push({k:'vid-orph',sev:'info',t:'動画：情報がない動画ファイル（'+orph.length+'件）',d:['削除しません。容量を使っているだけです。'],fix:null})}catch(e){F.push({k:'vid-chk',sev:'info',t:'動画の保存領域を確認できませんでした',d:[String(e&&e.message||e)],fix:null})}
+try{const o=(await idbCheck()).filter(x=>!/^（参考）/.test(x)&&!/まだデータがありません/.test(x));o.forEach(x=>F.push({k:'idb',sev:'warn',t:'保存の整合：'+x,d:['「データ」画面の保存の診断で再同期などの対処ができます。'],fix:null}))}catch(e){F.push({k:'idb',sev:'info',t:'IndexedDBを確認できませんでした',d:[String(e&&e.message||e)],fix:null})}
+try{const L=(await bkAllSafe()).slice(0,5);L.forEach(e=>{const r=bkVerify(e.json,'all');if(!r.ok)F.push({k:'bk-'+e.id,sev:'warn',t:'バックアップの構造に問題：'+(e.at||'').replace('T',' ').slice(0,16)+'（'+(e.why||e.kind||'')+'）',d:[r.msg||''],fix:null})})}catch(_){}
+return F};
+const vxKeys=async st=>{const d=await vxDb();try{return await new Promise((res,rej)=>{const t=d.transaction(st,'readonly'),q=t.objectStore(st).getAllKeys();t.oncomplete=()=>res(q.result||[]);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})}finally{d.close()}};
+/* ---------- 修復（事前表示 → バックアップ → 承認 → 実行 → 再検証 → 問題があればロールバック） ---------- */
+const r16Log=()=>{if(!Array.isArray(S.rp16))S.rp16=[];return S.rp16};
+const r16Plan=keys=>{const P=[];if(keys.includes('dupSame')){const L=[];r16Dup().filter(x=>x.same).forEach(x=>L.push(R16N[x.c]||x.c+'：ID '+x.id+'の余分な'+(x.ix.length-1)+'件を取り除く'));if(L.length)P.push({k:'dupSame',t:'完全に同じ重複記録を、1件だけ残して取り除く',L})}
+if(keys.includes('dupDiff')){const L=[];r16Dup().filter(x=>!x.same&&R16SAFE.includes(x.c)).forEach(x=>L.push((R16N[x.c]||x.c)+'：ID '+x.id+'の2件目以降（'+(x.ix.length-1)+'件）に新しいIDを付ける'));if(L.length)P.push({k:'dupDiff',t:'IDが重複している記録に新しいIDを付ける',L})}
+if(keys.includes('noId')){const L=[];R16SAFE.forEach(c=>{const n=(r16Arr(c)||[]).filter(x=>x&&typeof x=='object'&&(x.id==null||x.id==='')).length;if(n)L.push((R16N[c]||c)+'：IDのない'+n+'件にIDを付ける')});if(L.length)P.push({k:'noId',t:'IDのない記録にIDを付ける',L})}
+if(keys.includes('badH')){let n=0;S.g.forEach(g=>(g&&g.h||[]).forEach(z=>{try{JSON.parse(z)}catch(_){n++}}));if(n)P.push({k:'badH',t:'壊れた取り消し履歴だけを取り除く',L:[n+'件']})}
+if(keys.includes('vidMiss')){const L=[];P.vm=1;P.push({k:'vidMiss',t:'動画ファイルがない動画を「ファイルなし」として記録し直す',L:['動画の情報（タグ・クリップ）は残します']})}
+return P};
+const r16Apply=(keys,ch)=>{const lines=[];
+if(keys.includes('dupSame')){r16Cols().forEach(c=>{const A=r16Arr(c);if(!Array.isArray(A))return;const seen=new Map(),out=[];let n=0;A.forEach(x=>{if(x&&typeof x=='object'&&x.id!=null&&x.id!==''){const k=String(x.id),j=sj(x);if(seen.has(k)&&seen.get(k)==j){n++;ch.add(c+'|'+k);return}if(!seen.has(k))seen.set(k,j)}out.push(x)});if(n){if(c.startsWith('o8.'))S.o8[c.slice(3)]=out;else S[c]=out;lines.push((R16N[c]||c)+'：重複'+n+'件を取り除きました')}})}
+if(keys.includes('dupDiff')){R16SAFE.forEach(c=>{const A=r16Arr(c);if(!Array.isArray(A))return;const seen=new Set();let n=0;A.forEach(x=>{if(!x||typeof x!='object'||x.id==null||x.id==='')return;const k=String(x.id);if(seen.has(k)){ch.add(c+'|'+k);const nid=id();x.id=nid;ch.add(c+'|'+nid);n++}else seen.add(k)});if(n)lines.push((R16N[c]||c)+'：'+n+'件に新しいIDを付けました')})}
+if(keys.includes('noId')){R16SAFE.forEach(c=>{const A=r16Arr(c);if(!Array.isArray(A))return;let n=0;A.forEach(x=>{if(x&&typeof x=='object'&&(x.id==null||x.id==='')){x.id=id();ch.add(c+'|'+x.id);n++}});if(n)lines.push((R16N[c]||c)+'：'+n+'件にIDを付けました')})}
+if(keys.includes('badH')){let n=0;S.g.forEach(g=>{if(!g||!Array.isArray(g.h))return;const ok=g.h.filter(z=>{try{JSON.parse(z);return true}catch(_){n++;return false}});if(ok.length!=g.h.length){g.h=ok;ch.add('g|'+g.id)}});if(n)lines.push('壊れた取り消し履歴'+n+'件を取り除きました')}
+if(keys.includes('vidMiss')){const vd=(S.v11&&S.v11.vd)||[];let n=0;vd.forEach(v=>{if(v&&v.hasFile){v.hasFile=0;n++}});if(n)lines.push('動画'+n+'件を「ファイルなし」にしました')}
+return lines};
+const r16Fixable=['dupSame','dupDiff','noId','badH','vidMiss'];
+const r16Repair=async(keys0,miss)=>{const keys=keys0.filter(k=>r16Fixable.includes(k));let P=r16Plan(keys);
+if(keys.includes('vidMiss')&&miss&&miss.length)P=P.filter(x=>x.k!='vidMiss').concat([{k:'vidMiss',t:'動画ファイルがない動画を「ファイルなし」として記録し直す',L:miss.map(v=>v.nm||v.id)}]);
+if(!P.length){tpill('修復する項目がありません');return null}
+const html=`<p class="m" style="margin:0 0 6px">次の内容で修復します。実行の前にバックアップを作り、実行後に件数・ID・チェックサムを再確認します。問題があれば自動で元に戻します。</p>${P.map(x=>`<div style="margin:6px 0"><b>${esc(x.t)}</b>${x.L.slice(0,10).map(l=>`<div class="m">・${esc(l)}</div>`).join('')}${x.L.length>10?`<div class="m">…ほか${x.L.length-10}件</div>`:''}</div>`).join('')}`;
+if(!await g12M('データを修復します',html,'修復を実行する',()=>true,true))return null;
+let bk=false;try{bk=await bkMake('manual','データ修復前')}catch(_){}if(!bk){showErr('修復前のバックアップを作成できなかったため、修復を中止しました（データはそのままです）');return null}
+const pk=P.map(x=>x.k),cols=r16Cols(),snap={};cols.forEach(c=>{snap[c]=JSON.stringify(r16Arr(c)||[])});snap.__g=JSON.stringify(S.g);snap.__v=JSON.stringify(S.v11===undefined?null:S.v11);
+const r0=s10Recs(),n0=cols.reduce((s,c)=>s+(r16Arr(c)||[]).length,0),ch=new Set(),entry={id:id(),ts:Date.now(),keys:pk,ok:false,lines:[],err:'',n0,n1:n0,chk:{b:'',a:''}};
+const rollback=()=>{cols.forEach(c=>{const a=JSON.parse(snap[c]);if(c.startsWith('o8.'))S.o8[c.slice(3)]=a;else S[c]=a});S.g=JSON.parse(snap.__g);const v=JSON.parse(snap.__v);if(v===null)delete S.v11;else S.v11=v};
+let fail='';try{entry.lines=r16Apply(pk,ch);if(!save())throw new Error('保存に失敗：'+(SV.err||''));
+const r1=s10Recs(),n1=cols.reduce((s,c)=>s+(r16Arr(c)||[]).length,0);entry.n1=n1;const un=[...r0.keys()].filter(k=>!ch.has(k)).sort();
+const hb=un.map(k=>k+r0.get(k).h).join(''),ha=un.map(k=>{const r=r1.get(k);return k+(r?r.h:'?')}).join('');entry.chk={b:s10h0(hb),a:s10h0(ha)};
+if(entry.chk.b!==entry.chk.a)throw new Error('修復していない記録のチェックサムが一致しません');
+if(r1.st&&r0.st&&pk.some(k=>k=='dupSame')===false&&r1.st.dup>r0.st.dup)throw new Error('重複が増えました');
+const left=r16Scan().filter(f=>f.fix&&pk.includes(f.fix));if(left.length)throw new Error('修復後も同じ問題が残っています：'+left.map(f=>f.t).join('／'));
+entry.ok=true}catch(e){fail=String(e&&e.message||e)}
+if(!entry.ok){try{rollback();save()}catch(_){}entry.err=fail}
+r16Log().push(entry);if(r16Log().length>30)S.rp16=r16Log().slice(-30);try{save()}catch(_){}oplog('データ修復',(entry.ok?'成功 ':'失敗（元に戻しました） ')+pk.join(','));return entry};
+/* ---------- 画面 ---------- */
+const r16s={res:null,busy:0,msg:''};
+V.r16=()=>{const F=r16s.res,sv=F?F.filter(f=>f.fix):[],hm=F?F.filter(f=>!f.fix):[],lg=r16Log().slice().reverse().slice(0,5);
+const row=f=>`<div class="c" style="border-left:4px solid ${f.sev=='err'?'#c0392b':f.sev=='warn'?'#d6a041':'#8a93a0'};margin:6px 0"><b>${esc(f.t)}</b>${(f.d||[]).map(l=>`<div class="m">${esc(l)}</div>`).join('')}</div>`;
+return`<button class="x" data-t="team">‹ チーム</button><h2 style="margin:4px 0">データ整合性の診断・修復</h2><p class="m">診断は記録を変更しません。自動で削除することもありません。修復は、内容を確認して承認したときだけ、バックアップを作ってから実行します。</p>
+<div class="c"><button class="p" data-a="r16run" style="width:100%">${r16s.busy?'診断しています…':'診断を実行する'}</button>${r16s.msg?`<p class="m" style="white-space:pre-line;margin:6px 0 0">${esc(r16s.msg)}</p>`:''}${F?`<p class="m" style="margin:6px 0 0">${S.p.length}人・${S.g.length}試合・${S.a.length}打席を調べました。修復できる項目 ${sv.length}件・人による確認が必要な項目 ${hm.length}件。</p>`:''}</div>
+${F&&!F.length?'<div class="c" style="border-left:4px solid #2f8a7e"><b>問題は見つかりませんでした</b></div>':''}
+${sv.length?`<h3 style="margin:10px 0 4px">修復できる項目</h3>${sv.map(row).join('')}<button class="p" data-a="r16fix" style="width:100%;margin:4px 0">修復内容を確認する…</button>`:''}
+${hm.length?`<h3 style="margin:10px 0 4px">人による確認が必要な項目</h3>${hm.map(row).join('')}`:''}
+${lg.length?`<h3 style="margin:10px 0 4px">修復の記録</h3>${lg.map(e=>`<div class="c" style="margin:6px 0"><b style="color:${e.ok?'#2f8a7e':'#c0392b'}">${e.ok?'成功':'失敗（元に戻しました）'}</b> <span class="m">${new Date(e.ts).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>${(e.lines||[]).map(l=>`<div class="m">・${esc(l)}</div>`).join('')}${e.err?`<div class="m" style="color:#c0392b">${esc(e.err)}</div>`:''}<div class="m">記録の件数 ${e.n0} → ${e.n1}　修復していない記録のチェックサム ${esc((e.chk&&e.chk.b)||'')==esc((e.chk&&e.chk.a)||'')?'一致':'不一致'}</div></div>`).join('')}`:''}`};
+NV.r16='home';
+{const old=dpPanel;}
+$d.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a;
+if(a=='dp'&&sel&&/削除/.test(t.textContent||'')){e.stopImmediatePropagation();try{r16PDel(sel)}catch(er){showErr('処理でエラーが発生しました：'+(er&&er.message||er))}return}
+if(a!='r16pr'&&a!='r16pp'&&a!='r16run'&&a!='r16fix')return;e.stopImmediatePropagation();
+try{if(a=='r16pr')r16PRest(t.dataset.i);else if(a=='r16pp')r16PPurge(t.dataset.i);
+else if(a=='r16run'){r16s.busy=1;r16s.msg='';draw();r16Diag().then(F=>{r16s.res=F;r16s.busy=0;r16s.msg='診断が終わりました（記録は変更していません）';oplog('整合性診断',F.length+'件');draw()}).catch(er=>{r16s.busy=0;r16s.msg='診断中にエラー：'+(er&&er.message||er);draw()})}
+else if(a=='r16fix'){const F=r16s.res||[];const keys=[...new Set(F.filter(f=>f.fix).map(f=>f.fix))];let miss=null;if(keys.includes('vidMiss'))miss=((S.v11&&S.v11.vd)||[]).filter(v=>v&&v.hasFile);
+(async()=>{let m2=null;if(keys.includes('vidMiss')){const ks=new Set((await vxKeys('blob')).map(String));m2=miss.filter(v=>!ks.has(String(v.id)))}
+const ent=await r16Repair(keys,m2);if(ent){r16s.msg=ent.ok?'修復しました。件数・ID・チェックサムを再確認し、問題ありませんでした。':'修復を中止しました（自動で元に戻しました）：'+ent.err;r16s.res=await r16Diag()}draw()})()}}catch(er){oplog('診断エラー',er&&er.message);showErr('処理でエラーが発生しました：'+(er&&er.message||er))}},true);
+
 const DUPA=new Set(['gwms','gadd','gpadd','rok','ibb','ci','ofr','sqr','ent','sach','sflc','hbp','ap','am','msave','gstart']);let dupL={k:'',t:0};
 $d.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;const d=t.dataset,a=d.a,v=s=>$(s)?$(s).value:'';const c0=[S.pt.length,S.a.length,S.df.length,S.sb.length,S.ev.length,S.pk.length],pre6=(()=>{try{const g=cg();if(!g||!g.n)return null;const n=g.n;return{gid:g.id,inn:n.inn,o:n.o,bs:(n.bs||[]).slice(),cob:n.cob||'',cat:fp(g,'捕')||''}}catch(_){return null}})();if(a&&DUPA.has(a)){const k=a+'|'+JSON.stringify(d)+(a=='ap'?v('#pn')+v('#pno'):''),n=Date.now();if(dupL.k==k&&n-dupL.t<(a=='ap'||a=='gstart'||a=='am'||a=='msave'?1200:600)){oplog('二重登録防止',a);return}dupL={k,t:n}}
 if(d.t){tab=d.t;sh='';draw();scrollTo(0,0);return}
