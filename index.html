@@ -1118,7 +1118,7 @@ const IPW=['アウト','併殺','犠打','犠飛'];
 let rd={i:null,chain:[],out:1,dest:'stay'};
 /* 勝利・敗戦投手の候補（得点経過から「最後のリードを奪った時点」の投手を提案。確定は人が確認画面で行う） */
 const wl16=g=>{try{if(!g||g.rs==g.ra)return null;const own=!g.ho,A=S.a.filter(x=>x.gid==g.id),O=S.ao.filter(x=>x.gid==g.id),D=S.df.filter(x=>x.gid==g.id),E=S.ev.filter(x=>x.gid==g.id);
-const ro={},rp={};A.forEach(x=>{ro[x.inn]=(ro[x.inn]||0)+(x.ru||0)});O.forEach(x=>{ro[x.inn]=(ro[x.inn]||0)+(x.run||0)});D.concat(E).forEach(x=>{rp[x.inn]=(rp[x.inn]||0)+(x.run||0)});
+const ro={},rp={};A.forEach(x=>{ro[x.inn]=(ro[x.inn]||0)+(x.ru||0)});O.concat(S.sb.filter(x=>x.gid==g.id&&x.run>0)).forEach(x=>{ro[x.inn]=(ro[x.inn]||0)+(x.run||0)});D.concat(E).forEach(x=>{rp[x.inn]=(rp[x.inn]||0)+(x.run||0)});
 const so=Object.values(ro).reduce((a,b)=>a+b,0),sp=Object.values(rp).reduce((a,b)=>a+b,0);if(so!==g.rs||sp!==g.ra)return null;
 const mx=Math.max(0,...Object.keys(ro).map(Number),...Object.keys(rp).map(Number),...D.map(x=>x.inn||0));if(!mx)return null;
 const lastP=inn=>{const L=D.concat(E).filter(x=>x.inn==inn&&x.pit).sort((a,b)=>(a.ts||0)-(b.ts||0));return L.length?L[L.length-1].pit:''};
@@ -1732,7 +1732,7 @@ const x6stamp=(c0,pre,a,d)=>{if(!pre)return;const sp=parseFloat(pspd),okS=isFini
 for(let i=c0[0];i<S.pt.length;i++){const r=S.pt[i];if(r.gid!=pre.gid||!r.p)continue;if(r.inn==null)r.inn=pre.inn;if(r.bid==null&&pre.cob)r.bid=pre.cob;if(!r.cat&&pre.cat)r.cat=pre.cat;if(okS&&r.spd==null){r.spd=sp;used=1}}
 for(let i=c0[2];i<S.df.length;i++){const r=S.df[i];if(r.gid==pre.gid&&!r.cat&&pre.cat)r.cat=pre.cat}
 for(let i=c0[4];i<S.ev.length;i++){const r=S.ev[i];if(r.gid!=pre.gid)continue;if(['PB','WP','SBD','CS'].includes(r.k)&&!r.cat&&pre.cat)r.cat=pre.cat;if((r.k=='WP'||r.k=='PB')&&pty&&!r.pty)r.pty=pty}
-for(let i=c0[3];i<S.sb.length;i++){const r=S.sb[i];if(r.gid!=pre.gid||r.inn!=null)continue;r.inn=pre.inn;r.ou=pre.o;r.rs=(pre.bs||[]).map(x=>x?1:0).join('');if(a=='stl'&&d&&d.i!=null)r.bf=+d.i}
+for(let i=c0[3];i<S.sb.length;i++){const r=S.sb[i];if(r.gid!=pre.gid||r.ou!=null)continue;r.inn=pre.inn;r.ou=pre.o;r.rs=(pre.bs||[]).map(x=>x?1:0).join('');if(a=='stl'&&d&&d.i!=null)r.bf=+d.i}
 for(let i=c0[5];i<S.pk.length;i++){const r=S.pk[i];if(r.gid==pre.gid&&r.k=='att'&&r.ou==null)r.ou=pre.o}
 if(used&&!pkeep)pspd=''};
 /* ===== Phase 7: 試合中の入力支援 ===== */
@@ -1784,7 +1784,7 @@ oplog('ワンタップ入力',m.l)};
 const uxLast=g=>{const a=S.a.filter(x=>x.gid==g.id&&!x.ibb&&!x.sq).slice(-1)[0];return a&&UXR[a.r]?{k:UXR[a.r],r:a.r}:null};
 const uxLastP=g=>{const p=S.pt.filter(x=>x.gid==g.id&&!x.p).slice(-1)[0];return p&&['見逃し','空振り','ファウル','ボール'].includes(p.r)?p.r:null};
 /* イニング別スコア（打席・失点の記録から自動集計。合計が点数と合わないぶんは「他」に出す） */
-const uxLine=g=>{const A=S.a.filter(x=>x.gid==g.id),E=S.ev.filter(x=>x.gid==g.id&&x.run>0),D=S.df.filter(x=>x.gid==g.id&&x.run>0);let m=Math.max(g.n?g.n.inn:1,1,...A.map(x=>x.inn||1),...E.map(x=>x.inn||1),...D.map(x=>x.inn||1));const us=Array(m).fill(0),th=Array(m).fill(0);A.forEach(x=>{if(x.inn>=1&&x.ru)us[x.inn-1]+=x.ru});E.forEach(x=>{if(x.inn>=1)th[x.inn-1]+=x.run});D.forEach(x=>{if(x.inn>=1&&!E.some(e=>e.id&&e.id==x.id))th[x.inn-1]+=x.run});const su=us.reduce((a,b)=>a+b,0),st=th.reduce((a,b)=>a+b,0);return{m,us,th,su,st,ou:(g.rs||0)-su,ot:(g.ra||0)-st,rs:g.rs||0,ra:g.ra||0}};
+const uxLine=g=>{const A=S.a.filter(x=>x.gid==g.id),X=S.ao.filter(x=>x.gid==g.id&&x.run>0&&x.inn>=1).concat(S.sb.filter(x=>x.gid==g.id&&x.run>0&&x.inn>=1)),E=S.ev.filter(x=>x.gid==g.id&&x.run>0),D=S.df.filter(x=>x.gid==g.id&&x.run>0);let m=Math.max(g.n?g.n.inn:1,1,...A.map(x=>x.inn||1),...X.map(x=>x.inn),...E.map(x=>x.inn||1),...D.map(x=>x.inn||1));const us=Array(m).fill(0),th=Array(m).fill(0);A.forEach(x=>{if(x.inn>=1&&x.ru)us[x.inn-1]+=x.ru});X.forEach(x=>{us[x.inn-1]+=x.run});E.forEach(x=>{if(x.inn>=1)th[x.inn-1]+=x.run});D.forEach(x=>{if(x.inn>=1&&!E.some(e=>e.id&&e.id==x.id))th[x.inn-1]+=x.run});const su=us.reduce((a,b)=>a+b,0),st=th.reduce((a,b)=>a+b,0);return{m,us,th,su,st,ou:(g.rs||0)-su,ot:(g.ra||0)-st,rs:g.rs||0,ra:g.ra||0}};
 const uxLineH=g=>{const L=uxLine(g),f=g.ho?0:1,row=(nm,a,o,tot)=>`<tr><td style="text-align:left;white-space:nowrap">${esc(nm)}</td>${a.map(x=>`<td>${x}</td>`).join('')}<td>${o?(o>0?'+':'')+o:'-'}</td><td><b>${tot}</b></td></tr>`,R=[[S.team,L.us,L.ou,L.rs],[g.o||'相手',L.th,L.ot,L.ra]];if(g.ho)R.reverse();const bad=L.ou||L.ot;return`<div class="w"><table style="text-align:center"><tr><th></th>${[...Array(L.m)].map((_,i)=>`<th>${i+1}</th>`).join('')}<th>他</th><th>計</th></tr>${R.map(r=>row(...r)).join('')}</table></div>${bad?'<p class="m" style="margin:4px 0 0">「他」＝イニングが分からない得点・手動の点数補正（−1／＋1）です。合計は試合の点数と一致します。</p>':''}`};
 const uxMemoH=g=>{const M=g.mm||[];return M.length?M.slice().reverse().map(x=>`<div class="i" style="align-items:flex-start;gap:8px"><span style="flex:1"><small class="m">${x.inn}回${x.top?'表':'裏'}・${x.k=='i'?'イニング間':'試合中'}・${new Date(x.ts).toTimeString().slice(0,5)}</small><br>${esc(x.x).replace(/\n/g,'<br>')}</span></div>`).join(''):'<p class="m">メモはありません。</p>'};
 const uxOnl=()=>navigator.onLine!==false;
@@ -3471,7 +3471,7 @@ dfr(g,Object.assign({r:'三振',o:0,z:-1,ng:1,nc:cs,run,ur:cs=='失策'?run:0,fi
 else if(a=='dent'||a=='dsac'||a=='dsfl'){const g=cg(),n=g.n,ob=n.ob=n.ob||[0,0,0];if(a=='dsac'&&(!ob.some(Boolean)||n.o>=2))return;if(a=='dsfl'&&(!ob[2]||n.o>=2))return;snap(g);const c=ctx(g),inn=n.inn,cn=n.b+'-'+n.s,pcx=pcap(g),r=a=='dent'?'二塁打':a=='dsac'?'犠打':'犠飛';if(c.pit){ptc=c.pit;S.pt.push({id:id(),gid:g.id,d:g.d,p:c.pit,r:'インプレー'})}
 const res=a=='dent'?finD(g,r,2,ob.map((x,i)=>x?Math.min(4,i+3):0)):finD(g,r);S.df.push(paX(pcx,{id:id(),gid:g.id,d:g.d,db:res.db,dr:res.dr,r,z:-1,kind:a=='dent'?'':(a=='dsac'?'バント':'フライ'),pos:'',fid:'',pit:c.pit||'',e:0,run:res.run,ur:0,o:res.out,rbi:res.run,bh:c.bh,bid:c.bid,inn,cn,ent:a=='dent'?1:0}));pstart(g);sh=''}
 else if(a=='hbp'){const g=cg();snap(g);apit(g,'ボール');simple(g,'死球',g.n.b+'-'+g.n.s);sh=''}
-else if(a=='stl'){const g=cg(),n=g.n,i=+d.i,x=n.bs[i];if(!x)return;snap(g);S.sb.push({id:id(),gid:g.id,d:g.d,p:x,ok:+d.k});n.bs[i]=0;if(+d.k){if(i==2)g.rs++;else if(!n.bs[i+1])n.bs[i+1]=x;else n.bs[i]=x}else{n.o++;if(n.o>=3)chg(g)}g.lt='盗塁'+(+d.k?'成功':'失敗');sh=''}
+else if(a=='stl'){const g=cg(),n=g.n,i=+d.i,x=n.bs[i];if(!x)return;snap(g);S.sb.push({id:id(),gid:g.id,d:g.d,p:x,ok:+d.k,inn:n.inn,run:(+d.k&&i==2)?1:0});n.bs[i]=0;if(+d.k){if(i==2)g.rs++;else if(!n.bs[i+1])n.bs[i+1]=x;else n.bs[i]=x}else{n.o++;if(n.o>=3)chg(g)}g.lt='盗塁'+(+d.k?'成功':'失敗');sh=''}
 else if(a=='undo'){const g=cg();undoE(g);sh=''}
 else if(a=='bk'){const g=cg(),af=undoE(g);if(!af)return;const pl=af.x.pl;if(pl){ip=JSON.parse(JSON.stringify(pl.ip));ip.keep=1;ip.err='';sh=pl.t=='att'?'play':'dplay'}else sh=''}
 else if(a=='fw'){const g=cg();if(redoE(g))sh='';else if(g.n.o>=3){snap(g);chg(g)}else{g.lt='次のプレーの入力を待っています'}}
