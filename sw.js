@@ -1,7 +1,7 @@
 // HOPE Data Analysis service worker — アプリ本体をキャッシュしてオフラインで起動できるようにします。
 // アプリを更新したら VERSION を変えてください。利用者の端末では「更新できます」と表示され、
 // 利用者が「更新する」を押すと（更新前バックアップを作成した後で）新しい版に切り替わります。
-const VERSION = 'v69';
+const VERSION = 'v70';
 const CACHE = 'diamondlens-' + VERSION;
 const CORE = ['./index.html'];
 const ASSETS = [
@@ -95,7 +95,7 @@ self.addEventListener('fetch', (e) => {
       const cached = (await caches.match('./index.html', { ignoreSearch: true })) || (await caches.match('./', { ignoreSearch: true }));
       if (cached) return cached;
       try { return await fetch(req); } catch (err) {
-        return new Response('<meta charset="utf-8"><meta name="viewport" content="width=device-width"><body style="font-family:sans-serif;padding:20px"><h3>オフラインで開けません</h3><p>この端末にはまだアプリが保存されていません。インターネットに接続して一度開いてください。記録したデータは端末に残っています。</p>', { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+        return new Response('<meta charset="utf-8"><meta name="viewport" content="width=device-width"><body style="font-family:-apple-system,\'Hiragino Sans\',\'Noto Sans JP\',\'Yu Gothic\',Meiryo,sans-serif;padding:20px"><h3>オフラインで開けません</h3><p>この端末にはまだアプリが保存されていません。インターネットに接続して一度開いてください。記録したデータは端末に残っています。</p>', { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
       }
     })());
     return;
