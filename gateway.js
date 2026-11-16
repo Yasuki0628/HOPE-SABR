@@ -23,6 +23,10 @@ const TASKS = {
   practice: { max: 800, sys: COMMON + '与えられた練習メニュー案と理由をもとに、練習の進め方（順序・声かけ・注意点）を補足してください。新しい数値は作らないでください。' },
   opponent: { max: 700, sys: COMMON + '対戦相手との成績の事実をもとに、(1)傾向 (2)試合での注意点 を述べてください。' },
   video: { max: 700, sys: COMMON + '添付された静止画（動画のコマ）と端末内の簡易計測値を見て、(1)見えること (2)気づいた点 (3)練習のヒント を述べてください。画像だけでは分からないことは「分からない」と述べ、断定しないでください。人物の特定はしないでください。' },
+  tactics: { max: 1200, sys: COMMON + '野球の戦術について、監督・コーチが「指示した戦術の履歴」と、端末が計算した件数・成功率を渡します。それをもとに助言してください。' +
+    '成功率・件数・得点などの数字は、渡された値だけを、そのまま（丸めたり計算し直したりせずに）書いてください。自分で計算・推定した数字は書かないでください。数字はすべてアラビア数字で書き、箇条書きの先頭に番号は付けず「・」を使ってください。日付や選手の人数などを新たに作らないでください。' +
+    '出力は、次の2つの見出しだけを、この順番で使ってください。\n【記録から言えること】\n・渡されたデータから言える点を、1行に1点で書きます。各行の最後に「（根拠：…）」として、渡された件数や対象を書きます。データが足りない点は「分からない」と書き、成功率や傾向を作らないでください。\n【推測・一般論】\n・データからは言えないが、一般的な野球の考え方として参考になる点を書きます。必ず「推測です」または「一般論です」と分かる書き方にし、この欄には数字を書かないでください。\n' +
+    '「参考値」が true の枠（実行が10件未満）は、結論を出さず、「参考値」と明記して渡された件数だけを述べてください。選手個人の優劣・能力の評価や、選手どうしの比較はしないでください。守備位置については「ポジションの基本」として述べ、個人の不足を評価しないでください。最終判断は監督・コーチが行います。' },
   scorebook: { max: 2500, json: true, sys: '画像は学童野球のスコアブックです。打席ごとの情報を読み取り、JSONだけを出力してください（説明文なし）。形式: {"rows":[{"inning":数字または0,"batter":"画像に書かれた打者名","result":"単打|二塁打|三塁打|本塁打|四球|死球|打撃妨害|守備妨害|三振|ゴロ|飛球|犠打|犠飛|失策|野選のいずれか。読めなければ空文字","rbi":数字}]}。読めない箇所は推測せず空にしてください。' },
 };
 const buckets = new Map();
@@ -35,7 +39,7 @@ http.createServer((req, res) => {
   if (req.method === 'OPTIONS') { const h = { 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Max-Age': '600' }; if (ORIGIN && (origin === ORIGIN || ORIGIN === '*')) h['Access-Control-Allow-Origin'] = ORIGIN; res.writeHead(204, h); return res.end(); }
   const auth = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   if (!eq(auth, TOKEN)) return send(res, 401, { error: 'unauthorized' }, origin);
-  if (req.method === 'GET' && req.url === '/health') return send(res, 200, { ok: true, model: MODEL }, origin);
+  if (req.method === 'GET' && req.url === '/health') return send(res, 200, { ok: true, model: MODEL, tasks: Object.keys(TASKS) }, origin);   // tasks：この中継サーバーが対応する依頼の種類（アプリが戦術AIへの対応を確かめるのに使う）
   if (req.method !== 'POST' || req.url !== '/ai') return send(res, 404, { error: 'not found' }, origin);
   if (limited(req.socket.remoteAddress || '?')) return send(res, 429, { error: 'rate limit' }, origin);
   let size = 0; const ch = [];

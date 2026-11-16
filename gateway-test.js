@@ -17,6 +17,15 @@ const post = (b, h) => fetch(G + '/ai', { method: 'POST', headers: h || H, body:
   T('分析→text', r.status === 200 && /模擬/.test(j.text), JSON.stringify(j));
   const s = await post({ task: 'scorebook', data: {}, images: [{ media_type: 'image/png', data: 'AAAA' }] }); const sj = await s.json();
   T('scorebook→rows(JSON抽出)', s.status === 200 && Array.isArray(sj.rows) && sj.rows.length === 3, JSON.stringify(sj));
+  // Phase 24-F：戦術の助言用の依頼の種類
+  const hj = await (await fetch(G + '/health', { headers: H })).json();
+  T('health：対応する依頼の種類に tactics が入る', Array.isArray(hj.tasks) && hj.tasks.includes('tactics') && hj.tasks.includes('analysis_game'), JSON.stringify(hj));
+  const tc = await post({ task: 'tactics', data: { 知りたいこと: '攻撃戦術', 戦術別: [{ 戦術: '盗塁', 実行: 12, 成功: 9, 成功率: '75%' }] } }); const tj = await tc.json();
+  T('tactics→text', tc.status === 200 && typeof tj.text === 'string' && tj.text.length > 0, JSON.stringify(tj));
+  const lastReq = await (await fetch('http://localhost:8161/__last')).json();
+  T('tactics：2つの見出し・数字を作らない指示・選手を比べない指示が上流に渡る', lastReq && lastReq.body && lastReq.body.max_tokens === 1200 && /【記録から言えること】/.test(lastReq.body.system) && /【推測・一般論】/.test(lastReq.body.system) && /自分で計算・推定した数字は書かないでください/.test(lastReq.body.system) && /選手どうしの比較はしない/.test(lastReq.body.system), JSON.stringify(lastReq && lastReq.body && lastReq.body.system).slice(0, 120));
+  T('tactics：データはそのまま【データ】として渡る', lastReq && /【データ】/.test(JSON.stringify(lastReq.body.messages)) && /75%/.test(JSON.stringify(lastReq.body.messages)));
+  T('tactics も画像は付けられない（4枚超は400）', (await post({ task: 'tactics', data: {}, images: Array(5).fill({ media_type: 'image/jpeg', data: 'AAA' }) })).status === 400);
   const o = await fetch(G + '/health', { headers: { ...H, Origin: 'https://app.example' } }); T('CORS: 許可したオリジンのみ', o.headers.get('access-control-allow-origin') === 'https://app.example');
   const o2 = await fetch(G + '/health', { headers: { ...H, Origin: 'https://evil.example' } }); T('CORS: 他のオリジンには許可ヘッダなし', !o2.headers.get('access-control-allow-origin'));
   let c429 = 0; for (let i = 0; i < 50; i++) { const x = await post({ task: 'practice', data: {} }); if (x.status === 429) c429++; } T('回数制限(429)', c429 > 0);
